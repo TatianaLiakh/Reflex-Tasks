@@ -1,0 +1,8 @@
+ Init
+Start
+ ReceiveSCMOutputMsg
+Start
+ InsertHands
+Choice
+SensorOn
+SensorOff

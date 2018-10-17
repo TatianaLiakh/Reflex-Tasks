@@ -1,0 +1,43 @@
+    1          PROGR CA{
+    2          
+    3          TACT 50;
+    4          CONST ON 1;
+    5          CONST OFF 0;
+    6          
+    7          INPUT  LOG_CA_INPUT_PORT  0 0 8; /* имя, базовый адрес, доп. адр. порта, 8бит */
+    8          OUTPUT LOG_CA_OUTPUT_PORT 1 0 8;
+    9          
+   10          PROC Init
+   11          {
+   12           LOG S_HANDS_UNDER_DRYER = {LOG_CA_INPUT_PORT[1]} FOR ALL;
+   13           LOG C_TURN_ON_DRYER = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
+   14           
+   15           STATE Functioning
+   16           {  
+   17          	IF (S_HANDS_UNDER_DRYER == ON) 
+   18          	{
+   19          		C_TURN_ON_DRYER = ON;		
+   20          		IN NEXT;						
+   21          	}
+   22          	ELSE C_TURN_ON_DRYER = OFF; 		
+   23           }
+   24           STATE Drying
+   25           {  
+   26          	IF (S_HANDS_UNDER_DRYER == ON) IN STATE Drying;
+   27          	TIMEOUT 5 
+   28          	 {	
+   29          		IF (1) IN STATE Functioning;
+   30          		C_TURN_ON_DRYER = ON;	
+   31          	 }
+   32           }
+   33          
+   34          } /* \ПРОЦ */
+   35          
+   36          
+   37          
+   38          }  /* \Прогр */
+
+%RCSL-I-SUMMARY, Completed with 0 error(s).
+%RCSL-I-SUMMARY, Completed with 0 warning(s).
+
+ %RCSL-I-SUMMARY, Completed with 0 error(s).

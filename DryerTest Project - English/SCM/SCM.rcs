@@ -1,0 +1,141 @@
+PROGR SCM{
+
+TACT 50;
+CONST ON 1;
+CONST OFF 0;
+
+CONST Idiling 0;
+CONST RunNextTest 1;
+
+ 
+/*Набор команд для ВОУ*/
+ENUM
+{
+	SCM2VP_INSERT_HANDS,
+	SCM2VP_TAKE_AWAY_HANDS
+};
+ 
+/*Набор команд для БВ*/
+ENUM 
+{
+	SCM2VM_TEST_DRYER_NORMAL_TURN_ON,
+	SCM2VM_TEST_DRYER_NORMAL_TURN_OFF, 
+	SCM2VM_FINISH_VERIFICATION
+};
+
+/*Набор команд для БУС от БВ*/
+ENUM
+{
+	VM2SCM_START_VERIFICATION,
+	VM2SCM_NEXT_TEST
+};
+
+FUNCTION INT SendMsgToVirtualPlantCode( INT );
+FUNCTION INT SendMsgToVerificationModuleCode( INT );
+FUNCTION INT SendMsgToControlAlgorythmCode( INT );
+
+FUNCTION INT GetNextMsgFromVM( VOID );
+FUNCTION INT GetMsgCodeFromVM( VOID );
+
+PROC Init{
+
+STATE Start
+{  
+	START PROC ReceiveVMOutputMsg; 
+	STOP;
+ }
+} /* \ПРОЦ */
+
+PROC ReceiveVMOutputMsg
+{
+	LOG nextTest FOR ALL; 
+	INT VMMsgCode LOCAL;
+	STATE Start
+	{
+		nextTest = Idiling;
+		IF (GetNextMsgFromVM()) 
+		{
+			VMMsgCode = GetMsgCodeFromVM();
+			SWITCH (VMMsgCode)
+			{
+				CASE VM2SCM_START_VERIFICATION:
+					START PROC TestDriver;
+					BREAK;
+				CASE VM2SCM_NEXT_TEST:
+					nextTest = RunNextTest;
+					BREAK;
+			}
+		}
+		LOOP;
+	}
+} 
+
+
+PROC TestDriver
+{
+FROM PROC ReceiveVMOutputMsg nextTest;
+	STATE RunTestHandsUnderDryer
+	{
+		START PROC TestHandsUnderDryer;
+		IN NEXT;
+	}
+	STATE IdilingTest1
+	{
+		IF (nextTest == RunNextTest)
+		{
+			STOP PROC TestHandsUnderDryer;
+			IN NEXT;
+		}		
+	}
+	STATE RunTestRemoveHands
+	{
+		START PROC TestRemoveHands;
+		IN NEXT;
+	}
+	STATE IdilingTest2
+	{
+		IF (nextTest == RunNextTest)
+		{
+			STOP PROC TestRemoveHands;
+			IN NEXT;
+		}		
+	}
+	STATE Finish
+	{
+		SendMsgToVerificationModuleCode(SCM2VM_FINISH_VERIFICATION);
+		STOP;
+	}
+}
+
+PROC TestHandsUnderDryer
+{
+	STATE Start
+	{
+		SendMsgToVirtualPlantCode(SCM2VP_INSERT_HANDS);
+		SendMsgToVerificationModuleCode(SCM2VM_TEST_DRYER_NORMAL_TURN_ON);
+		IN NEXT;
+	}
+	STATE Idiling
+	{
+		LOOP;
+	}
+}
+
+PROC TestRemoveHands
+{
+	STATE Start
+	{
+		SendMsgToVirtualPlantCode(SCM2VP_TAKE_AWAY_HANDS);
+		SendMsgToVerificationModuleCode(SCM2VM_TEST_DRYER_NORMAL_TURN_OFF);
+		IN NEXT;
+	}
+	STATE Idiling
+	{
+		LOOP;
+	}
+}
+
+}  /* \Прогр */
+
+
+

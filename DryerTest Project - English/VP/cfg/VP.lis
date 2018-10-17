@@ -1,0 +1,89 @@
+    1          PROGR VP
+    2          {
+    3          TACT 50;
+    4          CONST ON 1;
+    5          CONST OFF 0;
+    6          CONST SENSOR_DELAY 3;
+    7          
+    8          ENUM
+    9          {
+   10          	SCM2VP_INSERT_HANDS,
+   11          	SCM2VP_TAKE_AWAY_HANDS
+   12          };
+   13          
+   14          
+   15          FUNCTION INT GetMessageFromScenariousBlock( VOID );
+   16          FUNCTION INT GetMessageCodeFromScenariousBlock( VOID );
+   17          FUNCTION INT Random( VOID );
+   18          
+   19          
+   20          INPUT  LOG_VP_INPUT_PORT  0 0 8; /* имя, базовый адрес, доп. адр. порта, 8бит */
+   21          OUTPUT LOG_VP_OUTPUT_PORT 1 0 8;
+   22          
+   23          PROC Init
+   24          {
+   25          
+   26          LOG C_TURN_ON_DRYER = {LOG_VP_INPUT_PORT[1]} FOR ALL;
+   27          LOG S_HANDS_UNDER_DRYER = {LOG_VP_OUTPUT_PORT[1]} FOR ALL;
+   28          
+   29          	STATE Start
+   30          	{ 
+   31          		START PROC ReceiveSCMOutputMsg;
+   32          		STOP; 
+   33          	}
+   34          } 
+   35          
+   36          PROC ReceiveSCMOutputMsg
+   37          {
+   38          FROM PROC Init S_HANDS_UNDER_DRYER;
+   39          INT SCMsgCode LOCAL;
+   40          
+   41          	STATE Start
+   42          	{
+   43          		IF (GetMessageFromScenariousBlock()) 
+   44          		{
+   45          			SCMsgCode = GetMessageCodeFromScenariousBlock();
+   46          			SWITCH (SCMsgCode)
+   47          			{
+   48          				CASE SCM2VP_INSERT_HANDS:
+   49          					START PROC InsertHands;	
+   50          					BREAK;					
+   51          				CASE SCM2VP_TAKE_AWAY_HANDS:
+   52          					STOP PROC InsertHands;
+   53          					S_HANDS_UNDER_DRYER = OFF;
+   54          					BREAK;			
+   55          			}
+   56          		}
+   57          		LOOP;
+   58          	}
+   59          }
+   60          
+   61          PROC InsertHands
+   62          {
+   63          	FROM PROC Init S_HANDS_UNDER_DRYER;
+   64          	FLOAT coin LOCAL;
+   65          	STATE Choice
+   66          	{
+   67          		coin = Random();
+   68          		IF (coin <= 80) IN STATE SensorOn;
+   69          		ELSE IN STATE SensorOff;
+   70          	
+   71          	}
+   72          	STATE SensorOn
+   73          	{
+   74          		S_HANDS_UNDER_DRYER = ON; 
+   75          		TIMEOUT SENSOR_DELAY IN STATE Choice;
+   76          	}
+   77          	STATE SensorOff
+   78          	{
+   79          		S_HANDS_UNDER_DRYER = OFF; 
+   80          		TIMEOUT SENSOR_DELAY IN STATE Choice;
+   81          	}
+   82          }
+   83          
+   84          }
+
+%RCSL-I-SUMMARY, Completed with 0 error(s).
+%RCSL-I-SUMMARY, Completed with 0 warning(s).
+
+ %RCSL-I-SUMMARY, Completed with 0 error(s).

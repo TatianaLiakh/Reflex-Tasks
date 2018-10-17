@@ -1,0 +1,20 @@
+ Init
+Start
+ ReceiveSCMOutputMsg
+Start
+ DryerNormalTurnOnControl
+WaitingOfHands
+WaitingOnLaunch
+DryerError
+StopTest
+ DryerNormalTurnOffControl
+WaitingOfHands
+WaitingOff
+DryerError
+StopTest
+ DryerStateControl
+Init
+UpdateState
+ InvariantFrequencyControl
+Normal
+ControlFreqency

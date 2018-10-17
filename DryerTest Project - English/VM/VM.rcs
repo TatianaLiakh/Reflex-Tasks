@@ -1,0 +1,207 @@
+PROGR VM{
+
+TACT 50;
+CONST ON 1;
+CONST OFF 0;
+CONST AlgorithmDelay 100;
+CONST ObjectDelay 10;
+CONST AlgorithmReaction 10;
+
+/*Набор команд для БВ*/
+ ENUM 
+{
+	SCM2VM_TEST_DRYER_NORMAL_TURN_ON,
+	SCM2VM_TEST_DRYER_NORMAL_TURN_OFF, 
+	SCM2VM_FINISH_VERIFICATION
+};
+
+/*Набор команд для БУС от БВ*/
+ENUM
+{
+	VM2SCM_START_VERIFICATION,
+	VM2SCM_NEXT_TEST
+};
+/*Набор Команд для GUI */
+ENUM
+{
+	VM2GUI_TEST_PASSED_DRYER_NORMAL_TURN_ON, 
+	VM2GUI_TEST_PASSED_DRYER_NORMAL_TURN_OFF,
+	VM2GUI_TEST_FAILED_DRYER_NORMAL_TURN_ON,
+	VM2GUI_TEST_FAILED_DRYER_NORMAL_TURN_OFF,
+	VM2GUI_TEST_FAILED_DRYER_ACTIVATION_FREQUENCY_ERROR,
+	VM2GUI_END_VERIFICATION
+};
+
+FUNCTION INT  SendMsgGUICode(INT);
+
+/*CA Input msg queue*/
+
+FUNCTION INT GetNextMsgFromCA(VOID);
+FUNCTION INT GetMsgCodeFromCA(VOID);  /*чтение из памяти кода события */
+
+/*SCM  Input msg queue*/
+FUNCTION INT GetNextMsgFromSCM(VOID);
+FUNCTION INT GetMsgCodeFromSCM(VOID);  /*чтение из памяти кода события */
+
+/*SCM  Output msg queue*/
+FUNCTION INT SendMsgToSCM( INT );
+
+
+INPUT  LOG_CA_INPUT_PORT 0 0 8; /* имя, базовый адрес, доп. адр. порта, 8бит */
+INPUT  LOG_CA_OUTPUT_PORT  0 1 8; /* имя, базовый адрес, доп. адр. порта, 8бит */
+
+PROC Init
+{
+	LOG S_HANDS_UNDER_DRYER    = {LOG_CA_INPUT_PORT[1]} FOR ALL;
+	LOG C_TURN_ON_DRYER = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
+	
+	STATE Start
+	{
+		SendMsgToSCM(VM2SCM_START_VERIFICATION);
+		START PROC ReceiveSCMOutputMsg;
+		START PROC DryerStateControl;
+		START PROC InvariantFrequencyControl;
+		STOP;
+	}
+
+} 
+
+PROC ReceiveSCMOutputMsg{  
+
+INT SCMsgCode LOCAL;
+ STATE Start{
+    /*  читаем код и параметр события из кольцевого буфера в структуру */
+    IF (GetNextMsgFromSCM()) 
+	{
+		SCMsgCode = GetMsgCodeFromSCM();
+		SWITCH (SCMsgCode) 
+		{
+			CASE SCM2VM_TEST_DRYER_NORMAL_TURN_ON:
+				START PROC DryerNormalTurnOnControl;				
+				BREAK;
+			CASE SCM2VM_TEST_DRYER_NORMAL_TURN_OFF: 
+				START PROC DryerNormalTurnOffControl;
+				BREAK;
+			CASE SCM2VM_FINISH_VERIFICATION:
+				SendMsgGUICode(VM2GUI_END_VERIFICATION);
+				STOP;
+				BREAK;
+		}
+	}
+	LOOP;
+}
+}
+
+/*Проверка требования: Если руки появились под сушилкой, то в будующем сушилка обязательно включится*/
+PROC DryerNormalTurnOnControl
+{
+FROM PROC Init S_HANDS_UNDER_DRYER, C_TURN_ON_DRYER;
+
+	STATE WaitingOfHands
+	{
+		IF(S_HANDS_UNDER_DRYER == ON) 
+			IN STATE WaitingOnLaunch;
+		TIMEOUT ObjectDelay IN STATE DryerError;
+	}
+	STATE WaitingOnLaunch
+	{
+		IF (C_TURN_ON_DRYER == ON)
+		{
+			SendMsgGUICode(VM2GUI_TEST_PASSED_DRYER_NORMAL_TURN_ON);
+			IN STATE StopTest;			
+		}
+		TIMEOUT AlgorithmDelay IN STATE DryerError;
+	}
+	STATE DryerError
+	{
+			SendMsgGUICode(VM2GUI_TEST_FAILED_DRYER_NORMAL_TURN_ON);
+			IN STATE StopTest;	
+	}
+	STATE StopTest
+	{
+		SendMsgToSCM(VM2SCM_NEXT_TEST);
+		STOP;
+	}
+}
+
+
+/*Проверка требования: Если рук нет под сушилкой, то в будующем сушилка обязательно выключится*/
+PROC DryerNormalTurnOffControl
+{
+FROM PROC Init S_HANDS_UNDER_DRYER, C_TURN_ON_DRYER;
+
+	STATE WaitingOfHands
+	{
+		IF(S_HANDS_UNDER_DRYER == OFF) IN STATE WaitingOff;
+		TIMEOUT ObjectDelay IN STATE DryerError;
+	}
+	STATE WaitingOff
+	{
+		IF (C_TURN_ON_DRYER == OFF)
+		{
+			SendMsgGUICode(VM2GUI_TEST_PASSED_DRYER_NORMAL_TURN_OFF);
+			IN STATE StopTest;			
+		}
+		TIMEOUT AlgorithmDelay IN STATE DryerError;
+	}
+	STATE DryerError
+	{
+			SendMsgGUICode(VM2GUI_TEST_FAILED_DRYER_NORMAL_TURN_OFF);
+			IN STATE StopTest;	
+	}
+	STATE StopTest
+	{
+		SendMsgToSCM(VM2SCM_NEXT_TEST);
+		STOP;
+	}
+}
+
+
+/*Инвариант: интервал между включением-выключением сушилки всегда больше Algorithm reaction тактов*/
+
+PROC DryerStateControl
+{
+	FROM PROC Init C_TURN_ON_DRYER;
+	INT PrevDryerState LOCAL;
+	LOG isStateChanged FOR ALL;
+	STATE Init
+	{
+		PrevDryerState = C_TURN_ON_DRYER;
+		IN STATE UpdateState;
+	}
+	STATE UpdateState
+	{
+		isStateChanged = OFF; 
+		IF (PrevDryerState != C_TURN_ON_DRYER)
+		{
+			PrevDryerState = C_TURN_ON_DRYER;
+			isStateChanged = ON;
+		}
+		LOOP;
+	}	
+}
+
+PROC InvariantFrequencyControl
+{
+FROM PROC DryerStateControl isStateChanged;
+	STATE Normal
+	{
+		IF (isStateChanged == ON) 
+		{			
+			IN STATE ControlFreqency;
+		}
+	}
+	STATE ControlFreqency
+	{
+		IF (isStateChanged == ON) 
+		{
+			SendMsgGUICode(VM2GUI_TEST_FAILED_DRYER_ACTIVATION_FREQUENCY_ERROR);
+			IN STATE Normal;
+		}
+		TIMEOUT AlgorithmReaction IN STATE Normal;
+	}
+}
+}
+
+
+

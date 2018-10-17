@@ -1,0 +1,16 @@
+ Init
+Start
+ ReceiveVMOutputMsg
+Start
+ TestDriver
+RunTestHandsUnderDryer
+IdilingTest1
+RunTestRemoveHands
+IdilingTest2
+Finish
+ TestHandsUnderDryer
+Start
+Idiling
+ TestRemoveHands
+Start
+Idiling

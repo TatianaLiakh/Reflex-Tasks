@@ -1,0 +1,143 @@
+    1          PROGR SCM{
+    2          
+    3          TACT 50;
+    4          CONST ON 1;
+    5          CONST OFF 0;
+    6          
+    7          CONST Idiling 0;
+    8          CONST RunNextTest 1;
+    9          
+   10           
+   11          /*Набор команд для ВОУ*/
+   12          ENUM
+   13          {
+   14          	SCM2VP_INSERT_HANDS,
+   15          	SCM2VP_TAKE_AWAY_HANDS
+   16          };
+   17           
+   18          /*Набор команд для БВ*/
+   19          ENUM 
+   20          {
+   21          	SCM2VM_TEST_DRYER_NORMAL_TURN_ON,
+   22          	SCM2VM_TEST_DRYER_NORMAL_TURN_OFF, 
+   23          	SCM2VM_FINISH_VERIFICATION
+   24          };
+   25          
+   26          /*Набор команд для БУС от БВ*/
+   27          ENUM
+   28          {
+   29          	VM2SCM_START_VERIFICATION,
+   30          	VM2SCM_NEXT_TEST
+   31          };
+   32          
+   33          FUNCTION INT SendMsgToVirtualPlantCode( INT );
+   34          FUNCTION INT SendMsgToVerificationModuleCode( INT );
+   35          FUNCTION INT SendMsgToControlAlgorythmCode( INT );
+   36          
+   37          FUNCTION INT GetNextMsgFromVM( VOID );
+   38          FUNCTION INT GetMsgCodeFromVM( VOID );
+   39          
+   40          PROC Init{
+   41          
+   42          STATE Start
+   43          {  
+   44          	START PROC ReceiveVMOutputMsg; 
+   45          	STOP;
+   46           }
+   47          } /* \ПРОЦ */
+   48          
+   49          PROC ReceiveVMOutputMsg
+   50          {
+   51          	LOG nextTest FOR ALL; 
+   52          	INT VMMsgCode LOCAL;
+   53          	STATE Start
+   54          	{
+   55          		nextTest = Idiling;
+   56          		IF (GetNextMsgFromVM()) 
+   57          		{
+   58          			VMMsgCode = GetMsgCodeFromVM();
+   59          			SWITCH (VMMsgCode)
+   60          			{
+   61          				CASE VM2SCM_START_VERIFICATION:
+   62          					START PROC TestDriver;
+   63          					BREAK;
+   64          				CASE VM2SCM_NEXT_TEST:
+   65          					nextTest = RunNextTest;
+   66          					BREAK;
+   67          			}
+   68          		}
+   69          		LOOP;
+   70          	}
+   71          } 
+   72          
+   73          
+   74          PROC TestDriver
+   75          {
+   76          FROM PROC ReceiveVMOutputMsg nextTest;
+   77          	STATE RunTestHandsUnderDryer
+   78          	{
+   79          		START PROC TestHandsUnderDryer;
+   80          		IN NEXT;
+   81          	}
+   82          	STATE IdilingTest1
+   83          	{
+   84          		IF (nextTest == RunNextTest)
+   85          		{
+   86          			STOP PROC TestHandsUnderDryer;
+   87          			IN NEXT;
+   88          		}		
+   89          	}
+   90          	STATE RunTestRemoveHands
+   91          	{
+   92          		START PROC TestRemoveHands;
+   93          		IN NEXT;
+   94          	}
+   95          	STATE IdilingTest2
+   96          	{
+   97          		IF (nextTest == RunNextTest)
+   98          		{
+   99          			STOP PROC TestRemoveHands;
+  100          			IN NEXT;
+  101          		}		
+  102          	}
+  103          	STATE Finish
+  104          	{
+  105          		SendMsgToVerificationModuleCode(SCM2VM_FINISH_VERIFICATION);
+  106          		STOP;
+  107          	}
+  108          }
+  109          
+  110          PROC TestHandsUnderDryer
+  111          {
+  112          	STATE Start
+  113          	{
+  114          		SendMsgToVirtualPlantCode(SCM2VP_INSERT_HANDS);
+  115          		SendMsgToVerificationModuleCode(SCM2VM_TEST_DRYER_NORMAL_TURN_ON);
+  116          		IN NEXT;
+  117          	}
+  118          	STATE Idiling
+  119          	{
+  120          		LOOP;
+  121          	}
+  122          }
+  123          
+  124          PROC TestRemoveHands
+  125          {
+  126          	STATE Start
+  127          	{
+  128          		SendMsgToVirtualPlantCode(SCM2VP_TAKE_AWAY_HANDS);
+  129          		SendMsgToVerificationModuleCode(SCM2VM_TEST_DRYER_NORMAL_TURN_OFF);
+  130          		IN NEXT;
+  131          	}
+  132          	STATE Idiling
+  133          	{
+  134          		LOOP;
+  135          	}
+  136          }
+  137          
+  138          }  /* \Прогр */
+
+%RCSL-I-SUMMARY, Completed with 0 error(s).
+%RCSL-I-SUMMARY, Completed with 0 warning(s).
+
+ %RCSL-I-SUMMARY, Completed with 0 error(s).

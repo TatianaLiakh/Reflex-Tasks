@@ -1,0 +1,88 @@
+PROGR VP
+{
+TACT 50;
+CONST ON 1;
+CONST OFF 0;
+CONST SENSOR_DELAY 3;
+
+ENUM
+{
+	SCM2VP_INSERT_HANDS,
+	SCM2VP_TAKE_AWAY_HANDS
+};
+
+
+FUNCTION INT GetMessageFromScenariousBlock( VOID );
+FUNCTION INT GetMessageCodeFromScenariousBlock( VOID );
+FUNCTION INT Random( VOID );
+
+
+INPUT  LOG_VP_INPUT_PORT  0 0 8; /* им€, базовый адрес, доп. адр. порта, 8бит */
+OUTPUT LOG_VP_OUTPUT_PORT 1 0 8;
+
+PROC Init
+{
+
+LOG C_TURN_ON_DRYER = {LOG_VP_INPUT_PORT[1]} FOR ALL;
+LOG S_HANDS_UNDER_DRYER = {LOG_VP_OUTPUT_PORT[1]} FOR ALL;
+
+	STATE Start
+	{ 
+		START PROC ReceiveSCMOutputMsg;
+		STOP; 
+	}
+} 
+
+PROC ReceiveSCMOutputMsg
+{
+FROM PROC Init S_HANDS_UNDER_DRYER;
+INT SCMsgCode LOCAL;
+
+	STATE Start
+	{
+		IF (GetMessageFromScenariousBlock()) 
+		{
+			SCMsgCode = GetMessageCodeFromScenariousBlock();
+			SWITCH (SCMsgCode)
+			{
+				CASE SCM2VP_INSERT_HANDS:
+					START PROC InsertHands;	
+					BREAK;					
+				CASE SCM2VP_TAKE_AWAY_HANDS:
+					STOP PROC InsertHands;
+					S_HANDS_UNDER_DRYER = OFF;
+					BREAK;			
+			}
+		}
+		LOOP;
+	}
+}
+
+PROC InsertHands
+{
+	FROM PROC Init S_HANDS_UNDER_DRYER;
+	FLOAT coin LOCAL;
+	STATE Choice
+	{
+		coin = Random();
+		IF (coin <= 80) IN STATE SensorOn;
+		ELSE IN STATE SensorOff;
+	
+	}
+	STATE SensorOn
+	{
+		S_HANDS_UNDER_DRYER = ON; 
+		TIMEOUT SENSOR_DELAY IN STATE Choice;
+	}
+	STATE SensorOff
+	{
+		S_HANDS_UNDER_DRYER = OFF; 
+		TIMEOUT SENSOR_DELAY IN STATE Choice;
+	}
+}
+
+}
+ /* \ѕрогр */
+
+
+
