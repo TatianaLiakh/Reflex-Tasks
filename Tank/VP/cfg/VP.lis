@@ -1,0 +1,166 @@
+    1          PROGR TankPlant{
+    2          TACT 50;
+    3          
+    4          
+    5          CONST T_H	0.1;
+    6          CONST PI	3.14;
+    7          CONST g		9.81; 
+    8          CONST H		0.6;
+    9          CONST SIMULATOR_DELAY 300;
+   10          CONST GAMMA 0.0115;
+   11          CONST BETA 0.4016;
+   12          CONST X_MIN 0.1;
+   13          CONST X_MAX 0.5;
+   14          
+   15          ENUM
+   16          {
+   17          	VP2GUI_Tank_Level,
+   18          	VP2GUI_U_Level
+   19          };
+   20          
+   21          FUNCTION FLOAT PortsToFloat(INT , INT , INT , INT );
+   22          FUNCTION INT GetBit(FLOAT, INT );
+   23          FUNCTION FLOAT SQRT(FLOAT); 
+   24          FUNCTION INT SendMsgFloatParamToGUI(INT, FLOAT);
+   25          FUNCTION INT SendMsgIntParamToGUI(INT, INT);
+   26          
+   27          INPUT U_BIT0_PORT  0 0 8;
+   28          INPUT U_BIT1_PORT  0 1 8;
+   29          INPUT U_BIT2_PORT  0 2 8;
+   30          INPUT U_BIT3_PORT  0 3 8;
+   31          
+   32          OUTPUT X_BIT0_PORT  1 0 8;
+   33          OUTPUT X_BIT1_PORT  1 1 8;
+   34          OUTPUT X_BIT2_PORT  1 2 8;
+   35          OUTPUT X_BIT3_PORT  1 3 8;
+   36          
+   37          
+   38          
+   39          PROC INIT 
+   40          {
+   41          	FLOAT U FOR ALL;
+   42          	FLOAT X FOR ALL;
+   43          	
+   44          	
+   45          	INT U_BIT0 = { U_BIT0_PORT [8]} FOR ALL; 
+   46          	INT U_BIT1 = { U_BIT1_PORT [8]} FOR ALL; 
+   47          	INT U_BIT2 = { U_BIT2_PORT [8]} FOR ALL; 
+   48          	INT U_BIT3 = { U_BIT3_PORT [8]} FOR ALL; 
+   49          	
+   50          	INT X_BIT0 = { X_BIT0_PORT [8]} FOR ALL; 
+   51          	INT X_BIT1 = { X_BIT1_PORT [8]} FOR ALL; 
+   52          	INT X_BIT2 = { X_BIT2_PORT [8]} FOR ALL; 
+   53          	INT X_BIT3 = { X_BIT3_PORT [8]} FOR ALL; 
+   54          		
+   55          	STATE InitialSetup
+   56          	{		
+   57          		X = 0.2;
+   58          		START PROC READ_ADC;
+   59          		START PROC WRITE_DAC;
+   60          		START PROC TANK; 
+   61          		START PROC ReadInputMsgs;
+   62          		START PROC Info;
+   63          		STOP;
+   64          	}
+   65          }
+   66          
+   67          PROC ReadInputMsgs
+   68          {
+   69          	INT msg_code FOR ALL;
+   70          /* */
+   71          	STATE StartReading
+   72          	{
+   73          		/*  читаем код и параметр события из кольцевого буфера в структуру */
+   74          
+   75          		LOOP;
+   76          	}
+   77          }
+   78          
+   79          PROC READ_ADC {
+   80          	FROM PROC INIT U, U_BIT0, U_BIT1, U_BIT2, U_BIT3;
+   81          	STATE READ {
+   82          		U = PortsToFloat(U_BIT0, U_BIT1, U_BIT2, U_BIT3);
+   83          		
+   84          		
+   85          	/*	 SendMsgIntParamToGUI(VP2GUI_U_Level, U_BIT0); */
+   86          	/*	 SendMsgIntParamToGUI(VP2GUI_U_Level, U_BIT1); */
+   87          	/*	 SendMsgIntParamToGUI(VP2GUI_U_Level, U_BIT2); */
+   88          	/*	 SendMsgIntParamToGUI(VP2GUI_U_Level, U_BIT3); */
+   89          		LOOP;
+   90          	}
+   91          }
+   92          
+   93           
+   94            
+   95            
+   96            
+   97          
+   98          
+   99          	
+  100          
+  101          /*Vitrual simulator of a tank */
+  102          /*X - water level */
+  103          /*U - control signal */
+  104          /*H - tank height*/
+  105          /*X_MIN - minimum water level*/
+  106          /*GAMMA,  BETA - coefficients describing tank parameters*/ 
+  107          PROC TANK {
+  108          	FROM PROC INIT X, U;
+  109          	STATE Normal {	
+  110          		/*New water level calculation*/
+  111          		X += (-GAMMA * SQRT(X)  * T_H  + BETA * U  * T_H )/SIMULATOR_DELAY ;
+  112          
+  113          		IF (X >= H) SET STATE Owerflow; 
+  114          		IF ( X < X_MIN ) SET STATE Underfill;
+  115          	}
+  116          	STATE Owerflow
+  117          	{	
+  118          		/*Water level is too high*/	
+  119          		X = H;						
+  120          		X += (-GAMMA * T_H * SQRT(X) + BETA * T_H * U) / SIMULATOR_DELAY;
+  121          		/*if water level is normal, set state Normal*/			
+  122          		IF (X < H) SET STATE Normal;	 	
+  123          	}
+  124          	STATE Underfill
+  125          	{
+  126          		/*Water level is too low*/
+  127          		X += ( -GAMMA * X * SQRT(X)  * T_H  / X_MIN  + BETA * U * T_H ) / SIMULATOR_DELAY ;
+  128          		IF (X < 0) X = 0;
+  129          		/*if water level is normal, set state Normal*/		
+  130          		IF ( X > X_MIN ) SET STATE Normal;
+  131          		
+  132          	}
+  133          }
+  134          
+  135          PROC WRITE_DAC {
+  136          	FROM PROC INIT X, X_BIT0, X_BIT1, X_BIT2, X_BIT3;
+  137          	STATE WRITE {
+  138          		X_BIT0 = GetBit(X, 0);
+  139          		X_BIT1 = GetBit(X, 1);
+  140          		X_BIT2 = GetBit(X, 2);
+  141          		X_BIT3 = GetBit(X, 3);
+  142          		LOOP;
+  143          	}
+  144          
+  145          }
+  146          
+  147          PROC Info
+  148          {
+  149          	FROM PROC INIT X, U;
+  150          	STATE Idiling
+  151          	{
+  152          		TIMEOUT 50 
+  153          		{
+  154          			SendMsgFloatParamToGUI(VP2GUI_Tank_Level, X);
+  155          		/*	SendMsgFloatParamToGUI(VP2GUI_U_Level, U);*/
+  156          		
+  157          			SET STATE Idiling;
+  158          		}
+  159          	}
+  160          }
+  161          
+  162          }
+%RCSL-I-SUMMARY, Completed with 0 error(s).
+%RCSL-I-SUMMARY, Completed with 0 warning(s).
+
+ %RCSL-I-SUMMARY, Completed with 0 error(s).

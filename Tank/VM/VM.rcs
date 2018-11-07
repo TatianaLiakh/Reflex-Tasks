@@ -1,0 +1,255 @@
+PROGR VM
+{
+
+CONST H		0.6;
+CONST U_MIN	0.0;	
+CONST U_MAX	15.0;
+CONST DELTA_U 10.0;
+CONST DELTA_X 0.1;
+
+CONST IDILING_DELAY 100;
+CONST CONTROLLER_DELAY 200;
+
+/*Набор команд для БУС от БВ*/
+ENUM
+{
+	VM2SCM_START_VERIFICATION,
+	VM2SCM_NEXT_TEST
+};
+
+ENUM
+{
+		CA2GUI_X_LEVEL,
+		CA2GUI_U_LEVEL
+};
+
+
+/*Набор команд для БВ*/
+ENUM 
+{
+	SCM2VM_StartTestNewDesiredLevel,
+	SCM2VM_FINISH_VERIFICATION
+};
+
+/*Набор Команд для GUI */
+ENUM
+{
+	VM2GUI_TEST_FAILED_U_MAX,
+	VM2GUI_TEST_FAILED_U_MIN, 
+	VM2GUI_TEST_FAILED_OWERFLOW,
+	VM2GUI_TEST_FAILED_UNDERFILL,	
+	VM2GUI_TEST_FAILED_DELTA_U,
+	VM2GUI_TEST_FAILED_BIG_LEVEL_DIFFERENCE,
+	VM2GUI_TEST_PASSED_X_LEVEL_CONTROL,	
+	VM2GUI_X_LEVEL,
+	VM2GUI_END_VERIFICATION
+};
+
+FUNCTION INT GetNextMsgFromSCM(VOID);
+FUNCTION INT GetMsgCodeFromSCM(VOID);  
+FUNCTION FLOAT GetFloatParamFromSCM(VOID);
+FUNCTION INT  SendMsgGUICode(INT);
+FUNCTION INT SendMsgFloatParamGUI(INT, FLOAT);
+
+/*SCM  Output msg queue*/
+FUNCTION INT SendMsgSCMCode( INT );
+
+
+FUNCTION FLOAT ABS(FLOAT); 
+FUNCTION FLOAT  PortsToFloat(INT , INT , INT , INT );
+
+INPUT X_BIT0_PORT  0 0 8;
+INPUT X_BIT1_PORT  0 1 8;
+INPUT X_BIT2_PORT  0 2 8;
+INPUT X_BIT3_PORT  0 3 8;
+INPUT U_BIT0_PORT  0 4 8;
+INPUT U_BIT1_PORT  0 5 8;
+INPUT U_BIT2_PORT  0 6 8;
+INPUT U_BIT3_PORT  0 7 8;
+
+
+PROC INIT
+{
+	INT X_BIT0 = { X_BIT0_PORT [8]} FOR ALL; 
+	INT X_BIT1 = { X_BIT1_PORT [8]} FOR ALL; 
+	INT X_BIT2 = { X_BIT2_PORT [8]} FOR ALL; 
+	INT X_BIT3 = { X_BIT3_PORT [8]} FOR ALL; 
+	
+	INT U_BIT0 = { U_BIT0_PORT [8]} FOR ALL; 
+	INT U_BIT1 = { U_BIT1_PORT [8]} FOR ALL; 
+	INT U_BIT2 = { U_BIT2_PORT [8]} FOR ALL; 
+	INT U_BIT3 = { U_BIT3_PORT [8]} FOR ALL; 
+	FLOAT XD FOR ALL;
+	FLOAT X FOR ALL;
+	FLOAT U FOR ALL;
+
+	STATE InitialSetup
+	{
+		SendMsgSCMCode(VM2SCM_START_VERIFICATION);
+		START PROC READ_ADC;
+		START PROC ReceiveSCMOutputMsg;
+		START PROC XValueRestrictionsInvariant;
+		START PROC UValueRestrictionsInvariant;
+		START PROC VoltageDerivativeRestrictionsInvariant;
+		/*START PROC  XLevelTendsToDesired; */
+		START PROC Info;
+		STOP;		
+	}
+}
+
+PROC READ_ADC {
+	FROM PROC INIT X, X_BIT0, X_BIT1, X_BIT2, X_BIT3, U, U_BIT0, U_BIT1, U_BIT2, U_BIT3;
+	STATE READ {
+		X = PortsToFloat(X_BIT0, X_BIT1, X_BIT2, X_BIT3);
+		U = PortsToFloat(U_BIT0, U_BIT1, U_BIT2, U_BIT3);
+		LOOP;
+	}
+}	
+PROC Info
+{
+	FROM PROC INIT X, XD;
+	STATE Idiling
+	{
+		TIMEOUT 50 
+		{
+		/*	SendMsgFloatParamGUI(VM2GUI_X_LEVEL, X); */
+			SET STATE Idiling;
+		}
+	}
+}
+
+PROC ReceiveSCMOutputMsg
+{  
+FROM PROC INIT XD;
+INT SCMsgCode LOCAL;
+ STATE Start{
+    IF (GetNextMsgFromSCM()) 
+	{
+		SCMsgCode = GetMsgCodeFromSCM();
+		SWITCH (SCMsgCode) 
+		{
+			CASE SCM2VM_StartTestNewDesiredLevel:
+				XD = GetFloatParamFromSCM();
+				START PROC XLevelTendsToDesired;
+				BREAK;
+			CASE SCM2VM_FINISH_VERIFICATION:
+				SendMsgGUICode(VM2GUI_END_VERIFICATION);
+				STOP;
+				BREAK;
+		}
+	}
+	LOOP;
+	}
+} 
+
+/*Invariant ALWAYS X <= H */
+/*Invariant ALWAYS X >= 0 */
+PROC XValueRestrictionsInvariant
+{
+FROM PROC INIT X;
+	STATE Normal 
+	{
+		IF ( X > H)
+		{
+			SendMsgGUICode(VM2GUI_TEST_FAILED_OWERFLOW);
+			SET STATE OwerflowError;
+		}
+		ELSE IF (X < 0)
+		{			
+			SendMsgGUICode(VM2GUI_TEST_FAILED_UNDERFILL);
+			SET STATE UnderfillError;
+		}
+	}
+	STATE OwerflowError
+	{
+		IF (X <= H) SET STATE Normal;
+	}
+	STATE UnderfillError
+	{
+		IF (X >= 0) SET STATE Normal; 
+	}
+}
+
+/*Invariant ALWAYS U <= U_MAX */
+/*Invariant ALWAYS U >= 0 */
+PROC UValueRestrictionsInvariant
+{
+FROM PROC INIT U;
+
+	STATE Normal 
+	{
+		IF ( U > U_MAX)
+		{
+			SendMsgGUICode(VM2GUI_TEST_FAILED_U_MAX);
+			SET STATE HighVoltage;
+		}
+		ELSE IF (U < 0)
+		{			
+			SendMsgGUICode(VM2GUI_TEST_FAILED_U_MIN);
+			SET STATE LowVoltage;
+		}
+	}
+	STATE HighVoltage
+	{
+		IF ( U <= U_MAX) SET STATE Normal;
+	}
+	STATE LowVoltage
+	{
+		IF ( U >= 0) SET STATE Normal;
+	}
+}
+
+/*The control signal always changes smoothly*/
+PROC VoltageDerivativeRestrictionsInvariant
+{
+	FROM PROC INIT U;
+	FLOAT U_Prev LOCAL;
+	STATE Setup
+	{
+		U_Prev = U; 
+		SET NEXT;
+	}
+	STATE Normal
+	{
+		IF ( ABS(U_Prev - U) >= DELTA_U)
+		{
+			SendMsgGUICode(VM2GUI_TEST_FAILED_DELTA_U);
+		}
+		U_Prev = U;
+		LOOP;
+	}
+}
+
+/*Liveness properties*/
+/*X tends to XD */ 
+/*If abs(X - XD) > DELTA, after a certain time N abs(XD - XD) < DELTA*/
+
+PROC XLevelTendsToDesired
+{
+	FROM PROC INIT X, XD;
+	STATE Idiling
+	{	
+		TIMEOUT IDILING_DELAY SET NEXT;
+	}
+	STATE LevelControl
+	{
+			IF (ABS(X - XD) > DELTA_X) SET STATE ProgressError;
+			TIMEOUT CONTROLLER_DELAY 
+			{
+				SendMsgGUICode(VM2GUI_TEST_PASSED_X_LEVEL_CONTROL);
+				SendMsgSCMCode(VM2SCM_NEXT_TEST);
+				STOP;
+			}
+	}
+	STATE ProgressError
+	{
+		SendMsgSCMCode(VM2SCM_NEXT_TEST);
+		SendMsgGUICode(VM2GUI_TEST_FAILED_BIG_LEVEL_DIFFERENCE);
+		ERROR;
+	}	
+}
+
+
+
+
+}

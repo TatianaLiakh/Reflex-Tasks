@@ -1,0 +1,23 @@
+ INIT
+InitialSetup
+ READ_ADC
+READ
+ Info
+Idiling
+ ReceiveSCMOutputMsg
+Start
+ XValueRestrictionsInvariant
+Normal
+OwerflowError
+UnderfillError
+ UValueRestrictionsInvariant
+Normal
+HighVoltage
+LowVoltage
+ VoltageDerivativeRestrictionsInvariant
+Setup
+Normal
+ XLevelTendsToDesired
+Idiling
+LevelControl
+ProgressError

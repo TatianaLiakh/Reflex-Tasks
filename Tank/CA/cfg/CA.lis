@@ -1,0 +1,212 @@
+    1          PROGR TankController{
+    2          TACT 50;
+    3          
+    4          
+    5          CONST T_H	0.1;
+    6          CONST X_MIN 0.1;
+    7          CONST X_MAX 0.5;
+    8          CONST H		0.6;
+    9          CONST U_MIN	0.0;	
+   10          CONST U_MAX	15.0;
+   11          CONST DELTA_U 3.0;
+   12          CONST K_P   31.2634; 
+   13          CONST K_I   0.4016;
+   14          
+   15          ENUM 
+   16          {
+   17          	COM2CA_XD 
+   18          };
+   19          ENUM
+   20          {
+   21          		CA2GUI_X_LEVEL,
+   22          		CA2GUI_U_LEVEL
+   23          };
+   24          FUNCTION INT GetNextMsgGUI(VOID);
+   25          FUNCTION INT  GetMsgGUICode(VOID);	
+   26          FUNCTION FLOAT  GetFloatParamGUI(VOID);	
+   27          FUNCTION FLOAT  PortsToFloat(INT , INT , INT , INT );
+   28          FUNCTION INT GetBit(FLOAT, INT );
+   29          FUNCTION INT  SendMsgFloatParamGUI(INT, FLOAT);
+   30          FUNCTION INT SendMsgIntParamGUI(INT, INT);
+   31          
+   32          INPUT X_BIT0_PORT  0 0 8;
+   33          INPUT X_BIT1_PORT  0 1 8;
+   34          INPUT X_BIT2_PORT  0 2 8;
+   35          INPUT X_BIT3_PORT  0 3 8;
+   36          
+   37          
+   38          OUTPUT U_BIT0_PORT  1 0 8;
+   39          OUTPUT U_BIT1_PORT  1 1 8;
+   40          OUTPUT U_BIT2_PORT  1 2 8;
+   41          OUTPUT U_BIT3_PORT  1 3 8;
+   42          
+   43          PROC INIT 
+   44          {
+   45          	FLOAT U FOR ALL;
+   46          	FLOAT X FOR ALL;
+   47          	FLOAT XD FOR ALL;
+   48          	
+   49          	INT X_BIT0 = { X_BIT0_PORT [8]} FOR ALL; 
+   50          	INT X_BIT1 = { X_BIT1_PORT [8]} FOR ALL; 
+   51          	INT X_BIT2 = { X_BIT2_PORT [8]} FOR ALL; 
+   52          	INT X_BIT3 = { X_BIT3_PORT [8]} FOR ALL; 
+   53          	
+   54          	INT U_BIT0 = { U_BIT0_PORT [8]} FOR ALL; 
+   55          	INT U_BIT1 = { U_BIT1_PORT [8]} FOR ALL; 
+   56          	INT U_BIT2 = { U_BIT2_PORT [8]} FOR ALL; 
+   57          	INT U_BIT3 = { U_BIT3_PORT [8]} FOR ALL; 
+   58          	
+   59          	STATE InitialSetup
+   60          	{		
+   61          		START PROC READ_ADC;
+   62          		START PROC WRITE_DAC;
+   63          		START PROC CONTROLLER;
+   64          		START PROC Filter;
+   65          		START PROC ReadInputMsgs;
+   66          		START PROC Info;
+   67          		STOP;
+   68          	}
+   69          }
+   70          
+   71          PROC ReadInputMsgs
+   72          {
+   73          	FROM PROC INIT XD;
+   74          	INT msg_code FOR ALL;
+   75          /* */
+   76           STATE StartReading
+   77           {
+   78              /*  читаем код и параметр события из кольцевого буфера в структуру */
+   79              IF (GetNextMsgGUI()) 
+   80          	{
+   81          		msg_code = GetMsgGUICode();
+   82          		IF (msg_code == COM2CA_XD)
+   83          		{
+   84          			XD = GetFloatParamGUI();
+   85          		}
+   86          	}
+   87          	LOOP;
+   88          }
+   89          }
+   90          
+   91          PROC READ_ADC {
+   92          	FROM PROC INIT X, X_BIT0, X_BIT1, X_BIT2, X_BIT3;
+   93          	STATE READ {
+   94          		X = PortsToFloat(X_BIT0, X_BIT1, X_BIT2, X_BIT3);
+   95          	/*	SendMsgFloatParamGUI(CA2GUI_X_LEVEL, X); */
+   96          		LOOP;
+   97          	}
+   98          }	
+   99          
+  100          /*Tank PI controller*/
+  101          /*X - water level */
+  102          /*XD - desired water level */
+  103          /*U - control signal */
+  104          /*U_MAX - maximum value of the control signal */
+  105          PROC CONTROLLER {
+  106          	FROM PROC INIT X, XD, U;
+  107          	FLOAT Sum LOCAL;
+  108          	FLOAT E LOCAL;
+  109          
+  110          	STATE Init {
+  111          		Sum = 0.0;
+  112          		E = 0.0;
+  113          		SET NEXT;
+  114          	}
+  115          	
+  116          	STATE NormalPIControl {
+  117          		E = XD - X;
+  118          		Sum += E;
+  119          		/*control signal calculation*/
+  120          		/*numerical solution of a differential equation*/ 
+  121          		U = K_P * E + K_I * Sum * T_H;		
+  122          		
+  123          		IF (U > U_MAX)
+  124          		{ U = U_MAX; }
+  125          		IF( U < 0 ) U = 0.0;		
+  126          		IF (X >= X_MAX) { SET STATE Owerflow; }
+  127          		ELSE IF ( X < X_MIN) { SET STATE LowLevel;	}
+  128          	}
+  129          	STATE Owerflow
+  130          	{
+  131          		/* Emergency situation - water level is to hight. Pump stop */  
+  132          		U = 0;  
+  133          		IF (X < X_MAX) SET STATE Init;			
+  134          	}
+  135          	STATE LowLevel
+  136          	{
+  137          	/* Emergency situation - water level is to low. Maximum pump power */  
+  138          		U = U_MAX;
+  139          		IF (X > X_MIN) SET STATE Init;	
+  140          	}
+  141          }
+  142          
+  143          
+  144          PROC Filter
+  145          {
+  146          FROM PROC INIT U;
+  147          	FLOAT U_Prev LOCAL;
+  148          	STATE Init
+  149          	{
+  150          		U_Prev = U_MIN;
+  151          		SET NEXT;
+  152          	}
+  153          	STATE Filtering
+  154          	{
+  155          		IF ( U >= U_Prev) 
+  156          			IF ( U - U_Prev > DELTA_U )
+  157          			{
+  158          				U = U_Prev + DELTA_U;
+  159          			}
+  160          		ELSE 
+  161          			IF ( U_Prev - U > DELTA_U )
+  162          			{
+  163          				U = U_Prev - DELTA_U;
+  164          			}
+  165          		U_Prev = U;	
+  166          		LOOP;
+  167          	}
+  168          }
+  169          
+  170          
+  171          
+  172          PROC WRITE_DAC {
+  173          	FROM PROC INIT U, U_BIT0, U_BIT1, U_BIT2, U_BIT3;
+  174          	STATE WRITE {
+  175          
+  176          		U_BIT0 = GetBit(U, 0);
+  177          		U_BIT1 = GetBit(U, 1);
+  178          		U_BIT2 = GetBit(U, 2);
+  179          		U_BIT3 = GetBit(U, 3);
+  180          	/*	SendMsgIntParamGUI(CA2GUI_U_LEVEL, U_BIT0);  */
+  181          	/*	SendMsgIntParamGUI(CA2GUI_U_LEVEL, U_BIT1);  */
+  182          	/*	SendMsgIntParamGUI(CA2GUI_U_LEVEL, U_BIT2);  */
+  183          	/*	SendMsgIntParamGUI(CA2GUI_U_LEVEL, U_BIT3);  */
+  184          		LOOP;                                        
+  185          	}                                                
+  186          }
+  187           
+  188              
+  189              
+  190              
+  191          
+  192          
+  193          
+  194          PROC Info
+  195          {
+  196          	FROM PROC INIT X, U, U_BIT0, U_BIT1, U_BIT2, U_BIT3;
+  197          	STATE Idiling
+  198          	{
+  199          		TIMEOUT 50 
+  200          		{		
+  201          			/*SendMsgFloatParamGUI(CA2GUI_X_LEVEL, X); */
+  202          			SendMsgFloatParamGUI(CA2GUI_U_LEVEL, U); 
+  203          			SET STATE Idiling;
+  204          		}
+  205          	}
+  206          }
+  207          
+  208          }
+%RCSL-I-SUMMARY, Completed with 0 error(s).
+%RCSL-I-SUMMARY, Completed with 0 warning(s).
+
+ %RCSL-I-SUMMARY, Completed with 0 error(s).

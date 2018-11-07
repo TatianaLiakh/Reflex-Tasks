@@ -1,0 +1,176 @@
+PROGR TankPlant{
+
+CONST X_MIN 0.1;
+CONST X_MAX 0.5;
+CONST Idiling 0;
+CONST RunNextTest 1;
+CONST H 0.6;
+
+/*Набор команд для БУС от БВ*/
+ENUM
+{
+	VM2SCM_START_VERIFICATION,
+	VM2SCM_NEXT_TEST
+};
+ENUM 
+{
+	COM2CA_XD 
+};
+/*Набор команд для БВ*/
+ENUM 
+{
+	SCM2VM_StartTestNewDesiredLevel,
+	SCM2VM_FINISH_VERIFICATION
+};
+
+FUNCTION INT SendMsgToVirtualPlantCode( INT );
+FUNCTION INT SendMsgToVerificationModuleCode( INT );
+FUNCTION INT SendMsgFloatParamToVerificationModule(INT, FLOAT);
+FUNCTION INT SendMsgToControlAlgorythmCode( INT );
+
+FUNCTION INT SendMsgFloatParamToControlAlgorythm(INT, FLOAT);
+
+FUNCTION INT GetNextMsgFromVM( VOID );
+FUNCTION INT GetMsgCodeFromVM( VOID );
+
+
+PROC INIT
+{
+	FLOAT XD FOR ALL;
+	STATE InitialSetup
+	{
+		START PROC ReceiveVMOutputMsg; 
+		STOP;
+	}
+}
+
+PROC ReceiveVMOutputMsg
+{
+	LOG nextTest FOR ALL; 
+	INT VMMsgCode LOCAL;
+	STATE Start
+	{
+		nextTest = Idiling;
+		IF (GetNextMsgFromVM()) 
+		{
+			VMMsgCode = GetMsgCodeFromVM();
+			SWITCH (VMMsgCode)
+			{
+				CASE VM2SCM_START_VERIFICATION:
+					START PROC TestTankControl;
+					BREAK;
+				CASE VM2SCM_NEXT_TEST:
+					nextTest = RunNextTest;
+					BREAK;
+			};
+		}
+		LOOP;
+	}
+} 
+
+PROC TestTankControl
+{
+FROM PROC ReceiveVMOutputMsg nextTest;
+/*#1*/
+	STATE RunTestNormalDesiredLevelControl
+	{
+		START PROC TestNormalDesiredLevelControl;
+		SET NEXT;
+	}
+	STATE IdilingTest1
+	{
+		IF (nextTest == RunNextTest)
+		{
+			STOP PROC TestNormalDesiredLevelControl;
+			SET NEXT;
+		}		
+	}
+/*#2*/
+	STATE RunTestMinimumDesiredLevelControl
+	{
+		START PROC TestMinimumDesiredLevelControl;
+		SET NEXT;
+	}
+	STATE IdilingTest2
+	{
+		IF (nextTest == RunNextTest)
+		{
+			STOP PROC TestMinimumDesiredLevelControl;
+			SET NEXT;
+		}		
+	}
+	
+/*#3*/
+
+	STATE RunTestMaximumDesiredLevelControl
+	{
+		START PROC TestMaximumDesiredLevelControl;
+		SET NEXT;
+	}
+	STATE IdilingTest3
+	{
+		IF (nextTest == RunNextTest)
+		{
+			STOP PROC TestMaximumDesiredLevelControl;
+			SET NEXT;
+		}		
+	}
+
+	STATE Finish
+	{
+		SendMsgToVerificationModuleCode(SCM2VM_FINISH_VERIFICATION);
+		STOP;
+	}
+}
+
+
+
+/*Test case1: set XD = (X_MIN+X_MAX)/2;
+/*Test case2: set XD = 0*/
+/*Test case3: set XD = H*/
+
+PROC TestNormalDesiredLevelControl
+{
+FROM PROC INIT XD;
+	STATE InitialSetup
+	{
+		XD = (X_MIN+X_MAX)/2; 
+		SendMsgFloatParamToControlAlgorythm(COM2CA_XD, XD);
+		SendMsgFloatParamToVerificationModule(SCM2VM_StartTestNewDesiredLevel, XD);
+		SET NEXT;
+	}
+	STATE Idiling
+	{
+		LOOP;
+	}	
+}
+
+PROC TestMinimumDesiredLevelControl
+{
+	STATE InitialSetup
+	{
+		SendMsgFloatParamToControlAlgorythm(COM2CA_XD, 0);
+		SendMsgFloatParamToVerificationModule(SCM2VM_StartTestNewDesiredLevel, 0);
+		SET NEXT;
+	}
+	STATE Idiling
+	{
+		LOOP;
+	}	
+}
+
+PROC TestMaximumDesiredLevelControl
+{
+	STATE InitialSetup
+	{
+		SendMsgFloatParamToControlAlgorythm(COM2CA_XD, H);
+		SendMsgFloatParamToVerificationModule(SCM2VM_StartTestNewDesiredLevel, H);
+		SET NEXT;
+	}
+	STATE Idiling
+	{
+		LOOP;
+	}	
+}
+
+}

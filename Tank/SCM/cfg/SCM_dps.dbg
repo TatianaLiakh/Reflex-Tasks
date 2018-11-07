@@ -1,0 +1,21 @@
+ INIT
+InitialSetup
+ ReceiveVMOutputMsg
+Start
+ TestTankControl
+RunTestNormalDesiredLevelControl
+IdilingTest1
+RunTestMinimumDesiredLevelControl
+IdilingTest2
+RunTestMaximumDesiredLevelControl
+IdilingTest3
+Finish
+ TestNormalDesiredLevelControl
+InitialSetup
+Idiling
+ TestMinimumDesiredLevelControl
+InitialSetup
+Idiling
+ TestMaximumDesiredLevelControl
+InitialSetup
+Idiling

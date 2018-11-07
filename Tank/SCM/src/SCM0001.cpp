@@ -1,0 +1,155 @@
+/* FILE OF PROC-IMAGES OF THE PROJECT */
+#include "SCMext.h" /* Common files for all generated c-files */
+#include "SCMxvar.h"  /* Var-images */
+
+void P0 (void) /* œ–Œ÷≈——: INIT */
+{
+	switch (Check_State(0)) {
+
+		case 0:    /*  P0S0() - —Œ—“ŒﬂÕ»≈: InitialSetup */
+
+		Set_Start(1); 
+		Set_Stop(0);
+			break;
+		default:
+			break;
+	}
+}
+
+void P1 (void) /* œ–Œ÷≈——: ReceiveVMOutputMsg */
+{
+	switch (Check_State(1)) {
+
+		case 0:    /*  P1S0() - —Œ—“ŒﬂÕ»≈: Start */
+
+		P1V0 = C_2;
+		if (GetNextMsgFromVM()) 
+		{
+			P1V1 = GetMsgCodeFromVM();
+			switch (P1V1)
+			{
+				case C_5:
+					Set_Start(2);
+					break;
+				case C_6:
+					P1V0 = C_3;
+					break;
+			};
+		}
+		
+			break;
+		default:
+			break;
+	}
+}
+
+void P2 (void) /* œ–Œ÷≈——: TestTankControl */
+{
+	switch (Check_State(2)) {
+
+		case 0:    /*  P2S0() - —Œ—“ŒﬂÕ»≈: RunTestNormalDesiredLevelControl */
+
+		Set_Start(3);
+		Set_State(2, 1);
+			break;
+		case 1:    /*  P2S1() - —Œ—“ŒﬂÕ»≈: IdilingTest1 */
+
+		if (P1V0 == C_3)
+		{
+			Set_Stop(3);
+			Set_State(2, 2);
+		}
+			break;
+		case 2:    /*  P2S2() - —Œ—“ŒﬂÕ»≈: RunTestMinimumDesiredLevelControl */
+
+		Set_Start(4);
+		Set_State(2, 3);
+			break;
+		case 3:    /*  P2S3() - —Œ—“ŒﬂÕ»≈: IdilingTest2 */
+
+		if (P1V0 == C_3)
+		{
+			Set_Stop(4);
+			Set_State(2, 4);
+		}
+			break;
+		case 4:    /*  P2S4() - —Œ—“ŒﬂÕ»≈: RunTestMaximumDesiredLevelControl */
+
+		Set_Start(5);
+		Set_State(2, 5);
+			break;
+		case 5:    /*  P2S5() - —Œ—“ŒﬂÕ»≈: IdilingTest3 */
+
+		if (P1V0 == C_3)
+		{
+			Set_Stop(5);
+			Set_State(2, 6);
+		}
+			break;
+		case 6:    /*  P2S6() - —Œ—“ŒﬂÕ»≈: Finish */
+
+		SendMsgToVerificationModuleCode(C_9);
+		Set_Stop(2);
+			break;
+		default:
+			break;
+	}
+}
+
+void P3 (void) /* œ–Œ÷≈——: TestNormalDesiredLevelControl */
+{
+	switch (Check_State(3)) {
+
+		case 0:    /*  P3S0() - —Œ—“ŒﬂÕ»≈: InitialSetup */
+
+		P0V0 = (C_0+C_1)/2; 
+		SendMsgFloatParamToControlAlgorythm(C_7, P0V0);
+		SendMsgFloatParamToVerificationModule(C_8, P0V0);
+		Set_State(3, 1);
+			break;
+		case 1:    /*  P3S1() - —Œ—“ŒﬂÕ»≈: Idiling */
+
+		
+			break;
+		default:
+			break;
+	}
+}
+
+void P4 (void) /* œ–Œ÷≈——: TestMinimumDesiredLevelControl */
+{
+	switch (Check_State(4)) {
+
+		case 0:    /*  P4S0() - —Œ—“ŒﬂÕ»≈: InitialSetup */
+
+		SendMsgFloatParamToControlAlgorythm(C_7, 0);
+		SendMsgFloatParamToVerificationModule(C_8, 0);
+		Set_State(4, 1);
+			break;
+		case 1:    /*  P4S1() - —Œ—“ŒﬂÕ»≈: Idiling */
+
+		
+			break;
+		default:
+			break;
+	}
+}
+
+void P5 (void) /* œ–Œ÷≈——: TestMaximumDesiredLevelControl */
+{
+	switch (Check_State(5)) {
+
+		case 0:    /*  P5S0() - —Œ—“ŒﬂÕ»≈: InitialSetup */
+
+		SendMsgFloatParamToControlAlgorythm(C_7, C_4);
+		SendMsgFloatParamToVerificationModule(C_8, C_4);
+		Set_State(5, 1);
+			break;
+		case 1:    /*  P5S1() - —Œ—“ŒﬂÕ»≈: Idiling */
+
+		
+			break;
+		default:
+			break;
+	}
+}

@@ -1,0 +1,4 @@
+INPUT INT X_BIT0 /*name*/ 0 /*owner input port*/ 0 /*start bit*/
+INPUT INT X_BIT1 /*name*/ 0 /*owner input port*/ 0 /*start bit*/
+INPUT INT X_BIT2 /*name*/ 0 /*owner input port*/ 0 /*start bit*/
+INPUT INT X_BIT3 /*name*/ 0 /*owner input port*/ 0 /*start bit*/

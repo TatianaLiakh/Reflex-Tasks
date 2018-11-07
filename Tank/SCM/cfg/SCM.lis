@@ -1,0 +1,180 @@
+    1          PROGR TankPlant{
+    2          
+    3          CONST X_MIN 0.1;
+    4          CONST X_MAX 0.5;
+    5          CONST Idiling 0;
+    6          CONST RunNextTest 1;
+    7          CONST H 0.6;
+    8          
+    9          /*Набор команд для БУС от БВ*/
+   10          ENUM
+   11          {
+   12          	VM2SCM_START_VERIFICATION,
+   13          	VM2SCM_NEXT_TEST
+   14          };
+   15          ENUM 
+   16          {
+   17          	COM2CA_XD 
+   18          };
+   19          /*Набор команд для БВ*/
+   20          ENUM 
+   21          {
+   22          	SCM2VM_StartTestNewDesiredLevel,
+   23          	SCM2VM_FINISH_VERIFICATION
+   24          };
+   25          
+   26          FUNCTION INT SendMsgToVirtualPlantCode( INT );
+   27          FUNCTION INT SendMsgToVerificationModuleCode( INT );
+   28          FUNCTION INT SendMsgFloatParamToVerificationModule(INT, FLOAT);
+   29          FUNCTION INT SendMsgToControlAlgorythmCode( INT );
+   30          
+   31          FUNCTION INT SendMsgFloatParamToControlAlgorythm(INT, FLOAT);
+   32          
+   33          FUNCTION INT GetNextMsgFromVM( VOID );
+   34          FUNCTION INT GetMsgCodeFromVM( VOID );
+   35          
+   36          
+   37          PROC INIT
+   38          {
+   39          	FLOAT XD FOR ALL;
+   40          	STATE InitialSetup
+   41          	{
+   42          		START PROC ReceiveVMOutputMsg; 
+   43          		STOP;
+   44          	}
+   45          }
+   46          
+   47          PROC ReceiveVMOutputMsg
+   48          {
+   49          	LOG nextTest FOR ALL; 
+   50          	INT VMMsgCode LOCAL;
+   51          	STATE Start
+   52          	{
+   53          		nextTest = Idiling;
+   54          		IF (GetNextMsgFromVM()) 
+   55          		{
+   56          			VMMsgCode = GetMsgCodeFromVM();
+   57          			SWITCH (VMMsgCode)
+   58          			{
+   59          				CASE VM2SCM_START_VERIFICATION:
+   60          					START PROC TestTankControl;
+   61          					BREAK;
+   62          				CASE VM2SCM_NEXT_TEST:
+   63          					nextTest = RunNextTest;
+   64          					BREAK;
+   65          			};
+   66          		}
+   67          		LOOP;
+   68          	}
+   69          } 
+   70          
+   71          PROC TestTankControl
+   72          {
+   73          FROM PROC ReceiveVMOutputMsg nextTest;
+   74          /*#1*/
+   75          	STATE RunTestNormalDesiredLevelControl
+   76          	{
+   77          		START PROC TestNormalDesiredLevelControl;
+   78          		SET NEXT;
+   79          	}
+   80          	STATE IdilingTest1
+   81          	{
+   82          		IF (nextTest == RunNextTest)
+   83          		{
+   84          			STOP PROC TestNormalDesiredLevelControl;
+   85          			SET NEXT;
+   86          		}		
+   87          	}
+   88          /*#2*/
+   89          	STATE RunTestMinimumDesiredLevelControl
+   90          	{
+   91          		START PROC TestMinimumDesiredLevelControl;
+   92          		SET NEXT;
+   93          	}
+   94          	STATE IdilingTest2
+   95          	{
+   96          		IF (nextTest == RunNextTest)
+   97          		{
+   98          			STOP PROC TestMinimumDesiredLevelControl;
+   99          			SET NEXT;
+  100          		}		
+  101          	}
+  102          	
+  103          /*#3*/
+  104          
+  105          	STATE RunTestMaximumDesiredLevelControl
+  106          	{
+  107          		START PROC TestMaximumDesiredLevelControl;
+  108          		SET NEXT;
+  109          	}
+  110          	STATE IdilingTest3
+  111          	{
+  112          		IF (nextTest == RunNextTest)
+  113          		{
+  114          			STOP PROC TestMaximumDesiredLevelControl;
+  115          			SET NEXT;
+  116          		}		
+  117          	}
+  118          
+  119          	STATE Finish
+  120          	{
+  121          		SendMsgToVerificationModuleCode(SCM2VM_FINISH_VERIFICATION);
+  122          		STOP;
+  123          	}
+  124          }
+  125          
+  126          
+  127          
+  128          /*Test case1: set XD = (X_MIN+X_MAX)/2;
+  129          /*Test case2: set XD = 0*/
+  130          /*Test case3: set XD = H*/
+  131          
+  132          PROC TestNormalDesiredLevelControl
+  133          {
+  134          FROM PROC INIT XD;
+  135          	STATE InitialSetup
+  136          	{
+  137          		XD = (X_MIN+X_MAX)/2; 
+  138          		SendMsgFloatParamToControlAlgorythm(COM2CA_XD, XD);
+  139          		SendMsgFloatParamToVerificationModule(SCM2VM_StartTestNewDesiredLevel, XD);
+  140          		SET NEXT;
+  141          	}
+  142          	STATE Idiling
+  143          	{
+  144          		LOOP;
+  145          	}	
+  146          }
+  147          
+  148          PROC TestMinimumDesiredLevelControl
+  149          {
+  150          	STATE InitialSetup
+  151          	{
+  152          		SendMsgFloatParamToControlAlgorythm(COM2CA_XD, 0);
+  153          		SendMsgFloatParamToVerificationModule(SCM2VM_StartTestNewDesiredLevel, 0);
+  154          		SET NEXT;
+  155          	}
+  156          	STATE Idiling
+  157          	{
+  158          		LOOP;
+  159          	}	
+  160          }
+  161          
+  162          PROC TestMaximumDesiredLevelControl
+  163          {
+  164          	STATE InitialSetup
+  165          	{
+  166          		SendMsgFloatParamToControlAlgorythm(COM2CA_XD, H);
+  167          		SendMsgFloatParamToVerificationModule(SCM2VM_StartTestNewDesiredLevel, H);
+  168          		SET NEXT;
+  169          	}
+  170          	STATE Idiling
+  171          	{
+  172          		LOOP;
+  173          	}	
+  174          }
+  175          
+  176          }
+%RCSL-I-SUMMARY, Completed with 0 error(s).
+%RCSL-I-SUMMARY, Completed with 0 warning(s).
+
+ %RCSL-I-SUMMARY, Completed with 0 error(s).

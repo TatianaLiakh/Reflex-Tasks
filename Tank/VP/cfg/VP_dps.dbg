@@ -1,0 +1,14 @@
+ INIT
+InitialSetup
+ ReadInputMsgs
+StartReading
+ READ_ADC
+READ
+ TANK
+Normal
+Owerflow
+Underfill
+ WRITE_DAC
+WRITE
+ Info
+Idiling

@@ -1,0 +1,259 @@
+    1          PROGR VM
+    2          {
+    3          
+    4          CONST H		0.6;
+    5          CONST U_MIN	0.0;	
+    6          CONST U_MAX	15.0;
+    7          CONST DELTA_U 10.0;
+    8          CONST DELTA_X 0.1;
+    9          
+   10          CONST IDILING_DELAY 100;
+   11          CONST CONTROLLER_DELAY 200;
+   12          
+   13          /*Набор команд для БУС от БВ*/
+   14          ENUM
+   15          {
+   16          	VM2SCM_START_VERIFICATION,
+   17          	VM2SCM_NEXT_TEST
+   18          };
+   19          
+   20          ENUM
+   21          {
+   22          		CA2GUI_X_LEVEL,
+   23          		CA2GUI_U_LEVEL
+   24          };
+   25          
+   26          
+   27          /*Набор команд для БВ*/
+   28          ENUM 
+   29          {
+   30          	SCM2VM_StartTestNewDesiredLevel,
+   31          	SCM2VM_FINISH_VERIFICATION
+   32          };
+   33          
+   34          /*Набор Команд для GUI */
+   35          ENUM
+   36          {
+   37          	VM2GUI_TEST_FAILED_U_MAX,
+   38          	VM2GUI_TEST_FAILED_U_MIN, 
+   39          	VM2GUI_TEST_FAILED_OWERFLOW,
+   40          	VM2GUI_TEST_FAILED_UNDERFILL,	
+   41          	VM2GUI_TEST_FAILED_DELTA_U,
+   42          	VM2GUI_TEST_FAILED_BIG_LEVEL_DIFFERENCE,
+   43          	VM2GUI_TEST_PASSED_X_LEVEL_CONTROL,	
+   44          	VM2GUI_X_LEVEL,
+   45          	VM2GUI_END_VERIFICATION
+   46          };
+   47          
+   48          FUNCTION INT GetNextMsgFromSCM(VOID);
+   49          FUNCTION INT GetMsgCodeFromSCM(VOID);  
+   50          FUNCTION FLOAT GetFloatParamFromSCM(VOID);
+   51          FUNCTION INT  SendMsgGUICode(INT);
+   52          FUNCTION INT SendMsgFloatParamGUI(INT, FLOAT);
+   53          
+   54          /*SCM  Output msg queue*/
+   55          FUNCTION INT SendMsgSCMCode( INT );
+   56          
+   57          
+   58          FUNCTION FLOAT ABS(FLOAT); 
+   59          FUNCTION FLOAT  PortsToFloat(INT , INT , INT , INT );
+   60          
+   61          INPUT X_BIT0_PORT  0 0 8;
+   62          INPUT X_BIT1_PORT  0 1 8;
+   63          INPUT X_BIT2_PORT  0 2 8;
+   64          INPUT X_BIT3_PORT  0 3 8;
+   65          INPUT U_BIT0_PORT  0 4 8;
+   66          INPUT U_BIT1_PORT  0 5 8;
+   67          INPUT U_BIT2_PORT  0 6 8;
+   68          INPUT U_BIT3_PORT  0 7 8;
+   69          
+   70          
+   71          PROC INIT
+   72          {
+   73          	INT X_BIT0 = { X_BIT0_PORT [8]} FOR ALL; 
+   74          	INT X_BIT1 = { X_BIT1_PORT [8]} FOR ALL; 
+   75          	INT X_BIT2 = { X_BIT2_PORT [8]} FOR ALL; 
+   76          	INT X_BIT3 = { X_BIT3_PORT [8]} FOR ALL; 
+   77          	
+   78          	INT U_BIT0 = { U_BIT0_PORT [8]} FOR ALL; 
+   79          	INT U_BIT1 = { U_BIT1_PORT [8]} FOR ALL; 
+   80          	INT U_BIT2 = { U_BIT2_PORT [8]} FOR ALL; 
+   81          	INT U_BIT3 = { U_BIT3_PORT [8]} FOR ALL; 
+   82          	FLOAT XD FOR ALL;
+   83          	FLOAT X FOR ALL;
+   84          	FLOAT U FOR ALL;
+   85          
+   86          	STATE InitialSetup
+   87          	{
+   88          		SendMsgSCMCode(VM2SCM_START_VERIFICATION);
+   89          		START PROC READ_ADC;
+   90          		START PROC ReceiveSCMOutputMsg;
+   91          		START PROC XValueRestrictionsInvariant;
+   92          		START PROC UValueRestrictionsInvariant;
+   93          		START PROC VoltageDerivativeRestrictionsInvariant;
+   94          		/*START PROC  XLevelTendsToDesired; */
+   95          		START PROC Info;
+   96          		STOP;		
+   97          	}
+   98          }
+   99          
+  100          PROC READ_ADC {
+  101          	FROM PROC INIT X, X_BIT0, X_BIT1, X_BIT2, X_BIT3, U, U_BIT0, U_BIT1, U_BIT2, U_BIT3;
+  102          	STATE READ {
+  103          		X = PortsToFloat(X_BIT0, X_BIT1, X_BIT2, X_BIT3);
+  104          		U = PortsToFloat(U_BIT0, U_BIT1, U_BIT2, U_BIT3);
+  105          		LOOP;
+  106          	}
+  107          }	
+  108          PROC Info
+  109          {
+  110          	FROM PROC INIT X, XD;
+  111          	STATE Idiling
+  112          	{
+  113          		TIMEOUT 50 
+  114          		{
+  115          		/*	SendMsgFloatParamGUI(VM2GUI_X_LEVEL, X); */
+  116          			SET STATE Idiling;
+  117          		}
+  118          	}
+  119          }
+  120          
+  121          PROC ReceiveSCMOutputMsg
+  122          {  
+  123          FROM PROC INIT XD;
+  124          INT SCMsgCode LOCAL;
+  125           STATE Start{
+  126              IF (GetNextMsgFromSCM()) 
+  127          	{
+  128          		SCMsgCode = GetMsgCodeFromSCM();
+  129          		SWITCH (SCMsgCode) 
+  130          		{
+  131          			CASE SCM2VM_StartTestNewDesiredLevel:
+  132          				XD = GetFloatParamFromSCM();
+  133          				START PROC XLevelTendsToDesired;
+  134          				BREAK;
+  135          			CASE SCM2VM_FINISH_VERIFICATION:
+  136          				SendMsgGUICode(VM2GUI_END_VERIFICATION);
+  137          				STOP;
+  138          				BREAK;
+  139          		}
+  140          	}
+  141          	LOOP;
+  142          	}
+  143          } 
+  144          
+  145          /*Invariant ALWAYS X <= H */
+  146          /*Invariant ALWAYS X >= 0 */
+  147          PROC XValueRestrictionsInvariant
+  148          {
+  149          FROM PROC INIT X;
+  150          	STATE Normal 
+  151          	{
+  152          		IF ( X > H)
+  153          		{
+  154          			SendMsgGUICode(VM2GUI_TEST_FAILED_OWERFLOW);
+  155          			SET STATE OwerflowError;
+  156          		}
+  157          		ELSE IF (X < 0)
+  158          		{			
+  159          			SendMsgGUICode(VM2GUI_TEST_FAILED_UNDERFILL);
+  160          			SET STATE UnderfillError;
+  161          		}
+  162          	}
+  163          	STATE OwerflowError
+  164          	{
+  165          		IF (X <= H) SET STATE Normal;
+  166          	}
+  167          	STATE UnderfillError
+  168          	{
+  169          		IF (X >= 0) SET STATE Normal; 
+  170          	}
+  171          }
+  172          
+  173          /*Invariant ALWAYS U <= U_MAX */
+  174          /*Invariant ALWAYS U >= 0 */
+  175          PROC UValueRestrictionsInvariant
+  176          {
+  177          FROM PROC INIT U;
+  178          
+  179          	STATE Normal 
+  180          	{
+  181          		IF ( U > U_MAX)
+  182          		{
+  183          			SendMsgGUICode(VM2GUI_TEST_FAILED_U_MAX);
+  184          			SET STATE HighVoltage;
+  185          		}
+  186          		ELSE IF (U < 0)
+  187          		{			
+  188          			SendMsgGUICode(VM2GUI_TEST_FAILED_U_MIN);
+  189          			SET STATE LowVoltage;
+  190          		}
+  191          	}
+  192          	STATE HighVoltage
+  193          	{
+  194          		IF ( U <= U_MAX) SET STATE Normal;
+  195          	}
+  196          	STATE LowVoltage
+  197          	{
+  198          		IF ( U >= 0) SET STATE Normal;
+  199          	}
+  200          }
+  201          
+  202          /*The control signal always changes smoothly*/
+  203          PROC VoltageDerivativeRestrictionsInvariant
+  204          {
+  205          	FROM PROC INIT U;
+  206          	FLOAT U_Prev LOCAL;
+  207          	STATE Setup
+  208          	{
+  209          		U_Prev = U; 
+  210          		SET NEXT;
+  211          	}
+  212          	STATE Normal
+  213          	{
+  214          		IF ( ABS(U_Prev - U) >= DELTA_U)
+  215          		{
+  216          			SendMsgGUICode(VM2GUI_TEST_FAILED_DELTA_U);
+  217          		}
+  218          		U_Prev = U;
+  219          		LOOP;
+  220          	}
+  221          }
+  222          
+  223          /*Liveness properties*/
+  224          /*X tends to XD */ 
+  225          /*If abs(X - XD) > DELTA, after a certain time N abs(XD - XD) < DELTA*/
+  226          
+  227          PROC XLevelTendsToDesired
+  228          {
+  229          	FROM PROC INIT X, XD;
+  230          	STATE Idiling
+  231          	{	
+  232          		TIMEOUT IDILING_DELAY SET NEXT;
+  233          	}
+  234          	STATE LevelControl
+  235          	{
+  236          			IF (ABS(X - XD) > DELTA_X) SET STATE ProgressError;
+  237          			TIMEOUT CONTROLLER_DELAY 
+  238          			{
+  239          				SendMsgGUICode(VM2GUI_TEST_PASSED_X_LEVEL_CONTROL);
+  240          				SendMsgSCMCode(VM2SCM_NEXT_TEST);
+  241          				STOP;
+  242          			}
+  243          	}
+  244          	STATE ProgressError
+  245          	{
+  246          		SendMsgSCMCode(VM2SCM_NEXT_TEST);
+  247          		SendMsgGUICode(VM2GUI_TEST_FAILED_BIG_LEVEL_DIFFERENCE);
+  248          		ERROR;
+  249          	}	
+  250          }
+  251          
+  252          
+  253          
+  254          
+  255          }
+%RCSL-I-SUMMARY, Completed with 0 error(s).
+%RCSL-I-SUMMARY, Completed with 0 warning(s).
+
+ %RCSL-I-SUMMARY, Completed with 0 error(s).
