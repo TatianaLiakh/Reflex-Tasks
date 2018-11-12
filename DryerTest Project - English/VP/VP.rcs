@@ -65,19 +65,19 @@ PROC InsertHands
 	STATE Choice
 	{
 		coin = Random();
-		IF (coin <= 80) IN STATE SensorOn;
-		ELSE IN STATE SensorOff;
+		IF (coin <= 80) SET STATE SensorOn;
+		ELSE SET STATE SensorOff;
 	
 	}
 	STATE SensorOn
 	{
 		S_HANDS_UNDER_DRYER = ON; 
-		TIMEOUT SENSOR_DELAY IN STATE Choice;
+		TIMEOUT SENSOR_DELAY SET STATE Choice;
 	}
 	STATE SensorOff
 	{
 		S_HANDS_UNDER_DRYER = OFF; 
-		TIMEOUT SENSOR_DELAY IN STATE Choice;
+		TIMEOUT SENSOR_DELAY SET STATE Choice;
 	}
 }
 

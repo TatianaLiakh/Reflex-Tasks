@@ -52,8 +52,8 @@
    52          
    53          PROC Init
    54          {
-   55          	LOG S_HANDS_UNDER_DRYER    = {LOG_CA_INPUT_PORT[1]} FOR ALL;
-   56          	LOG C_TURN_ON_DRYER = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
+   55          	LOG I_HANDS_UNDER_DRYER    = {LOG_CA_INPUT_PORT[1]} FOR ALL;
+   56          	LOG O_HANDS_UNDER_DRYER = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
    57          	
    58          	STATE Start
    59          	{
@@ -95,27 +95,27 @@
    95          /*Проверка требования: Если руки появились под сушилкой, то в будующем сушилка обязательно включится*/
    96          PROC DryerNormalTurnOnControl
    97          {
-   98          FROM PROC Init S_HANDS_UNDER_DRYER, C_TURN_ON_DRYER;
+   98          FROM PROC Init I_HANDS_UNDER_DRYER, O_HANDS_UNDER_DRYER;
    99          
   100          	STATE WaitingOfHands
   101          	{
-  102          		IF(S_HANDS_UNDER_DRYER == ON) 
-  103          			IN STATE WaitingOnLaunch;
-  104          		TIMEOUT ObjectDelay IN STATE DryerError;
+  102          		IF(I_HANDS_UNDER_DRYER == ON) 
+  103          			SET STATE WaitingOnLaunch;
+  104          		TIMEOUT ObjectDelay SET STATE DryerError;
   105          	}
   106          	STATE WaitingOnLaunch
   107          	{
-  108          		IF (C_TURN_ON_DRYER == ON)
+  108          		IF (O_HANDS_UNDER_DRYER == ON)
   109          		{
   110          			SendMsgGUICode(VM2GUI_TEST_PASSED_DRYER_NORMAL_TURN_ON);
-  111          			IN STATE StopTest;			
+  111          			SET STATE StopTest;			
   112          		}
-  113          		TIMEOUT AlgorithmDelay IN STATE DryerError;
+  113          		TIMEOUT AlgorithmDelay SET STATE DryerError;
   114          	}
   115          	STATE DryerError
   116          	{
   117          			SendMsgGUICode(VM2GUI_TEST_FAILED_DRYER_NORMAL_TURN_ON);
-  118          			IN STATE StopTest;	
+  118          			SET STATE StopTest;	
   119          	}
   120          	STATE StopTest
   121          	{
@@ -128,26 +128,26 @@
   128          /*Проверка требования: Если рук нет под сушилкой, то в будующем сушилка обязательно выключится*/
   129          PROC DryerNormalTurnOffControl
   130          {
-  131          FROM PROC Init S_HANDS_UNDER_DRYER, C_TURN_ON_DRYER;
+  131          FROM PROC Init I_HANDS_UNDER_DRYER, O_HANDS_UNDER_DRYER;
   132          
   133          	STATE WaitingOfHands
   134          	{
-  135          		IF(S_HANDS_UNDER_DRYER == OFF) IN STATE WaitingOff;
-  136          		TIMEOUT ObjectDelay IN STATE DryerError;
+  135          		IF(I_HANDS_UNDER_DRYER == OFF) SET STATE WaitingOff;
+  136          		TIMEOUT ObjectDelay SET STATE DryerError;
   137          	}
   138          	STATE WaitingOff
   139          	{
-  140          		IF (C_TURN_ON_DRYER == OFF)
+  140          		IF (O_HANDS_UNDER_DRYER == OFF)
   141          		{
   142          			SendMsgGUICode(VM2GUI_TEST_PASSED_DRYER_NORMAL_TURN_OFF);
-  143          			IN STATE StopTest;			
+  143          			SET STATE StopTest;			
   144          		}
-  145          		TIMEOUT AlgorithmDelay IN STATE DryerError;
+  145          		TIMEOUT AlgorithmDelay SET STATE DryerError;
   146          	}
   147          	STATE DryerError
   148          	{
   149          			SendMsgGUICode(VM2GUI_TEST_FAILED_DRYER_NORMAL_TURN_OFF);
-  150          			IN STATE StopTest;	
+  150          			SET STATE StopTest;	
   151          	}
   152          	STATE StopTest
   153          	{
@@ -161,20 +161,20 @@
   161          
   162          PROC DryerStateControl
   163          {
-  164          	FROM PROC Init C_TURN_ON_DRYER;
+  164          	FROM PROC Init O_HANDS_UNDER_DRYER;
   165          	INT PrevDryerState LOCAL;
   166          	LOG isStateChanged FOR ALL;
   167          	STATE Init
   168          	{
-  169          		PrevDryerState = C_TURN_ON_DRYER;
-  170          		IN STATE UpdateState;
+  169          		PrevDryerState = O_HANDS_UNDER_DRYER;
+  170          		SET STATE UpdateState;
   171          	}
   172          	STATE UpdateState
   173          	{
   174          		isStateChanged = OFF; 
-  175          		IF (PrevDryerState != C_TURN_ON_DRYER)
+  175          		IF (PrevDryerState != O_HANDS_UNDER_DRYER)
   176          		{
-  177          			PrevDryerState = C_TURN_ON_DRYER;
+  177          			PrevDryerState = O_HANDS_UNDER_DRYER;
   178          			isStateChanged = ON;
   179          		}
   180          		LOOP;
@@ -188,7 +188,7 @@
   188          	{
   189          		IF (isStateChanged == ON) 
   190          		{			
-  191          			IN STATE ControlFreqency;
+  191          			SET STATE ControlFreqency;
   192          		}
   193          	}
   194          	STATE ControlFreqency
@@ -196,9 +196,9 @@
   196          		IF (isStateChanged == ON) 
   197          		{
   198          			SendMsgGUICode(VM2GUI_TEST_FAILED_DRYER_ACTIVATION_FREQUENCY_ERROR);
-  199          			IN STATE Normal;
+  199          			SET STATE Normal;
   200          		}
-  201          		TIMEOUT AlgorithmReaction IN STATE Normal;
+  201          		TIMEOUT AlgorithmReaction SET STATE Normal;
   202          	}
   203          }
   204          }

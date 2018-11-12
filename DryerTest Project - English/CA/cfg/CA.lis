@@ -17,16 +17,16 @@
    17          	IF (S_HANDS_UNDER_DRYER == ON) 
    18          	{
    19          		C_TURN_ON_DRYER = ON;		
-   20          		IN NEXT;						
+   20          		SET NEXT;						
    21          	}
    22          	ELSE C_TURN_ON_DRYER = OFF; 		
    23           }
    24           STATE Drying
    25           {  
-   26          	IF (S_HANDS_UNDER_DRYER == ON) IN STATE Drying;
+   26          	IF (S_HANDS_UNDER_DRYER == ON) SET STATE Drying;
    27          	TIMEOUT 5 
    28          	 {	
-   29          		IF (1) IN STATE Functioning;
+   29          		IF (1) SET STATE Functioning;
    30          		C_TURN_ON_DRYER = ON;	
    31          	 }
    32           }

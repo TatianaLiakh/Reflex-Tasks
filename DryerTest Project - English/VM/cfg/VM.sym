@@ -56,13 +56,13 @@
       ÈÌ‗ ÑÎÑÒÎ‗ÍÈ‗: ControlFreqency,    ËÎÃ.ÈÌ‗: P5S1
 /*======================= ÏÅÐÅÌÅÍÍÛÅ ============================*/
 
- ÈÌ‗ ÏÅÐÅÌÅÍÍÎÉ: S_HANDS_UNDER_DRYER,	ËÎÃ.ÈÌ‗: P0V0
+ ÈÌ‗ ÏÅÐÅÌÅÍÍÎÉ: I_HANDS_UNDER_DRYER,	ËÎÃ.ÈÌ‗: P0V0
  ÒÈÏ: Logical
  ÒÀÁËÈÖÀ ÔÈÇ. ÎÁÐÀÇÀ:
 	Cממעגועסעגףוע בטעף 0 ןמנעא LOG_CA_INPUT_PORT
  Äמסעףןםא טח גסוץ ןנמצוססמג.
 
- ÈÌ‗ ÏÅÐÅÌÅÍÍÎÉ: C_TURN_ON_DRYER,	ËÎÃ.ÈÌ‗: P0V1
+ ÈÌ‗ ÏÅÐÅÌÅÍÍÎÉ: O_HANDS_UNDER_DRYER,	ËÎÃ.ÈÌ‗: P0V1
  ÒÈÏ: Logical
  ÒÀÁËÈÖÀ ÔÈÇ. ÎÁÐÀÇÀ:
 	Cממעגועסעגףוע בטעף 0 ןמנעא LOG_CA_OUTPUT_PORT

@@ -17,16 +17,16 @@ PROC Init
 	IF (S_HANDS_UNDER_DRYER == ON) 
 	{
 		C_TURN_ON_DRYER = ON;		
-		IN NEXT;						
+		SET NEXT;						
 	}
 	ELSE C_TURN_ON_DRYER = OFF; 		
  }
  STATE Drying
  {  
-	IF (S_HANDS_UNDER_DRYER == ON) IN STATE Drying;
+	IF (S_HANDS_UNDER_DRYER == ON) SET STATE Drying;
 	TIMEOUT 5 
 	 {	
-		IF (1) IN STATE Functioning;
+		IF (1) SET STATE Functioning;
 		C_TURN_ON_DRYER = ON;	
 	 }
  }

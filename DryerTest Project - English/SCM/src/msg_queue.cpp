@@ -70,7 +70,7 @@ int PutTailMsgQueueI(MsgQueue* queue, int code, int param)
 	queue->Arr[queue->tail_item].code = code;
 	queue->Arr[queue->tail_item].param.pr_int = param;
 	//    queue->Arr[queue->tail_item].param.pr_int[1] = 0;
-	queue->Arr[queue->tail_item].type - INT_TYPE;
+	queue->Arr[queue->tail_item].type = INT_TYPE;
 
 	queue->tail_item++;
 

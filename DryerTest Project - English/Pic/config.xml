@@ -5,7 +5,7 @@
 	  <type>SquareLED</type>
 	  <portType>in</portType> 
 	  <portNum> 0 </portNum> 
-	  <title> S_HANDS_UNDER_DRYER </title>
+	  <title> I_HANDS_UNDER_DRYER </title>
 	  <colorTrue> FFFFFF  </colorTrue>
 	  <colorFalse> 0 </colorFalse>
 	  <bitNum>0</bitNum>
@@ -16,7 +16,7 @@
 	  <type>RoundLED</type>
 	  <portType>out</portType> 
 	  <portNum> 0 </portNum> 
-	  <title> C_TURN_ON_DRYER </title>
+	  <title> O_TURN_ON_DRYER </title>
 	  <colorTrue> FFFFFF </colorTrue>
 	  <colorFalse> 0 </colorFalse>
 	  <bitNum>0</bitNum>

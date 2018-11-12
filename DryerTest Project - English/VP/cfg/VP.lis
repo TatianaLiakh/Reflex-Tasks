@@ -65,19 +65,19 @@
    65          	STATE Choice
    66          	{
    67          		coin = Random();
-   68          		IF (coin <= 80) IN STATE SensorOn;
-   69          		ELSE IN STATE SensorOff;
+   68          		IF (coin <= 80) SET STATE SensorOn;
+   69          		ELSE SET STATE SensorOff;
    70          	
    71          	}
    72          	STATE SensorOn
    73          	{
    74          		S_HANDS_UNDER_DRYER = ON; 
-   75          		TIMEOUT SENSOR_DELAY IN STATE Choice;
+   75          		TIMEOUT SENSOR_DELAY SET STATE Choice;
    76          	}
    77          	STATE SensorOff
    78          	{
    79          		S_HANDS_UNDER_DRYER = OFF; 
-   80          		TIMEOUT SENSOR_DELAY IN STATE Choice;
+   80          		TIMEOUT SENSOR_DELAY SET STATE Choice;
    81          	}
    82          }
    83          

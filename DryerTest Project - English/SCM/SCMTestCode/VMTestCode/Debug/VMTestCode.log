@@ -1,0 +1,18 @@
+﻿C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(368,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
+C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(392,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (VMTestCode.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  SCMusr1.cpp
+  SCMoutp.cpp
+  SCMmain.cpp
+  SCMinp.cpp
+  SCM0001.cpp
+  r_lib.cpp
+  r_io.cpp
+  msg_queue.cpp
+  lib.cpp
+  custom_dll_inrefacecpp.cpp
+  Создание кода...
+     Создается библиотека D:\Liakh Tanya\Dissertation\Complex\DLL-s\MakeFullImmitationStepDLL\Release\VB.lib и объект D:\Liakh Tanya\Dissertation\Complex\DLL-s\MakeFullImmitationStepDLL\Release\VB.exp
+VB.exp : warning LNK4070: директива /OUT:SCM.dll в .EXP отличается от имени выходного файла "D:\Liakh Tanya\Dissertation\Complex\DLL-s\MakeFullImmitationStepDLL\Release\VB.exe"; директива игнорируется
+D:\Liakh Tanya\Dissertation\Complex\DLL-s\MakeFullImmitationStepDLL\Release\VB.exe : warning LNK4086: точка входа "_mainCRTStartup" не является __stdcall с аргументами из 12 байт; образ нельзя запустить
+  VMTestCode.vcxproj -> D:\Liakh Tanya\Dissertation\Complex\DLL-s\MakeFullImmitationStepDLL\Release\VB.exe
+  VMTestCode.vcxproj -> D:\Liakh Tanya\Dissertation\Complex\DLL-s\MakeFullImmitationStepDLL\Release\VB.pdb (Partial PDB)
