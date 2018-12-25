@@ -3,9 +3,9 @@
 
 #define C_0 /* ON */ 1
 #define C_1 /* OFF */ 0
-#define C_2 /* AlgorithmDelay */ 100
+#define C_2 /* AlgorithmDelay */ 10
 #define C_3 /* ObjectDelay */ 10
-#define C_4 /* AlgorithmReaction */ 10
+#define C_4 /* TestIdling */ 100
 
 
  enum EN0 {
@@ -26,6 +26,13 @@ enum EN2 {
 	C_12,
 	C_13,
 	C_14,
-	C_15
+	C_15,
+	C_16,
+	C_17,
+	C_18
+	
+	
 
+	
+	
 };

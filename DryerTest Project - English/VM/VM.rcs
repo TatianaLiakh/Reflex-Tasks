@@ -3,9 +3,9 @@ PROGR VM{
 TACT 50;
 CONST ON 1;
 CONST OFF 0;
-CONST AlgorithmDelay 100;
+CONST AlgorithmDelay 10;
 CONST ObjectDelay 10;
-CONST AlgorithmReaction 10;
+CONST TestIdling 100;
 
 /*Набор команд для БВ*/
  ENUM 
@@ -28,8 +28,13 @@ ENUM
 	VM2GUI_TEST_PASSED_DRYER_NORMAL_TURN_OFF,
 	VM2GUI_TEST_FAILED_DRYER_NORMAL_TURN_ON,
 	VM2GUI_TEST_FAILED_DRYER_NORMAL_TURN_OFF,
-	VM2GUI_TEST_FAILED_DRYER_ACTIVATION_FREQUENCY_ERROR,
+	VM2GUI_TEST_NOT_ACTIVE_DRYER_NORMAL_TURN_ON,
+	VM2GUI_TEST_NOT_ACTIVE_DRYER_NORMAL_TURN_OFF,
+	VM2GUI_START_TEST_DRYER_TURN_ON,
+	VM2GUI_START_TEST_DRYER_TURN_OFF,
 	VM2GUI_END_VERIFICATION
+	
+	/* VM2GUI_TEST_DEBUG_ERROR, VM2GUI_TEST_DEBUG_NORM */
 };
 
 FUNCTION INT  SendMsgGUICode(INT);
@@ -59,12 +64,15 @@ PROC Init
 	{
 		SendMsgToSCM(VM2SCM_START_VERIFICATION);
 		START PROC ReceiveSCMOutputMsg;
-		START PROC DryerStateControl;
-		START PROC InvariantFrequencyControl;
 		STOP;
 	}
 
 } 
+
+/*Заменить на два требования:*/
+/* 1) После появления рук сушилка срабатывает не позже, чем через 0.1 с.*/
+/* 2) сушилка выключится ровно через секунду*/
+
 
 PROC ReceiveSCMOutputMsg{  
 
@@ -77,13 +85,18 @@ INT SCMsgCode LOCAL;
 		SWITCH (SCMsgCode) 
 		{
 			CASE SCM2VM_TEST_DRYER_NORMAL_TURN_ON:
-				START PROC DryerNormalTurnOnControl;				
+				SendMsgGUICode(VM2GUI_START_TEST_DRYER_TURN_ON);
+				START PROC DryerNormalTurnOnControl;
+				START PROC Terminator; 	
 				BREAK;
 			CASE SCM2VM_TEST_DRYER_NORMAL_TURN_OFF: 
+				SendMsgGUICode(VM2GUI_START_TEST_DRYER_TURN_OFF);
 				START PROC DryerNormalTurnOffControl;
+				START PROC Terminator; 
 				BREAK;
 			CASE SCM2VM_FINISH_VERIFICATION:
 				SendMsgGUICode(VM2GUI_END_VERIFICATION);
+				STOP PROC Terminator; 
 				STOP;
 				BREAK;
 		}
@@ -92,7 +105,49 @@ INT SCMsgCode LOCAL;
 }
 }
 
-/*Проверка требования: Если руки появились под сушилкой, то в будующем сушилка обязательно включится*/
+PROC Terminator
+{
+	STATE Idling
+	{
+		TIMEOUT TestIdling SET NEXT;
+	}
+	STATE Report
+	{
+	/*DryerNormalTurnOnControl*/
+		IF(PROC DryerNormalTurnOnControl SET STATE ACTIVE)
+		{
+			SendMsgGUICode(VM2GUI_TEST_PASSED_DRYER_NORMAL_TURN_ON);
+		}
+		IF (PROC DryerNormalTurnOnControl SET STATE ERROR)
+		{
+			SendMsgGUICode(VM2GUI_TEST_FAILED_DRYER_NORMAL_TURN_ON);
+		}
+
+
+		STOP PROC DryerNormalTurnOnControl;
+		
+		/*DryerNormalTurnOffControl*/
+		
+		IF(PROC DryerNormalTurnOffControl SET STATE ACTIVE)
+		{
+			SendMsgGUICode(VM2GUI_TEST_PASSED_DRYER_NORMAL_TURN_OFF);
+		}
+
+		IF (PROC DryerNormalTurnOffControl SET STATE ERROR)
+		{
+			SendMsgGUICode(VM2GUI_TEST_FAILED_DRYER_NORMAL_TURN_OFF);
+		}
+
+		 
+		STOP PROC DryerNormalTurnOffControl;
+		
+		SendMsgToSCM(VM2SCM_NEXT_TEST);
+		STOP;
+	}
+	
+}
+
+/*Проверка требования: Если руки появились под сушилкой, то по прошествии AlgorithmDelay тактов сушилка обязательно включится*/
 PROC DryerNormalTurnOnControl
 {
 FROM PROC Init I_HANDS_UNDER_DRYER, O_HANDS_UNDER_DRYER;
@@ -101,106 +156,46 @@ FROM PROC Init I_HANDS_UNDER_DRYER, O_HANDS_UNDER_DRYER;
 	{
 		IF(I_HANDS_UNDER_DRYER == ON) 
 			SET STATE WaitingOnLaunch;
-		TIMEOUT ObjectDelay SET STATE DryerError;
+		TIMEOUT ObjectDelay ERROR;
 	}
 	STATE WaitingOnLaunch
 	{
 		IF (O_HANDS_UNDER_DRYER == ON)
 		{
-			SendMsgGUICode(VM2GUI_TEST_PASSED_DRYER_NORMAL_TURN_ON);
-			SET STATE StopTest;			
+			SET NEXT; 
 		}
-		TIMEOUT AlgorithmDelay SET STATE DryerError;
+		TIMEOUT AlgorithmDelay ERROR;
 	}
-	STATE DryerError
+	STATE StabilityControl
 	{
-			SendMsgGUICode(VM2GUI_TEST_FAILED_DRYER_NORMAL_TURN_ON);
-			SET STATE StopTest;	
+		/*??? Ждем руки. Ждем запуск. А если руки пропадути после запуска - все равно ошибка?*/
+		IF (I_HANDS_UNDER_DRYER == OFF)
+				SET STATE WaitingOfHands; 
+		ELSE IF(O_HANDS_UNDER_DRYER == OFF) ERROR;
+		
 	}
-	STATE StopTest
-	{
-		SendMsgToSCM(VM2SCM_NEXT_TEST);
-		STOP;
-	}
+
 }
 
 
-/*Проверка требования: Если рук нет под сушилкой, то в будующем сушилка обязательно выключится*/
+/*Проверка требования: Если рук нет под сушилкой, то ровно через AlgorithmDelay тактов сушилка обязательно выключится*/
 PROC DryerNormalTurnOffControl
 {
 FROM PROC Init I_HANDS_UNDER_DRYER, O_HANDS_UNDER_DRYER;
 
-	STATE WaitingOfHands
-	{
-		IF(I_HANDS_UNDER_DRYER == OFF) SET STATE WaitingOff;
-		TIMEOUT ObjectDelay SET STATE DryerError;
-	}
 	STATE WaitingOff
 	{
-		IF (O_HANDS_UNDER_DRYER == OFF)
-		{
-			SendMsgGUICode(VM2GUI_TEST_PASSED_DRYER_NORMAL_TURN_OFF);
-			SET STATE StopTest;			
-		}
-		TIMEOUT AlgorithmDelay SET STATE DryerError;
+		
+		IF (O_HANDS_UNDER_DRYER == OFF) ERROR;
+		TIMEOUT AlgorithmDelay SET NEXT;
 	}
-	STATE DryerError
+	STATE StabilityControl
 	{
-			SendMsgGUICode(VM2GUI_TEST_FAILED_DRYER_NORMAL_TURN_OFF);
-			SET STATE StopTest;	
+		IF (O_HANDS_UNDER_DRYER == ON) ERROR;
 	}
-	STATE StopTest
-	{
-		SendMsgToSCM(VM2SCM_NEXT_TEST);
-		STOP;
-	}
+
 }
 
-
-/*Инвариант: интервал между включением-выключением сушилки всегда больше Algorithm reaction тактов*/
-
-PROC DryerStateControl
-{
-	FROM PROC Init O_HANDS_UNDER_DRYER;
-	INT PrevDryerState LOCAL;
-	LOG isStateChanged FOR ALL;
-	STATE Init
-	{
-		PrevDryerState = O_HANDS_UNDER_DRYER;
-		SET STATE UpdateState;
-	}
-	STATE UpdateState
-	{
-		isStateChanged = OFF; 
-		IF (PrevDryerState != O_HANDS_UNDER_DRYER)
-		{
-			PrevDryerState = O_HANDS_UNDER_DRYER;
-			isStateChanged = ON;
-		}
-		LOOP;
-	}	
-}
-
-PROC InvariantFrequencyControl
-{
-FROM PROC DryerStateControl isStateChanged;
-	STATE Normal
-	{
-		IF (isStateChanged == ON) 
-		{			
-			SET STATE ControlFreqency;
-		}
-	}
-	STATE ControlFreqency
-	{
-		IF (isStateChanged == ON) 
-		{
-			SendMsgGUICode(VM2GUI_TEST_FAILED_DRYER_ACTIVATION_FREQUENCY_ERROR);
-			SET STATE Normal;
-		}
-		TIMEOUT AlgorithmReaction SET STATE Normal;
-	}
-}
 }
 
 

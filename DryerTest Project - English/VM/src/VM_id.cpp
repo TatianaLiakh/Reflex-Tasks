@@ -25,8 +25,8 @@ main () {
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 
- 	i = AlgorithmReaction; /* C_4 - AlgorithmReaction */
-	fputs( "AlgorithmReaction = " , file);
+ 	i = TestIdling; /* C_4 - TestIdling */
+	fputs( "TestIdling = " , file);
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 
@@ -75,8 +75,23 @@ main () {
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 
- 	i = VM2GUI_TEST_FAILED_DRYER_ACTIVATION_FREQUENCY_ERROR; /* VM2GUI_TEST_FAILED_DRYER_ACTIVATION_FREQUENCY_ERROR */
-	fputs( "VM2GUI_TEST_FAILED_DRYER_ACTIVATION_FREQUENCY_ERROR = " , file);
+ 	i = VM2GUI_TEST_NOT_ACTIVE_DRYER_NORMAL_TURN_ON; /* VM2GUI_TEST_NOT_ACTIVE_DRYER_NORMAL_TURN_ON */
+	fputs( "VM2GUI_TEST_NOT_ACTIVE_DRYER_NORMAL_TURN_ON = " , file);
+	sprintf(string, "%d\n", i );
+	fputs( string, file);
+
+ 	i = VM2GUI_TEST_NOT_ACTIVE_DRYER_NORMAL_TURN_OFF; /* VM2GUI_TEST_NOT_ACTIVE_DRYER_NORMAL_TURN_OFF */
+	fputs( "VM2GUI_TEST_NOT_ACTIVE_DRYER_NORMAL_TURN_OFF = " , file);
+	sprintf(string, "%d\n", i );
+	fputs( string, file);
+
+ 	i = VM2GUI_START_TEST_DRYER_TURN_ON; /* VM2GUI_START_TEST_DRYER_TURN_ON */
+	fputs( "VM2GUI_START_TEST_DRYER_TURN_ON = " , file);
+	sprintf(string, "%d\n", i );
+	fputs( string, file);
+
+ 	i = VM2GUI_START_TEST_DRYER_TURN_OFF; /* VM2GUI_START_TEST_DRYER_TURN_OFF */
+	fputs( "VM2GUI_START_TEST_DRYER_TURN_OFF = " , file);
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 

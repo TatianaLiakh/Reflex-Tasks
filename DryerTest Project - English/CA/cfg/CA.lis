@@ -1,6 +1,6 @@
     1          PROGR CA{
     2          
-    3          TACT 50;
+    3          TACT 100;
     4          CONST ON 1;
     5          CONST OFF 0;
     6          
@@ -24,18 +24,17 @@
    24           STATE Drying
    25           {  
    26          	IF (S_HANDS_UNDER_DRYER == ON) SET STATE Drying;
-   27          	TIMEOUT 5 
+   27          	TIMEOUT 10 
    28          	 {	
-   29          		IF (1) SET STATE Functioning;
-   30          		C_TURN_ON_DRYER = ON;	
-   31          	 }
-   32           }
-   33          
-   34          } /* \ПРОЦ */
+   29          		SET STATE Functioning;
+   30          	 }
+   31           }
+   32          
+   33          } /* \ПРОЦ */
+   34          
    35          
    36          
-   37          
-   38          }  /* \Прогр */
+   37          }  /* \Прогр */
 
 %RCSL-I-SUMMARY, Completed with 0 error(s).
 %RCSL-I-SUMMARY, Completed with 0 warning(s).

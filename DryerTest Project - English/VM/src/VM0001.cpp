@@ -10,8 +10,6 @@ void P0 (void) /* œ–Œ÷≈——: Init */
 
 		SendMsgToSCM(C_8);
 		Set_Start(1);
-		Set_Start(4);
-		Set_Start(5);
 		Set_Stop(0);
 			break;
 		default:
@@ -32,13 +30,18 @@ void P1 (void) /* œ–Œ÷≈——: ReceiveSCMOutputMsg */
 		switch (P1V0) 
 		{
 			case C_5:
-				Set_Start(2);				
+				SendMsgGUICode(C_16);
+				Set_Start(3);
+				Set_Start(2); 	
 				break;
 			case C_6: 
-				Set_Start(3);
+				SendMsgGUICode(C_17);
+				Set_Start(4);
+				Set_Start(2); 
 				break;
 			case C_7:
-				SendMsgGUICode(C_15);
+				SendMsgGUICode(C_18);
+				Set_Stop(2); 
 				Set_Stop(1);
 				break;
 		}
@@ -50,32 +53,44 @@ void P1 (void) /* œ–Œ÷≈——: ReceiveSCMOutputMsg */
 	}
 }
 
-void P2 (void) /* œ–Œ÷≈——: DryerNormalTurnOnControl */
+void P2 (void) /* œ–Œ÷≈——: Terminator */
 {
 	switch (Check_State(2)) {
 
-		case 0:    /*  P2S0() - —Œ—“ŒﬂÕ»≈: WaitingOfHands */
+		case 0:    /*  P2S0() - —Œ—“ŒﬂÕ»≈: Idling */
 
-		if(P0V0 == C_0) 
-			Set_State(2, 1);
-		if (Timeout(2, C_3))  Set_State(2, 2);
+		if (Timeout(2, C_4))  Set_State(2, 1);
 			break;
-		case 1:    /*  P2S1() - —Œ—“ŒﬂÕ»≈: WaitingOnLaunch */
+		case 1:    /*  P2S1() - —Œ—“ŒﬂÕ»≈: Report */
 
-		if (P0V1 == C_0)
+	
+		if((!(Check_State(3) & MASK_OF_INACTIVITY)))
 		{
 			SendMsgGUICode(C_10);
-			Set_State(2, 3);			
 		}
-		if (Timeout(2, C_2))  Set_State(2, 2);
-			break;
-		case 2:    /*  P2S2() - —Œ—“ŒﬂÕ»≈: DryerError */
-
+		if ((Check_State(3) == STATE_OF_ERROR))
+		{
 			SendMsgGUICode(C_12);
-			Set_State(2, 3);
-			break;
-		case 3:    /*  P2S3() - —Œ—“ŒﬂÕ»≈: StopTest */
+		}
 
+
+		Set_Stop(3);
+		
+		
+		
+		if((!(Check_State(4) & MASK_OF_INACTIVITY)))
+		{
+			SendMsgGUICode(C_11);
+		}
+
+		if ((Check_State(4) == STATE_OF_ERROR))
+		{
+			SendMsgGUICode(C_13);
+		}
+
+		 
+		Set_Stop(4);
+		
 		SendMsgToSCM(C_9);
 		Set_Stop(2);
 			break;
@@ -84,82 +99,49 @@ void P2 (void) /* œ–Œ÷≈——: DryerNormalTurnOnControl */
 	}
 }
 
-void P3 (void) /* œ–Œ÷≈——: DryerNormalTurnOffControl */
+void P3 (void) /* œ–Œ÷≈——: DryerNormalTurnOnControl */
 {
 	switch (Check_State(3)) {
 
 		case 0:    /*  P3S0() - —Œ—“ŒﬂÕ»≈: WaitingOfHands */
 
-		if(P0V0 == C_1) Set_State(3, 1);
-		if (Timeout(3, C_3))  Set_State(3, 2);
+		if(P0V0 == C_0) 
+			Set_State(3, 1);
+		if (Timeout(3, C_3))  Set_Error(3);
 			break;
-		case 1:    /*  P3S1() - —Œ—“ŒﬂÕ»≈: WaitingOff */
+		case 1:    /*  P3S1() - —Œ—“ŒﬂÕ»≈: WaitingOnLaunch */
 
-		if (P0V1 == C_1)
+		if (P0V1 == C_0)
 		{
-			SendMsgGUICode(C_11);
-			Set_State(3, 3);			
+			Set_State(3, 2); 
 		}
-		if (Timeout(3, C_2))  Set_State(3, 2);
+		if (Timeout(3, C_2))  Set_Error(3);
 			break;
-		case 2:    /*  P3S2() - —Œ—“ŒﬂÕ»≈: DryerError */
+		case 2:    /*  P3S2() - —Œ—“ŒﬂÕ»≈: StabilityControl */
 
-			SendMsgGUICode(C_13);
-			Set_State(3, 3);
-			break;
-		case 3:    /*  P3S3() - —Œ—“ŒﬂÕ»≈: StopTest */
-
-		SendMsgToSCM(C_9);
-		Set_Stop(3);
+		
+		if (P0V0 == C_1)
+				Set_State(3, 0); 
+		else if(P0V1 == C_1) Set_Error(3);
 			break;
 		default:
 			break;
 	}
 }
 
-void P4 (void) /* œ–Œ÷≈——: DryerStateControl */
+void P4 (void) /* œ–Œ÷≈——: DryerNormalTurnOffControl */
 {
 	switch (Check_State(4)) {
 
-		case 0:    /*  P4S0() - —Œ—“ŒﬂÕ»≈: Init */
+		case 0:    /*  P4S0() - —Œ—“ŒﬂÕ»≈: WaitingOff */
 
-		P4V1 = P0V1;
-		Set_State(4, 1);
-			break;
-		case 1:    /*  P4S1() - —Œ—“ŒﬂÕ»≈: UpdateState */
-
-		P4V2 = C_1; 
-		if (P4V1 != P0V1)
-		{
-			P4V1 = P0V1;
-			P4V2 = C_0;
-		}
 		
+		if (P0V1 == C_1) Set_Error(4);
+		if (Timeout(4, C_2))  Set_State(4, 1);
 			break;
-		default:
-			break;
-	}
-}
+		case 1:    /*  P4S1() - —Œ—“ŒﬂÕ»≈: StabilityControl */
 
-void P5 (void) /* œ–Œ÷≈——: InvariantFrequencyControl */
-{
-	switch (Check_State(5)) {
-
-		case 0:    /*  P5S0() - —Œ—“ŒﬂÕ»≈: Normal */
-
-		if (P4V2 == C_0) 
-		{			
-			Set_State(5, 1);
-		}
-			break;
-		case 1:    /*  P5S1() - —Œ—“ŒﬂÕ»≈: ControlFreqency */
-
-		if (P4V2 == C_0) 
-		{
-			SendMsgGUICode(C_14);
-			Set_State(5, 0);
-		}
-		if (Timeout(5, C_4))  Set_State(5, 0);
+		if (P0V1 == C_0) Set_Error(4);
 			break;
 		default:
 			break;

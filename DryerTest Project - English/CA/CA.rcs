@@ -1,6 +1,6 @@
 PROGR CA{
 
-TACT 50;
+TACT 100;
 CONST ON 1;
 CONST OFF 0;
 
@@ -24,10 +24,9 @@ PROC Init
  STATE Drying
  {  
 	IF (S_HANDS_UNDER_DRYER == ON) SET STATE Drying;
-	TIMEOUT 5 
+	TIMEOUT 10 
 	 {	
-		IF (1) SET STATE Functioning;
-		C_TURN_ON_DRYER = ON;	
+		SET STATE Functioning;
 	 }
  }
 

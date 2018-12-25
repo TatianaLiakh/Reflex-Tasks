@@ -4,7 +4,7 @@
  хлъ йнмярюмрш: OFF,  гмювемхе: ,    кнц.хлъ: C_1
  хлъ йнмярюмрш: AlgorithmDelay,  гмювемхе: ,    кнц.хлъ: C_2
  хлъ йнмярюмрш: ObjectDelay,  гмювемхе: ,    кнц.хлъ: C_3
- хлъ йнмярюмрш: AlgorithmReaction,  гмювемхе: ,    кнц.хлъ: C_4
+ хлъ йнмярюмрш: TestIdling,  гмювемхе: ,    кнц.хлъ: C_4
  хлъ йнмярюмрш: SCM2VM_TEST_DRYER_NORMAL_TURN_ON,  гмювемхе: ,    кнц.хлъ: C_5
  хлъ йнмярюмрш: SCM2VM_TEST_DRYER_NORMAL_TURN_OFF,  гмювемхе: ,    кнц.хлъ: C_6
  хлъ йнмярюмрш: SCM2VM_FINISH_VERIFICATION,  гмювемхе: ,    кнц.хлъ: C_7
@@ -14,8 +14,11 @@
  хлъ йнмярюмрш: VM2GUI_TEST_PASSED_DRYER_NORMAL_TURN_OFF,  гмювемхе: ,    кнц.хлъ: C_11
  хлъ йнмярюмрш: VM2GUI_TEST_FAILED_DRYER_NORMAL_TURN_ON,  гмювемхе: ,    кнц.хлъ: C_12
  хлъ йнмярюмрш: VM2GUI_TEST_FAILED_DRYER_NORMAL_TURN_OFF,  гмювемхе: ,    кнц.хлъ: C_13
- хлъ йнмярюмрш: VM2GUI_TEST_FAILED_DRYER_ACTIVATION_FREQUENCY_ERROR,  гмювемхе: ,    кнц.хлъ: C_14
- хлъ йнмярюмрш: VM2GUI_END_VERIFICATION,  гмювемхе: ,    кнц.хлъ: C_15
+ хлъ йнмярюмрш: VM2GUI_TEST_NOT_ACTIVE_DRYER_NORMAL_TURN_ON,  гмювемхе: ,    кнц.хлъ: C_14
+ хлъ йнмярюмрш: VM2GUI_TEST_NOT_ACTIVE_DRYER_NORMAL_TURN_OFF,  гмювемхе: ,    кнц.хлъ: C_15
+ хлъ йнмярюмрш: VM2GUI_START_TEST_DRYER_TURN_ON,  гмювемхе: ,    кнц.хлъ: C_16
+ хлъ йнмярюмрш: VM2GUI_START_TEST_DRYER_TURN_OFF,  гмювемхе: ,    кнц.хлъ: C_17
+ хлъ йнмярюмрш: VM2GUI_END_VERIFICATION,  гмювемхе: ,    кнц.хлъ: C_18
 /*= онпрш =*/
  хлъ онпрю:    LOG_CA_INPUT_PORT
  рхо онпрю:    Input
@@ -34,26 +37,19 @@
 ### хлъ опнжеяяю: ReceiveSCMOutputMsg, кнц. хлъ : P1
 ###### янярнъмхъ опнжеяю: 
       хлъ янярнъмхъ: Start,    кнц.хлъ: P1S0
-### хлъ опнжеяяю: DryerNormalTurnOnControl, кнц. хлъ : P2
+### хлъ опнжеяяю: Terminator, кнц. хлъ : P2
 ###### янярнъмхъ опнжеяю: 
-      хлъ янярнъмхъ: WaitingOfHands,    кнц.хлъ: P2S0
-      хлъ янярнъмхъ: WaitingOnLaunch,    кнц.хлъ: P2S1
-      хлъ янярнъмхъ: DryerError,    кнц.хлъ: P2S2
-      хлъ янярнъмхъ: StopTest,    кнц.хлъ: P2S3
-### хлъ опнжеяяю: DryerNormalTurnOffControl, кнц. хлъ : P3
+      хлъ янярнъмхъ: Idling,    кнц.хлъ: P2S0
+      хлъ янярнъмхъ: Report,    кнц.хлъ: P2S1
+### хлъ опнжеяяю: DryerNormalTurnOnControl, кнц. хлъ : P3
 ###### янярнъмхъ опнжеяю: 
       хлъ янярнъмхъ: WaitingOfHands,    кнц.хлъ: P3S0
-      хлъ янярнъмхъ: WaitingOff,    кнц.хлъ: P3S1
-      хлъ янярнъмхъ: DryerError,    кнц.хлъ: P3S2
-      хлъ янярнъмхъ: StopTest,    кнц.хлъ: P3S3
-### хлъ опнжеяяю: DryerStateControl, кнц. хлъ : P4
+      хлъ янярнъмхъ: WaitingOnLaunch,    кнц.хлъ: P3S1
+      хлъ янярнъмхъ: StabilityControl,    кнц.хлъ: P3S2
+### хлъ опнжеяяю: DryerNormalTurnOffControl, кнц. хлъ : P4
 ###### янярнъмхъ опнжеяю: 
-      хлъ янярнъмхъ: Init,    кнц.хлъ: P4S0
-      хлъ янярнъмхъ: UpdateState,    кнц.хлъ: P4S1
-### хлъ опнжеяяю: InvariantFrequencyControl, кнц. хлъ : P5
-###### янярнъмхъ опнжеяю: 
-      хлъ янярнъмхъ: Normal,    кнц.хлъ: P5S0
-      хлъ янярнъмхъ: ControlFreqency,    кнц.хлъ: P5S1
+      хлъ янярнъмхъ: WaitingOff,    кнц.хлъ: P4S0
+      хлъ янярнъмхъ: StabilityControl,    кнц.хлъ: P4S1
 /*======================= оепелеммше ============================*/
 
  хлъ оепелеммни: I_HANDS_UNDER_DRYER,	кнц.хлъ: P0V0
@@ -73,15 +69,3 @@
  рюакхжю тхг. напюгю:
  мЕР тХГХВЕЯЙНЦН нАПЮГЮ.
  дНЯРСОМЮ РНКЭЙН ХГ ОПНЖЕЯЯЮ ReceiveSCMOutputMsg
-
- хлъ оепелеммни: PrevDryerState,	кнц.хлъ: P4V1
- рхо: Integer
- рюакхжю тхг. напюгю:
- мЕР тХГХВЕЯЙНЦН нАПЮГЮ.
- дНЯРСОМЮ РНКЭЙН ХГ ОПНЖЕЯЯЮ DryerStateControl
-
- хлъ оепелеммни: isStateChanged,	кнц.хлъ: P4V2
- рхо: Logical
- рюакхжю тхг. напюгю:
- мЕР тХГХВЕЯЙНЦН нАПЮГЮ.
- дНЯРСОМЮ ХГ БЯЕУ ОПНЖЕЯЯНБ.

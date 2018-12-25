@@ -11,10 +11,9 @@ void Control_Loop (void)    /* ”правл€ющий алгоритм */
 	Input();
 	P0();  /* Process Init */
 	P1();  /* Process ReceiveSCMOutputMsg */
-	P2();  /* Process DryerNormalTurnOnControl */
-	P3();  /* Process DryerNormalTurnOffControl */
-	P4();  /* Process DryerStateControl */
-	P5();  /* Process InvariantFrequencyControl */
+	P2();  /* Process Terminator */
+	P3();  /* Process DryerNormalTurnOnControl */
+	P4();  /* Process DryerNormalTurnOffControl */
 	Output();
 	Prepare_PSW((INT16S)(PROCESS_N1), (INT16S)PROCESS_Nn);
 }

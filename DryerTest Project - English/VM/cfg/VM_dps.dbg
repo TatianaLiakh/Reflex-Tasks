@@ -2,19 +2,13 @@
 Start
  ReceiveSCMOutputMsg
 Start
+ Terminator
+Idling
+Report
  DryerNormalTurnOnControl
 WaitingOfHands
 WaitingOnLaunch
-DryerError
-StopTest
+StabilityControl
  DryerNormalTurnOffControl
-WaitingOfHands
 WaitingOff
-DryerError
-StopTest
- DryerStateControl
-Init
-UpdateState
- InvariantFrequencyControl
-Normal
-ControlFreqency
+StabilityControl

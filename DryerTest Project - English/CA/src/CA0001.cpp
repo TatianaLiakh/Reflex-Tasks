@@ -18,10 +18,9 @@ void P0 (void) /* œ–Œ÷≈——: Init */
 		case 1:    /*  P0S1() - —Œ—“ŒﬂÕ»≈: Drying */
   
 	if (P0V0 == C_0) Set_State(0, 1);
-	if (Timeout(0, 5))  
+	if (Timeout(0, 10))  
 	 {	
-		if (1) Set_State(0, 0);
-		P0V1[1] = C_0;	
+		Set_State(0, 0);
 	 }
 			break;
 		default:
