@@ -1,3 +1,6 @@
- Init
-Functioning
-Drying
+ WaitingButton
+Begin
+CheckButton
+ TrafficLightCycle
+Pause1min
+LetCrossWalking30sec

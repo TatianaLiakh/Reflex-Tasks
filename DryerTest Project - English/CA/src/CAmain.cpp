@@ -9,7 +9,8 @@ void Control_Loop(void);  /* for r_main.h */
 void Control_Loop (void)    /* ”правл€ющий алгоритм */
 {
 	Input();
-	P0();  /* Process Init */
+	P0();  /* Process WaitingButton */
+	P1();  /* Process TrafficLightCycle */
 	Output();
 	Prepare_PSW((INT16S)(PROCESS_N1), (INT16S)PROCESS_Nn);
 }

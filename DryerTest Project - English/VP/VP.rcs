@@ -1,88 +1,70 @@
-PROGR VP
-{
-TACT 50;
-CONST ON 1;
-CONST OFF 0;
-CONST SENSOR_DELAY 3;
+PROGR Plant {
+    TACT 100; /* 100 ms */
+    CONST ON 1;
+    CONST OFF 0;
+	CONST MAX_LIMIT 10;
 
+/*Набор команд для ВОУ*/
 ENUM
 {
 	SCM2VP_INSERT_HANDS,
 	SCM2VP_TAKE_AWAY_HANDS
 };
+ 
+    FUNCTION INT GetMessageFromScenariousBlock(VOID);
+    FUNCTION INT GetMessageCodeFromScenariousBlock(VOID);
+    FUNCTION INT Random(VOID);
 
+    INPUT ACTUATOR_PORT 0 0 8; /* name, type, address, size */
+    OUTPUT SENSOR_PORT 1 0 8;
+	 
+    PROC Init {
+        LOG I_DRYER = { ACTUATOR_PORT [1]} FOR ALL;
+        LOG S_HANDS = { SENSOR_PORT [1]} FOR ALL;
+        STATE Start { 
+            START PROC DispatcherCmd;
+            STOP; 	
+        }
+    } 
 
-FUNCTION INT GetMessageFromScenariousBlock( VOID );
-FUNCTION INT GetMessageCodeFromScenariousBlock( VOID );
-FUNCTION INT Random( VOID );
+    PROC DispatcherCmd {
+        FROM PROC Init S_HANDS;
+        STATE Start {
+            IF ( GetMessageFromScenariousBlock()) {
+                SWITCH (GetMessageCodeFromScenariousBlock()){
+                    CASE SCM2VP_INSERT_HANDS:
+                        START PROC InsertHands;	
+                        BREAK;					
+                    CASE SCM2VP_TAKE_AWAY_HANDS:
+                        STOP PROC InsertHands;
+                        S_HANDS = OFF;
+                        BREAK;			
+                }
+            }
+            LOOP;
+        }
+    }
 
-
-INPUT  LOG_VP_INPUT_PORT  0 0 8; /* им€, базовый адрес, доп. адр. порта, 8бит */
-OUTPUT LOG_VP_OUTPUT_PORT 1 0 8;
-
-PROC Init
-{
-
-LOG C_TURN_ON_DRYER = {LOG_VP_INPUT_PORT[1]} FOR ALL;
-LOG S_HANDS_UNDER_DRYER = {LOG_VP_OUTPUT_PORT[1]} FOR ALL;
-
-	STATE Start
-	{ 
-		START PROC ReceiveSCMOutputMsg;
-		STOP; 
-	}
-} 
-
-PROC ReceiveSCMOutputMsg
-{
-FROM PROC Init S_HANDS_UNDER_DRYER;
-INT SCMsgCode LOCAL;
-
-	STATE Start
-	{
-		IF (GetMessageFromScenariousBlock()) 
-		{
-			SCMsgCode = GetMessageCodeFromScenariousBlock();
-			SWITCH (SCMsgCode)
-			{
-				CASE SCM2VP_INSERT_HANDS:
-					START PROC InsertHands;	
-					BREAK;					
-				CASE SCM2VP_TAKE_AWAY_HANDS:
-					STOP PROC InsertHands;
-					S_HANDS_UNDER_DRYER = OFF;
-					BREAK;			
-			}
-		}
-		LOOP;
-	}
+    PROC InsertHands {
+        FROM PROC Init S_HANDS;
+        INT OFF_counter LOCAL;
+        STATE Init {
+            S_HANDS = ON; 
+            OFF_counter = 1; 
+            SET NEXT;
+        }
+		#C OFF_counter++; 
+        STATE Off {
+            S_HANDS = OFF;
+            TIMEOUT OFF_counter {
+                OFF_counter++; 
+                SET NEXT;
+            }
+        }
+        STATE On {
+            S_HANDS = ON; 
+            IF (OFF_counter >= MAX_LIMIT) SET STATE Init;
+            TIMEOUT OFF_counter SET STATE Off;
+        }
+    }
 }
-
-PROC InsertHands
-{
-	FROM PROC Init S_HANDS_UNDER_DRYER;
-	FLOAT coin LOCAL;
-	STATE Choice
-	{
-		coin = Random();
-		IF (coin <= 80) SET STATE SensorOn;
-		ELSE SET STATE SensorOff;
-	
-	}
-	STATE SensorOn
-	{
-		S_HANDS_UNDER_DRYER = ON; 
-		TIMEOUT SENSOR_DELAY SET STATE Choice;
-	}
-	STATE SensorOff
-	{
-		S_HANDS_UNDER_DRYER = OFF; 
-		TIMEOUT SENSOR_DELAY SET STATE Choice;
-	}
-}
-
-}
- /* \ѕрогр */
-
-
-

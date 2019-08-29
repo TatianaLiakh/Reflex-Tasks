@@ -1,8 +1,8 @@
  Init
 Start
- ReceiveSCMOutputMsg
+ DispatcherCmd
 Start
  InsertHands
-Choice
-SensorOn
-SensorOff
+Init
+Off
+On

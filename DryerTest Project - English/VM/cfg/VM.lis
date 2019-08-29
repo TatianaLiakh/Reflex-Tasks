@@ -158,45 +158,46 @@
   158          			SET STATE WaitingOnLaunch;
   159          		TIMEOUT ObjectDelay ERROR;
   160          	}
-  161          	STATE WaitingOnLaunch
-  162          	{
-  163          		IF (O_HANDS_UNDER_DRYER == ON)
-  164          		{
-  165          			SET NEXT; 
-  166          		}
-  167          		TIMEOUT AlgorithmDelay ERROR;
-  168          	}
-  169          	STATE StabilityControl
-  170          	{
-  171          		/*??? Ждем руки. Ждем запуск. А если руки пропадути после запуска - все равно ошибка?*/
-  172          		IF (I_HANDS_UNDER_DRYER == OFF)
-  173          				SET STATE WaitingOfHands; 
-  174          		ELSE IF(O_HANDS_UNDER_DRYER == OFF) ERROR;
-  175          		
-  176          	}
-  177          
-  178          }
-  179          
+  161          	#C O_HANDS_UNDER_DRYER++; 
+  162          	STATE WaitingOnLaunch
+  163          	{
+  164          		IF (O_HANDS_UNDER_DRYER == ON)
+  165          		{
+  166          			SET NEXT; 
+  167          		}
+  168          		TIMEOUT AlgorithmDelay ERROR;
+  169          	}
+  170          	STATE StabilityControl
+  171          	{
+  172          		/*??? Ждем руки. Ждем запуск. А если руки пропадути после запуска - все равно ошибка?*/
+  173          		IF (I_HANDS_UNDER_DRYER == OFF)
+  174          				SET STATE WaitingOfHands; 
+  175          		ELSE IF(O_HANDS_UNDER_DRYER == OFF) ERROR;
+  176          		
+  177          	}
+  178          
+  179          }
   180          
-  181          /*Проверка требования: Если рук нет под сушилкой, то ровно через AlgorithmDelay тактов сушилка обязательно выключится*/
-  182          PROC DryerNormalTurnOffControl
-  183          {
-  184          FROM PROC Init I_HANDS_UNDER_DRYER, O_HANDS_UNDER_DRYER;
-  185          
-  186          	STATE WaitingOff
-  187          	{
-  188          		
-  189          		IF (O_HANDS_UNDER_DRYER == OFF) ERROR;
-  190          		TIMEOUT AlgorithmDelay SET NEXT;
-  191          	}
-  192          	STATE StabilityControl
-  193          	{
-  194          		IF (O_HANDS_UNDER_DRYER == ON) ERROR;
-  195          	}
-  196          
-  197          }
-  198          
-  199          }
+  181          
+  182          /*Проверка требования: Если рук нет под сушилкой, то ровно через AlgorithmDelay тактов сушилка обязательно выключится*/
+  183          PROC DryerNormalTurnOffControl
+  184          {
+  185          FROM PROC Init I_HANDS_UNDER_DRYER, O_HANDS_UNDER_DRYER;
+  186          
+  187          	STATE WaitingOff
+  188          	{
+  189          		
+  190          		IF (O_HANDS_UNDER_DRYER == OFF) ERROR;
+  191          		TIMEOUT AlgorithmDelay SET NEXT;
+  192          	}
+  193          	STATE StabilityControl
+  194          	{
+  195          		IF (O_HANDS_UNDER_DRYER == ON) ERROR;
+  196          	}
+  197          
+  198          }
+  199          
+  200          }
 
 %RCSL-I-SUMMARY, Completed with 0 error(s).
 %RCSL-I-SUMMARY, Completed with 0 warning(s).

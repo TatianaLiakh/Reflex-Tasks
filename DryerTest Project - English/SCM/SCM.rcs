@@ -55,6 +55,7 @@ PROC ReceiveVMOutputMsg
 		nextTest = Idiling;
 		IF (GetNextMsgFromVM()) 
 		{
+	
 			VMMsgCode = GetMsgCodeFromVM();
 			SWITCH (VMMsgCode)
 			{

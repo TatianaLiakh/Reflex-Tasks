@@ -15,8 +15,8 @@ main () {
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 
- 	i = SENSOR_DELAY; /* C_2 - SENSOR_DELAY */
-	fputs( "SENSOR_DELAY = " , file);
+ 	i = MAX_LIMIT; /* C_2 - MAX_LIMIT */
+	fputs( "MAX_LIMIT = " , file);
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 

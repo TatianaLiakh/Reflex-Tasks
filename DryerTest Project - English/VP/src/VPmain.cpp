@@ -10,7 +10,7 @@ void Control_Loop (void)    /* ”правл€ющий алгоритм */
 {
 	Input();
 	P0();  /* Process Init */
-	P1();  /* Process ReceiveSCMOutputMsg */
+	P1();  /* Process DispatcherCmd */
 	P2();  /* Process InsertHands */
 	Output();
 	Prepare_PSW((INT16S)(PROCESS_N1), (INT16S)PROCESS_Nn);

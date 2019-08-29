@@ -13,5 +13,5 @@ void Output (void)
 
 
 /*======= Output Port =============*/
-	if(FPO0 == ON) OUTBYTE((INT16U)1, (INT16U)0, (INT8U)~PO0);
+	if(FPO0 == ON) OUTBYTE((INT16U)C_6, (INT16U)0, (INT8U)~PO0);
 }

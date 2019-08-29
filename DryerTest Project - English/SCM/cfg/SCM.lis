@@ -55,87 +55,88 @@
    55          		nextTest = Idiling;
    56          		IF (GetNextMsgFromVM()) 
    57          		{
-   58          			VMMsgCode = GetMsgCodeFromVM();
-   59          			SWITCH (VMMsgCode)
-   60          			{
-   61          				CASE VM2SCM_START_VERIFICATION:
-   62          					START PROC TestDriver;
-   63          					BREAK;
-   64          				CASE VM2SCM_NEXT_TEST:
-   65          					nextTest = RunNextTest;
-   66          					BREAK;
-   67          			}
-   68          		}
-   69          		LOOP;
-   70          	}
-   71          } 
-   72          
+   58          	
+   59          			VMMsgCode = GetMsgCodeFromVM();
+   60          			SWITCH (VMMsgCode)
+   61          			{
+   62          				CASE VM2SCM_START_VERIFICATION:
+   63          					START PROC TestDriver;
+   64          					BREAK;
+   65          				CASE VM2SCM_NEXT_TEST:
+   66          					nextTest = RunNextTest;
+   67          					BREAK;
+   68          			}
+   69          		}
+   70          		LOOP;
+   71          	}
+   72          } 
    73          
-   74          PROC TestDriver
-   75          {
-   76          FROM PROC ReceiveVMOutputMsg nextTest;
-   77          	STATE RunTestHandsUnderDryer
-   78          	{
-   79          		START PROC TestHandsUnderDryer;
-   80          		SET NEXT;
-   81          	}
-   82          	STATE IdilingTest1
-   83          	{
-   84          		IF (nextTest == RunNextTest)
-   85          		{
-   86          			STOP PROC TestHandsUnderDryer;
-   87          			SET NEXT;
-   88          		}		
-   89          	}
-   90          	STATE RunTestRemoveHands
-   91          	{
-   92          		START PROC TestRemoveHands;
-   93          		SET NEXT;
-   94          	}
-   95          	STATE IdilingTest2
-   96          	{
-   97          		IF (nextTest == RunNextTest)
-   98          		{
-   99          			STOP PROC TestRemoveHands;
-  100          			SET NEXT;
-  101          		}		
-  102          	}
-  103          	STATE Finish
-  104          	{
-  105          		SendMsgToVerificationModuleCode(SCM2VM_FINISH_VERIFICATION);
-  106          		STOP;
-  107          	}
-  108          }
-  109          
-  110          PROC TestHandsUnderDryer
-  111          {
-  112          	STATE Start
-  113          	{
-  114          		SendMsgToVirtualPlantCode(SCM2VP_INSERT_HANDS);
-  115          		SendMsgToVerificationModuleCode(SCM2VM_TEST_DRYER_NORMAL_TURN_ON);
-  116          		SET NEXT;
-  117          	}
-  118          	STATE Idiling
-  119          	{
-  120          		LOOP;
-  121          	}
-  122          }
-  123          
-  124          PROC TestRemoveHands
-  125          {
-  126          	STATE Start
-  127          	{
-  128          		SendMsgToVirtualPlantCode(SCM2VP_TAKE_AWAY_HANDS);
-  129          		SendMsgToVerificationModuleCode(SCM2VM_TEST_DRYER_NORMAL_TURN_OFF);
-  130          		SET NEXT;
-  131          	}
-  132          	STATE Idiling
-  133          	{
-  134          		LOOP;
-  135          	}
-  136          }
-  137          
-  138          }  /* \Прогр */
+   74          
+   75          PROC TestDriver
+   76          {
+   77          FROM PROC ReceiveVMOutputMsg nextTest;
+   78          	STATE RunTestHandsUnderDryer
+   79          	{
+   80          		START PROC TestHandsUnderDryer;
+   81          		SET NEXT;
+   82          	}
+   83          	STATE IdilingTest1
+   84          	{
+   85          		IF (nextTest == RunNextTest)
+   86          		{
+   87          			STOP PROC TestHandsUnderDryer;
+   88          			SET NEXT;
+   89          		}		
+   90          	}
+   91          	STATE RunTestRemoveHands
+   92          	{
+   93          		START PROC TestRemoveHands;
+   94          		SET NEXT;
+   95          	}
+   96          	STATE IdilingTest2
+   97          	{
+   98          		IF (nextTest == RunNextTest)
+   99          		{
+  100          			STOP PROC TestRemoveHands;
+  101          			SET NEXT;
+  102          		}		
+  103          	}
+  104          	STATE Finish
+  105          	{
+  106          		SendMsgToVerificationModuleCode(SCM2VM_FINISH_VERIFICATION);
+  107          		STOP;
+  108          	}
+  109          }
+  110          
+  111          PROC TestHandsUnderDryer
+  112          {
+  113          	STATE Start
+  114          	{
+  115          		SendMsgToVirtualPlantCode(SCM2VP_INSERT_HANDS);
+  116          		SendMsgToVerificationModuleCode(SCM2VM_TEST_DRYER_NORMAL_TURN_ON);
+  117          		SET NEXT;
+  118          	}
+  119          	STATE Idiling
+  120          	{
+  121          		LOOP;
+  122          	}
+  123          }
+  124          
+  125          PROC TestRemoveHands
+  126          {
+  127          	STATE Start
+  128          	{
+  129          		SendMsgToVirtualPlantCode(SCM2VP_TAKE_AWAY_HANDS);
+  130          		SendMsgToVerificationModuleCode(SCM2VM_TEST_DRYER_NORMAL_TURN_OFF);
+  131          		SET NEXT;
+  132          	}
+  133          	STATE Idiling
+  134          	{
+  135          		LOOP;
+  136          	}
+  137          }
+  138          
+  139          }  /* \Прогр */
 
 %RCSL-I-SUMMARY, Completed with 0 error(s).
 %RCSL-I-SUMMARY, Completed with 0 warning(s).

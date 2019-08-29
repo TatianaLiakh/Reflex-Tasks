@@ -1,5 +1,5 @@
 /* INPUT PORTS */ 
-	#define LOG_CA_INPUT_PORT 0 /*LOG_CA_INPUT_PORT*/ 
+	#define INPUTS 0 /*INPUTS*/ 
  
 /* OUTPUT PORTS */ 
-	#define LOG_CA_OUTPUT_PORT 0 /*LOG_CA_OUTPUT_PORT*/ 
+	#define OUTPUTS 0 /*OUTPUTS*/ 

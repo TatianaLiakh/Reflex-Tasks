@@ -5,8 +5,7 @@
 /* ======= оепелеммше опнжеяянб ===*/
 extern char P0V0;
 extern char P0V1[2];
-extern int P1V1;
-extern float P2V1;
+extern int P2V1;
 /*======= Input Ports =============*/
 extern char PI0;
 

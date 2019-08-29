@@ -3,7 +3,7 @@
 #define _VPproc_h 1
 
 void P0(void);  /* Process Init */
-void P1(void);  /* Process ReceiveSCMOutputMsg */
+void P1(void);  /* Process DispatcherCmd */
 void P2(void);  /* Process InsertHands */
 
 #define PROCESS_N1 0

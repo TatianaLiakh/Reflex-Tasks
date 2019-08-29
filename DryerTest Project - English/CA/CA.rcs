@@ -1,40 +1,91 @@
-PROGR CA{
-
-TACT 100;
+PROGR PuffinCrossing
+/* To simplify traffic light works uses 2 sattes only (not with three colors
+(red, yellow, green)). The system has
+one input signal:
+I_BUTTON,
+and control signal:
+O_CROSSWALK.
+The structure of the solution of the problem:
+A. The base process is the TrafficLightCycle, which implements
+cycle - 1 min. pause, 30 seconds - crosswalk alowing, then permission
+for vehicle and stop.
+B. All is controlled by the Waiting Button process. When button appears
+the proc does the following - looks if the TrafficLightCycle process is
+stopped (in a passive state) - then the proc starts it ... */
+{
+TACT 10; /* activation period is 10 milliseconds */
+/*#############################################################*/
+/*######### CONSTANTS DESCRIPTIONS ############################*/
+/*#############################################################*/
 CONST ON 1;
 CONST OFF 0;
+CONST SECOND 100;
+CONST THIRTY_SECONDS 30*SECOND;
+CONST MINUTE 60*SECOND;
+/*===========================================================*/
+/*========= ADDRESSES OF I/O PORTS ==========================*/
+/*===========================================================*/
+CONST BA_FPGA1_U1 0XA110; /* INPUT */
+CONST BA_FPGA3_U1 0XA910; /* OUTPUT */
+/*###########################################################*/
+/*######## I/O PORTS DESCRIPTION ############################*/
+/*###########################################################*/
+INPUT  INPUTS BA_FPGA1_U1 0 8; /* name, address, offset, size */
+OUTPUT OUTPUTS BA_FPGA3_U1 0 8; 
 
-INPUT  LOG_CA_INPUT_PORT  0 0 8; /* имя, базовый адрес, доп. адр. порта, 8бит */
-OUTPUT LOG_CA_OUTPUT_PORT 1 0 8;
+/*###########################################################*/
+/*############### PROCESSES ###################*/
+/*###########################################################*/
+/* Process Initialization. Serves for
+ program deployment. This process (described by
+ first) - the only active launch process.
+ Also, the Initialization process contains a description
+ variables for references from others
+ processes. This is convenient: descriptions are localized in one
+ location.
+*/
 
-PROC Init
-{
- LOG S_HANDS_UNDER_DRYER = {LOG_CA_INPUT_PORT[1]} FOR ALL;
- LOG C_TURN_ON_DRYER = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
- 
- STATE Functioning
- {  
-	IF (S_HANDS_UNDER_DRYER == ON) 
-	{
-		C_TURN_ON_DRYER = ON;		
-		SET NEXT;						
-	}
-	ELSE C_TURN_ON_DRYER = OFF; 		
- }
- STATE Drying
- {  
-	IF (S_HANDS_UNDER_DRYER == ON) SET STATE Drying;
-	TIMEOUT 10 
-	 {	
-		SET STATE Functioning;
-	 }
- }
+PROC WaitingButton{ 
+/*===========================================================*/
+/*=========== VARIABLES DESCRIPTION =========================*/
+/*===========================================================*/
+/* INPUTS: */
+LOG I_BUTTON = {INPUTS[1]} FOR ALL;
+/* OUTPUTS: */
+LOG O_CROSSWALK = {OUTPUTS[1]} FOR ALL;
 
-} /* \ПРОЦ */
+  STATE Begin{
+    O_CROSSWALK = OFF;
+    SET NEXT; 
+  }
+  STATE CheckButton{
+    IF (I_BUTTON) { /* Vehicle ? */
+      IF (PROC TrafficLightCycle SET STATE PASSIVE){ 
+        START PROC TrafficLightCycle;
+      }
+    }
+    LOOP;
+  }
+} /* PROC */
 
+PROC TrafficLightCycle { /* working out one cycle of the traffic light:
+                           * 1 min - green for freeway,
+                           * 30 s - prohibition of motorway traffic
+                           * stop */
 
+FROM PROC WaitingButton O_CROSSWALK;
 
-}  /* \Прогр */
+  STATE Pause1min{
+    O_CROSSWALK = OFF;
+    TIMEOUT MINUTE SET NEXT;
+  }
+  STATE LetCrossWalking30sec{
+    O_CROSSWALK = ON;
+    TIMEOUT THIRTY_SECONDS { 
+      O_CROSSWALK = OFF; /* let highway traffic */
+      STOP;
+    }
+  }
+} /* \PROC */
 
-
-
+} /* \PROG */ 

@@ -109,6 +109,9 @@ void P3 (void) /* œ–Œ÷≈——: DryerNormalTurnOnControl */
 			Set_State(3, 1);
 		if (Timeout(3, C_3))  Set_Error(3);
 			break;
+	 P0V1
+	 ++
+	 ;
 		case 1:    /*  P3S1() - —Œ—“ŒﬂÕ»≈: WaitingOnLaunch */
 
 		if (P0V1 == C_0)

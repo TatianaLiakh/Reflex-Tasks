@@ -5,8 +5,7 @@
 /* ======= оепелеммше опнжеяянб ===*/
 char P0V0;
 char P0V1[2];
-int P1V1;
-float P2V1;
+int P2V1;
 /*======= Input Ports =============*/
 char PI0;
 

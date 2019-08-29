@@ -130,11 +130,14 @@ INT SCMsgCode LOCAL;
 		{
 			CASE SCM2VM_StartTestNewDesiredLevel:
 				XD = GetFloatParamFromSCM();
+				SendMsgFloatParamGUI(VM2GUI_START_TEST_DESIRED_LEVEL, XD);				
+				START PROC XValueRestrictionsInvariant;
+				START PROC UValueRestrictionsInvariant;
 				START PROC XLevelTendsToDesired;
 				BREAK;
 			CASE SCM2VM_FINISH_VERIFICATION:
 				SendMsgGUICode(VM2GUI_END_VERIFICATION);
-				STOP;
+				STOP PROC Terminator; 
 				BREAK;
 		}
 	}
@@ -142,6 +145,41 @@ INT SCMsgCode LOCAL;
 	}
 } 
 
+PROC Terminator
+{
+	STATE Idling
+	{
+		TIMEOUT TestIdling SET NEXT;
+	}
+	
+	STATE Report
+	{
+
+		IF (PROC XValueRestrictionsInvariant IN STATE ERROR)
+		{
+			SendMsgGUICode(VM2GUI_TEST_FAILED_WATER_LEVEL);
+		}
+		ELSE IF (PROC XValueRestrictionsInvariant IN STATE ACTIVE)
+		{
+			SendMsgGUICode(VM2GUI_TEST_PASSED_WATER_LEVEL);
+		}
+		
+		STOP PROC XValueRestrictionsInvariant;
+		
+		IF (PROC UValueRestrictionsInvariant IN STATE ERROR)
+		{
+			SendMsgGUICode(VM2GUI_TEST_FAILED_U_LEVEL);
+		}
+		ELSE IF (PROC UValueRestrictionsInvariant IN STATE ACTIVE)
+		{
+			SendMsgGUICode(VM2GUI_TEST_PASSED_U_LEVEL);
+		}
+		
+		STOP PROC UValueRestrictionsInvariant;
+		SendMsgSCMCode(VM2SCM_NEXT_TEST);
+		STOP;
+	}
+}
 /*Invariant ALWAYS X <= H */
 /*Invariant ALWAYS X >= 0 */
 PROC XValueRestrictionsInvariant
@@ -149,24 +187,11 @@ PROC XValueRestrictionsInvariant
 FROM PROC INIT X;
 	STATE Normal 
 	{
-		IF ( X > H)
+		IF ( X > H || X < 0 )
 		{
-			SendMsgGUICode(VM2GUI_TEST_FAILED_OWERFLOW);
-			SET STATE OwerflowError;
+			SET STATE ERROR;
 		}
-		ELSE IF (X < 0)
-		{			
-			SendMsgGUICode(VM2GUI_TEST_FAILED_UNDERFILL);
-			SET STATE UnderfillError;
-		}
-	}
-	STATE OwerflowError
-	{
-		IF (X <= H) SET STATE Normal;
-	}
-	STATE UnderfillError
-	{
-		IF (X >= 0) SET STATE Normal; 
+		LOOP;
 	}
 }
 
@@ -178,24 +203,11 @@ FROM PROC INIT U;
 
 	STATE Normal 
 	{
-		IF ( U > U_MAX)
-		{
-			SendMsgGUICode(VM2GUI_TEST_FAILED_U_MAX);
-			SET STATE HighVoltage;
-		}
-		ELSE IF (U < 0)
+		IF ( U > U_MAX || U < 0)
 		{			
-			SendMsgGUICode(VM2GUI_TEST_FAILED_U_MIN);
-			SET STATE LowVoltage;
+			SET STATE ERROR;
 		}
-	}
-	STATE HighVoltage
-	{
-		IF ( U <= U_MAX) SET STATE Normal;
-	}
-	STATE LowVoltage
-	{
-		IF ( U >= 0) SET STATE Normal;
+		LOOP;
 	}
 }
 
@@ -213,7 +225,7 @@ PROC VoltageDerivativeRestrictionsInvariant
 	{
 		IF ( ABS(U_Prev - U) >= DELTA_U)
 		{
-			SendMsgGUICode(VM2GUI_TEST_FAILED_DELTA_U);
+			SET STATE ERROR;
 		}
 		U_Prev = U;
 		LOOP;
@@ -233,19 +245,15 @@ PROC XLevelTendsToDesired
 	}
 	STATE LevelControl
 	{
-			IF (ABS(X - XD) > DELTA_X) SET STATE ProgressError;
+			IF (ABS(X - XD) > DELTA_X) SET STATE ERROR;
 			TIMEOUT CONTROLLER_DELAY 
 			{
-				SendMsgGUICode(VM2GUI_TEST_PASSED_X_LEVEL_CONTROL);
-				SendMsgSCMCode(VM2SCM_NEXT_TEST);
-				STOP;
+				SET NEXT;
 			}
 	}
-	STATE ProgressError
+	STATE Progress
 	{
-		SendMsgSCMCode(VM2SCM_NEXT_TEST);
-		SendMsgGUICode(VM2GUI_TEST_FAILED_BIG_LEVEL_DIFFERENCE);
-		ERROR;
+		LOOP;
 	}	
 }
 

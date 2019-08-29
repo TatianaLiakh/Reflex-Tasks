@@ -1,40 +1,94 @@
-    1          PROGR CA{
-    2          
-    3          TACT 100;
-    4          CONST ON 1;
-    5          CONST OFF 0;
-    6          
-    7          INPUT  LOG_CA_INPUT_PORT  0 0 8; /* имя, базовый адрес, доп. адр. порта, 8бит */
-    8          OUTPUT LOG_CA_OUTPUT_PORT 1 0 8;
-    9          
-   10          PROC Init
-   11          {
-   12           LOG S_HANDS_UNDER_DRYER = {LOG_CA_INPUT_PORT[1]} FOR ALL;
-   13           LOG C_TURN_ON_DRYER = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
-   14           
-   15           STATE Functioning
-   16           {  
-   17          	IF (S_HANDS_UNDER_DRYER == ON) 
-   18          	{
-   19          		C_TURN_ON_DRYER = ON;		
-   20          		SET NEXT;						
-   21          	}
-   22          	ELSE C_TURN_ON_DRYER = OFF; 		
-   23           }
-   24           STATE Drying
-   25           {  
-   26          	IF (S_HANDS_UNDER_DRYER == ON) SET STATE Drying;
-   27          	TIMEOUT 10 
-   28          	 {	
-   29          		SET STATE Functioning;
-   30          	 }
-   31           }
-   32          
-   33          } /* \ПРОЦ */
-   34          
+    1          PROGR PuffinCrossing
+    2          /* To simplify traffic light works uses 2 sattes only (not with three colors
+    3          (red, yellow, green)). The system has
+    4          one input signal:
+    5          I_BUTTON,
+    6          and control signal:
+    7          O_CROSSWALK.
+    8          The structure of the solution of the problem:
+    9          A. The base process is the TrafficLightCycle, which implements
+   10          cycle - 1 min. pause, 30 seconds - crosswalk alowing, then permission
+   11          for vehicle and stop.
+   12          B. All is controlled by the Waiting Button process. When button appears
+   13          the proc does the following - looks if the TrafficLightCycle process is
+   14          stopped (in a passive state) - then the proc starts it ... */
+   15          {
+   16          TACT 10; /* activation period is 10 milliseconds */
+   17          /*#############################################################*/
+   18          /*######### CONSTANTS DESCRIPTIONS ############################*/
+   19          /*#############################################################*/
+   20          CONST ON 1;
+   21          CONST OFF 0;
+   22          CONST SECOND 100;
+   23          CONST THIRTY_SECONDS 30*SECOND;
+   24          CONST MINUTE 60*SECOND;
+   25          /*===========================================================*/
+   26          /*========= ADDRESSES OF I/O PORTS ==========================*/
+   27          /*===========================================================*/
+   28          CONST BA_FPGA1_U1 0XA110; /* INPUT */
+   29          CONST BA_FPGA3_U1 0XA910; /* OUTPUT */
+   30          /*###########################################################*/
+   31          /*######## I/O PORTS DESCRIPTION ############################*/
+   32          /*###########################################################*/
+   33          INPUT  INPUTS BA_FPGA1_U1 0 8; /* name, address, offset, size */
+   34          OUTPUT OUTPUTS BA_FPGA3_U1 0 8; 
    35          
-   36          
-   37          }  /* \Прогр */
+   36          /*###########################################################*/
+   37          /*############### PROCESSES ###################*/
+   38          /*###########################################################*/
+   39          /* Process Initialization. Serves for
+   40           program deployment. This process (described by
+   41           first) - the only active launch process.
+   42           Also, the Initialization process contains a description
+   43           variables for references from others
+   44           processes. This is convenient: descriptions are localized in one
+   45           location.
+   46          */
+   47          
+   48          PROC WaitingButton{ 
+   49          /*===========================================================*/
+   50          /*=========== VARIABLES DESCRIPTION =========================*/
+   51          /*===========================================================*/
+   52          /* INPUTS: */
+   53          LOG I_BUTTON = {INPUTS[1]} FOR ALL;
+   54          /* OUTPUTS: */
+   55          LOG O_CROSSWALK = {OUTPUTS[1]} FOR ALL;
+   56          
+   57            STATE Begin{
+   58              O_CROSSWALK = OFF;
+   59              SET NEXT; 
+   60            }
+   61            STATE CheckButton{
+   62              IF (I_BUTTON) { /* Vehicle ? */
+   63                IF (PROC TrafficLightCycle SET STATE PASSIVE){ 
+   64                  START PROC TrafficLightCycle;
+   65                }
+   66              }
+   67              LOOP;
+   68            }
+   69          } /* PROC */
+   70          
+   71          PROC TrafficLightCycle { /* working out one cycle of the traffic light:
+   72                                     * 1 min - green for freeway,
+   73                                     * 30 s - prohibition of motorway traffic
+   74                                     * stop */
+   75          
+   76          FROM PROC WaitingButton O_CROSSWALK;
+   77          
+   78            STATE Pause1min{
+   79              O_CROSSWALK = OFF;
+   80              TIMEOUT MINUTE SET NEXT;
+   81            }
+   82            STATE LetCrossWalking30sec{
+   83              O_CROSSWALK = ON;
+   84              TIMEOUT THIRTY_SECONDS { 
+   85                O_CROSSWALK = OFF; /* let highway traffic */
+   86                STOP;
+   87              }
+   88            }
+   89          } /* \PROC */
+   90          
+   91          } /* \PROG */ 
 
 %RCSL-I-SUMMARY, Completed with 0 error(s).
 %RCSL-I-SUMMARY, Completed with 0 warning(s).

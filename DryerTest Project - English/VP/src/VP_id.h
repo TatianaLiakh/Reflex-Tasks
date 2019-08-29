@@ -1,7 +1,7 @@
-
-#define ON /* C_0 - ON */ 1
-#define OFF /* C_1 - OFF */ 0
-#define SENSOR_DELAY /* C_2 - SENSOR_DELAY */ 3
+ 
+    #define ON /* C_0 - ON */ 1
+    #define OFF /* C_1 - OFF */ 0
+	#define MAX_LIMIT /* C_2 - MAX_LIMIT */ 10
 
 enum EN0 {
 	SCM2VP_INSERT_HANDS /* SCM2VP_INSERT_HANDS */,

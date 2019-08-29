@@ -25,6 +25,7 @@ void P1 (void) /* опнжеяя: ReceiveVMOutputMsg */
 		P1V0 = C_2;
 		if (GetNextMsgFromVM()) 
 		{
+	
 			P1V1 = GetMsgCodeFromVM();
 			switch (P1V1)
 			{
