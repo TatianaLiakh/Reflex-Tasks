@@ -1,0 +1,35 @@
+    1          PROGR DISPATCHER
+    2          {
+    3          	TACT 50;
+    4          	
+    5          	CONST Idiling 0;
+    6          	CONST RunNextTest 1;
+    7           
+    8          
+    9          	PROC Init
+   10          	{
+   11          		STATE Start
+   12          		{  
+   13          			START PROC ReceiveVerifierOutputMsg; 
+   14          			STOP;
+   15          		}
+   16          	}
+   17          	
+   18          	PROC ReceiveVerifierOutputMsg
+   19          	{
+   20          		INT VerifierMsgCode LOCAL;
+   21          		LOG nextTest FOR ALL;
+   22          		
+   23          		STATE Start
+   24          		{
+   25          
+   26          			LOOP;
+   27          		}
+   28          	}
+   29          
+   30          }  /* \Прогр */
+
+%RCSL-I-SUMMARY, Completed with 0 error(s).
+%RCSL-I-SUMMARY, Completed with 0 warning(s).
+
+ %RCSL-I-SUMMARY, Completed with 0 error(s).

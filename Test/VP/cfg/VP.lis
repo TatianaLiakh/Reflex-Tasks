@@ -1,0 +1,31 @@
+    1          /*Просто получаем сообщения от диспетчера и ничего не делаем*/
+    2          /*Нет элемента управления*/
+    3          PROGR PLANT
+    4          {
+    5          	TACT 50;
+    6          
+    7          	ENUM
+    8          	{
+    9          		D2P_MESSAGE_TURN_ON,
+   10          		D2P_MESSAGE_TURN_OFF
+   11          	};
+   12          
+   13          
+   14          	
+   15          	INPUT  LOG_PLANT_INPUT_PORT  0 0 8; 
+   16          	OUTPUT LOG_PLANT_OUTPUT_PORT 1 0 8;
+   17          	
+   18          	PROC Init
+   19          	{
+   20          		STATE Start
+   21          		{ 			
+   22          			STOP; 
+   23          		}
+   24          	} 
+   25          	
+   26          }
+
+%RCSL-I-SUMMARY, Completed with 0 error(s).
+%RCSL-I-SUMMARY, Completed with 0 warning(s).
+
+ %RCSL-I-SUMMARY, Completed with 0 error(s).

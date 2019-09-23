@@ -1,0 +1,30 @@
+/*Просто получаем сообщения от диспетчера и ничего не делаем*/
+/*Нет элемента управления*/
+PROGR PLANT
+{
+	TACT 50;
+
+	ENUM
+	{
+		D2P_MESSAGE_TURN_ON,
+		D2P_MESSAGE_TURN_OFF
+	};
+
+
+	
+	INPUT  LOG_PLANT_INPUT_PORT  0 0 8; 
+	OUTPUT LOG_PLANT_OUTPUT_PORT 1 0 8;
+	
+	PROC Init
+	{
+		STATE Start
+		{ 			
+			STOP; 
+		}
+	} 
+	
+}
+
+
+
+

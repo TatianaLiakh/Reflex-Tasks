@@ -1,0 +1,29 @@
+/*Датчик мигает каждые 2 секунды*/
+PROGR ALGORITHM
+{
+	TACT 100;
+	CONST OFF 0;
+	CONST ON 1;
+	CONST one_second 10; 
+	CONST two_second 2*one_second;
+	
+	INPUT  LOG_ALGORITHM_INPUT_PORT  0 0 8; /* имя, базовый адрес, доп. адр. порта, 8бит */
+	OUTPUT LOG_ALGORITHM_OUTPUT_PORT 1 0 8;
+
+	PROC Init
+	{
+		LOG HELLO_WORLD = {LOG_ALGORITHM_OUTPUT_PORT[1]} FOR ALL;
+ 
+		STATE Functioning
+		{  
+			HELLO_WORLD = ON;
+			TIMEOUT two_second SET STATE Non_Functioning;
+		}	
+		
+		STATE Non_Functioning
+		{			
+			HELLO_WORLD = OFF;
+            TIMEOUT two_second SET STATE Functioning;		
+		}
+	}
+} 

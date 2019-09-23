@@ -1,0 +1,56 @@
+    1          PROGR VERIFIER
+    2          {
+    3          	TACT 50;
+    4          	CONST ON 1;
+    5          	CONST OFF 0;
+    6          	CONST AlgorithmDelay 40; /*2 сек*/
+    7          	CONST TestIdling 100;
+    8          
+    9          	/*Набор команд для VERIFIER(блок верификации)*/
+   10          	ENUM 
+   11          	{
+   12          		D2V_TEST_NORMAL_TURN_ON, 
+   13          		D2V_TEST_NORMAL_TURN_OFF, 
+   14          		D2V_FINISH_VERIFICATION
+   15          	};
+   16          
+   17          	/*Набор команд для DISPATCHER(блок управления сценарием) от VERIFIER(блока верификации)*/
+   18          	ENUM
+   19          	{
+   20          		V2D_START_VERIFICATION
+   21          	};
+   22          
+   23          	/*Набор Команд для GUI */
+   24          	ENUM
+   25          	{
+   26          		V2GUI_TEST_PASSED_NORMAL_TURN_ON, 
+   27          		V2GUI_TEST_FAILED_NORMAL_TURN_ON,
+   28          		V2GUI_START_TEST_TURN_ON,
+   29          		V2GUI_TEST_PASSED_NORMAL_TURN_OFF, 
+   30          		V2GUI_TEST_FAILED_NORMAL_TURN_OFF,
+   31          		V2GUI_START_TEST_TURN_OFF,
+   32          		V2GUI_END_VERIFICATION
+   33          	};
+   34          
+   35          
+   36          	INPUT  LOG_VERIFIER_INPUT_PORT 0 0 8; /* имя, базовый адрес, доп. адр. порта, 8бит */
+   37          	INPUT  LOG_VERIFIER_OUTPUT_PORT  0 1 8; /* имя, базовый адрес, доп. адр. порта, 8бит */
+   38          	
+   39          	PROC Init
+   40          	{
+   41          				
+   42          		STATE Start
+   43          		{
+   44          
+   45          			STOP;
+   46          		}
+   47          	} 
+   48          
+   49          	
+   50          	
+   51          }
+
+%RCSL-I-SUMMARY, Completed with 0 error(s).
+%RCSL-I-SUMMARY, Completed with 0 warning(s).
+
+ %RCSL-I-SUMMARY, Completed with 0 error(s).
