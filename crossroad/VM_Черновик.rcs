@@ -1,0 +1,285 @@
+PROGR VERIFIER
+{
+	TACT 50;
+	CONST ON 1;
+	CONST OFF 0;
+	CONST PCyclesDelay 1200; /*60 сек*/
+	CONST KCyclesDelay 600; /*30 сек*/
+	CONST ObjectDelay 10; /*0.5 сек*/
+	CONST AlgorithmDelay 10; /*0.5 сек*/
+	CONST TestIdling 100; /*5 сек*/
+
+	/*Набор команд для VERIFIER(блок верификации)*/
+	ENUM 
+	{
+		SCM2VM_TEST_TEST1,
+		SCM2VM_TEST_TEST2, 
+		SCM2VM_FINISH_VERIFICATION
+	};
+
+	/*Набор команд для DISPATCHER(блок управления сценарием) от VERIFIER(блока верификации)*/
+	ENUM
+	{
+		VM2SCM_START_VERIFICATION,
+		VM2SCM_NEXT_TEST
+	};
+
+	/*Набор Команд для GUI */
+	ENUM
+	{
+		VM2GUI_TEST_PASSED_TEST1, 
+		VM2GUI_TEST_PASSED_TEST2,
+		VM2GUI_TEST_FAILED_TEST1,
+		VM2GUI_TEST_FAILED_TEST2,
+		VM2GUI_START_TEST_TEST1,
+		VM2GUI_START_TEST_TEST2,
+		VM2GUI_END_VERIFICATION
+	};
+	
+	FUNCTION INT SendMsgSCMCode(INT);
+	FUNCTION INT SendMsgGUICode(INT);
+	FUNCTION INT GetNextMsgFromSCM(VOID);
+	FUNCTION INT GetMsgCodeFromSCM(VOID);
+
+	INPUT  LOG_CA_INPUT_PORT 0 0 8; /* имя, базовый адрес, доп. адр. порта, 8бит */
+	INPUT  LOG_CA_OUTPUT_PORT  0 1 8; /* имя, базовый адрес, доп. адр. порта, 8бит */
+	
+	PROC Init
+	{	
+		LOG I_CAR_NEAR_CROSROAD = {LOG_CA_INPUT_PORT[1]} FOR ALL;
+		LOG I_SWITCH_TRAFFIC_LIGHT_TO_SECOND_ROAD = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
+				
+		STATE Start 
+		{	
+			SendMsgSCMCode(VM2SCM_START_VERIFICATION); 	
+			START PROC ReceiveSCMOutputMsg;
+			STOP;
+		}
+	} 
+	
+	PROC ReceiveSCMOutputMsg
+	{  
+		INT SCMsgCode LOCAL;
+		STATE Start
+		{
+			/*  читаем код и параметр события из кольцевого буфера в структуру */
+			IF (GetNextMsgFromSCM()) 
+			{
+				SCMsgCode = GetMsgCodeFromSCM();
+				SWITCH (SCMsgCode) 				
+				{
+				
+					CASE SCM2VM_TEST_TEST1:					
+						SendMsgGUICode(VM2GUI_START_TEST_TEST1);
+						START PROC Test1Control;
+						START PROC Terminator; 	
+						BREAK;
+					CASE SCM2VM_TEST_TEST2:					
+						SendMsgGUICode(VM2GUI_START_TEST_TEST2);
+						START PROC Test2Control;
+						START PROC Terminator; 	
+						BREAK;
+					CASE SCM2VM_FINISH_VERIFICATION:
+						SendMsgGUICode(VM2GUI_END_VERIFICATION);
+						STOP PROC Terminator; 
+						STOP;
+						BREAK;
+				}
+			}
+			LOOP;
+		}
+	}
+	
+	PROC Terminator
+	{
+		STATE Idling
+		{
+			TIMEOUT TestIdling SET NEXT;
+		}
+		STATE Report
+		{			
+		/*Test1Control*/
+		IF(PROC Test1Control SET STATE ACTIVE)
+		{
+			SendMsgGUICode(VM2GUI_TEST_PASSED_TEST1);
+		}
+		IF (PROC Test1Control SET STATE ERROR)
+		{
+			SendMsgGUICode(VM2GUI_TEST_FAILED_TEST1);
+		}
+
+		STOP PROC Test1Control;
+		
+		/*Test1Control*/		
+		IF(PROC Test2Control SET STATE ACTIVE)
+		{
+			SendMsgGUICode(VM2GUI_TEST_PASSED_TEST2);
+		}
+
+		IF (PROC Test2Control SET STATE ERROR)
+		{
+			SendMsgGUICode(VM2GUI_TEST_FAILED_TEST2);
+		}
+
+		 
+		STOP PROC Test2Control; 
+		
+		SendMsgSCMCode(VM2SCM_NEXT_TEST);
+		STOP;
+		}	
+	}
+
+/*Проверка требования: Если появилась машина со стороны сельской дороги, то дорога откроется ровно через P тактов (1 минута)*/
+	PROC Test1Control
+	{
+		FROM PROC Init I_CAR_NEAR_CROSROAD, I_SWITCH_TRAFFIC_LIGHT_TO_SECOND_ROAD;
+		
+		STATE WaitingOfCar /*Ждем для переключения датчика*/
+		{
+			IF(I_CAR_NEAR_CROSROAD == ON) 
+				SET NEXT;
+			TIMEOUT ObjectDelay ERROR;
+		}		
+		
+		STATE CheckOnSwitch /*Проверим не переключен ли уже светофор*/
+		{
+			IF (I_SWITCH_TRAFFIC_LIGHT_TO_SECOND_ROAD == OFF)
+				SET NEXT; 
+			TIMEOUT AlgorithmDelay ERROR;
+		}
+		
+		STATE WaitingPCycles /*Ждем минуту(Р тактов)*/
+		{
+			TIMEOUT PCyclesDelay SET NEXT;
+		}
+		
+		STATE PCyclesControl /*Проверяем состояние датчика после Р тактов*/
+		{
+			TIMEOUT AlgorithmDelay
+			{
+				IF(I_SWITCH_TRAFFIC_LIGHT_TO_SECOND_ROAD == OFF) 
+					ERROR;
+			}
+		}	
+	}
+
+/*Проверка требования: Между открытием и закрытием сельской дороги должно пройти ровно K тактов (пол минуты)*/
+	PROC Test2Control
+	{
+		FROM PROC Init I_CAR_NEAR_CROSROAD, I_SWITCH_TRAFFIC_LIGHT_TO_SECOND_ROAD;
+		INT counter LOCAL;
+		/*1VARIANT*****************************************/
+		STATE WaitingOfCar /*Ждем для переключения датчика*/
+		{
+			IF(I_CAR_NEAR_CROSROAD == ON) 
+				SET STATE WaitingPCycles;
+			TIMEOUT ObjectDelay ERROR;
+		}
+		
+		STATE WaitingPCycles /*Ждем минуту(Р тактов)*/
+		{
+			IF (I_SWITCH_TRAFFIC_LIGHT_TO_SECOND_ROAD == ON)
+				ERROR;
+			TIMEOUT PCyclesDelay SET NEXT;
+		}
+		
+		STATE PCyclesControl /*Проверяем состояние датчика после Р тактов*/
+		{
+			IF(I_SWITCH_TRAFFIC_LIGHT_TO_SECOND_ROAD == OFF) 
+				ERROR;
+			TIMEOUT AlgorithmDelay SET NEXT;
+		}	
+		
+		STATE KCyclesControl /*Проверяем состояние датчика после K тактов*/
+		{
+			TIMEOUT KCyclesDelay
+			{
+				IF(I_SWITCH_TRAFFIC_LIGHT_TO_SECOND_ROAD == ON) 
+					ERROR;
+			}
+		}
+		/*2VARIANT*****************************************/
+		STATE INIT
+		{
+			counter = 1;
+			SET NEXT;
+		}
+		
+		STATE WAIT_P/*ЖДЕМ МИНУТУ*/
+		{
+			IF(I_SWITCH_TRAFFIC_LIGHT_TO_SECOND_ROAD == OFF)
+			{
+				counter++;
+				IF(counter >= 2*PCyclesDelay) /*ЧТОБЫ НЕ ЗАЦИКЛИЛСЯ*/
+					ERROR;
+			}
+			ELSE
+			{
+				IF(counter < PCyclesDelay) 
+					ERROR;
+				SET NEXT;
+			}
+		LOOP;		
+		}
+		
+		STATE WAIT_K/*ЖДЕМ ПОЛ-МИНУТЫ*/
+		{
+			IF(I_SWITCH_TRAFFIC_LIGHT_TO_SECOND_ROAD == OFF) 
+				ERROR;
+			TIMEOUT KCyclesDelay
+			{
+				IF(I_SWITCH_TRAFFIC_LIGHT_TO_SECOND_ROAD == ON) 
+					ERROR;
+			}
+		}
+		
+		/*3VARIANT*****************************************/
+		STATE WAIT_P/*ЖДЕМ МИНУТУ*/
+		{
+			IF(I_CAR_NEAR_CROSROAD == ON) 
+			{
+				IF(I_SWITCH_TRAFFIC_LIGHT_TO_SECOND_ROAD == OFF)
+					TIMEOUT PCyclesDelay SET NEXT;
+				TIMEOUT AlgorithmDelay ERROR;
+			}
+			TIMEOUT ObjectDelay ERROR;
+		}
+		
+		/*4VARIANT*****************************************/
+		STATE CheckInitialState /*Проверим что машина приехала и светофор выключен*/
+		{
+			IF(I_CAR_NEAR_CROSROAD == ON && I_SWITCH_TRAFFIC_LIGHT_TO_SECOND_ROAD == OFF) 
+				SET NEXT;
+			TIMEOUT ObjectDelay ERROR;
+		}
+		
+		STATE WaitingPCycles /*Ждем минуту(Р тактов)*/
+		{
+			TIMEOUT PCyclesDelay SET NEXT;
+		}
+					
+		STATE PCyclesControl /*Проверяем состояние датчика после Р тактов*/
+		{
+			IF(I_SWITCH_TRAFFIC_LIGHT_TO_SECOND_ROAD == ON) 
+				SET NEXT;
+			TIMEOUT AlgorithmDelay ERROR;
+		}
+		
+		STATE WaitingKCycles /*Ждем пол-минуты(K тактов)*/
+		{
+			TIMEOUT KCyclesDelay SET NEXT;
+		}
+		
+		STATE KCyclesControl /*Проверяем состояние датчика после Р тактов*/
+		{
+			TIMEOUT AlgorithmDelay
+			{
+				IF(I_CAR_NEAR_CROSROAD == ON || I_SWITCH_TRAFFIC_LIGHT_TO_SECOND_ROAD == ON) 
+					ERROR;
+			}
+		}
+	}
+}
+
+
+

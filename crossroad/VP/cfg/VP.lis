@@ -1,0 +1,213 @@
+    1          PROGR PLANT
+    2          {
+    3          TACT 50;
+    4          CONST ON 1;
+    5          CONST OFF 0;
+    6          CONST DrivingTime 10; /*(60)~3 сек машина едет до датчика или от датчика после пересечения автострады*/
+    7          CONST CrossingTime 10; /*(60)~3 сек для пересечения автострады*/
+    8          CONST YellowLightTime 20; /*(160)~8 сек горит желтый свет светофора*/
+    9          CONST SensorTime 10; /*(40)~2 сек машина проезжает датчик*/
+   10          CONST Norm 1;
+   11          CONST Wrong 0;
+   12          
+   13          ENUM
+   14          {		
+   15          	SCM2VP_RUN_CAR,
+   16          	SCM2VP_RUN_WRONG_CAR,
+   17          	SCM2VP_RUN_TWO_CARS
+   18          };
+   19          
+   20          FUNCTION INT GetMessageFromScenariousBlock(VOID);
+   21          FUNCTION INT GetMessageCodeFromScenariousBlock(VOID);
+   22          	
+   23          INPUT  LOG_VP_INPUT_PORT  0 0 8; 
+   24          OUTPUT LOG_VP_OUTPUT_PORT 1 0 8;
+   25          
+   26          PROC Init
+   27          {
+   28          LOG I_SWITCH_TRAFFIC_LIGHT = {LOG_VP_INPUT_PORT[1]} FOR ALL;
+   29          LOG S_CAR_NEAR_CROSSROAD = {LOG_VP_OUTPUT_PORT[1]} FOR ALL;
+   30          	
+   31          	STATE Start
+   32          	{ 			
+   33          		START PROC ReceiveSCMOutputMsg;
+   34          		STOP;  
+   35          	}
+   36          } 
+   37          	
+   38          PROC ReceiveSCMOutputMsg
+   39          {
+   40          	LOG CarFlag FOR ALL; 
+   41          	FROM PROC Init S_CAR_NEAR_CROSSROAD;
+   42          	INT SCMsgCode LOCAL;
+   43          
+   44          	STATE Start
+   45          	{
+   46          		CarFlag = Norm;
+   47          		IF (GetMessageFromScenariousBlock()) 
+   48          		{
+   49          			SCMsgCode = GetMessageCodeFromScenariousBlock();
+   50          			SWITCH (SCMsgCode)
+   51          			{
+   52          				CASE SCM2VP_RUN_CAR:
+   53          					IF(PROC RunCar SET STATE PASSIVE)
+   54          						START PROC RunCar;	
+   55          					BREAK;					
+   56          				CASE SCM2VP_RUN_WRONG_CAR:
+   57          					CarFlag = Wrong;
+   58          					IF(PROC RunCar SET STATE PASSIVE)
+   59          						START PROC RunCar;	
+   60          					BREAK;
+   61          				CASE SCM2VP_RUN_TWO_CARS:
+   62          					IF(PROC RunTwoCars SET STATE PASSIVE)
+   63          						START PROC RunTwoCars;	
+   64          					BREAK;
+   65          			}
+   66          		}
+   67          		LOOP;
+   68          	}
+   69          }
+   70          
+   71          PROC RunCar
+   72          {
+   73          	FROM PROC ReceiveSCMOutputMsg CarFlag;
+   74          	FROM PROC Init S_CAR_NEAR_CROSSROAD, I_SWITCH_TRAFFIC_LIGHT;
+   75          
+   76          	STATE GetToSensor1 /*Доедем до датчика наличия машины и включим его*/
+   77          	{
+   78          		TIMEOUT DrivingTime 
+   79          		{
+   80          			S_CAR_NEAR_CROSSROAD = ON;
+   81          			SET NEXT;
+   82          		}
+   83          	}
+   84          	
+   85          	STATE WaitingForSwitching /*Ждем пока светофор переключится на второстепенную дорогу*/
+   86          	{ 
+   87          		IF(I_SWITCH_TRAFFIC_LIGHT == ON)
+   88          			SET NEXT;
+   89          	}
+   90          	
+   91          	STATE WaitingYellowLight /*Ждем пока горит желтый сигнал*/
+   92          	{
+   93          		TIMEOUT YellowLightTime SET NEXT;
+   94          	}
+   95          	
+   96          	STATE PassingSensor1 /*Ждем пока машина проедет датчик1*/
+   97          	{
+   98          		TIMEOUT SensorTime
+   99          		{
+  100          			IF(CarFlag == Norm)
+  101          				S_CAR_NEAR_CROSSROAD = OFF;
+  102          			SET NEXT;
+  103          		}
+  104          	}
+  105          	
+  106          	STATE PassingCrossroad /*Ждем пока машина проедет перекресток*/
+  107          	{
+  108          		TIMEOUT CrossingTime
+  109          		{
+  110          			IF(CarFlag == Norm)
+  111          				S_CAR_NEAR_CROSSROAD = ON;
+  112          			SET NEXT;
+  113          		}
+  114          	}
+  115          	
+  116          	STATE PassingSensor2 /*Ждем пока машина проедет датчик2*/
+  117          	{
+  118          		TIMEOUT SensorTime
+  119          		{
+  120          			IF(CarFlag == Norm)
+  121          				S_CAR_NEAR_CROSSROAD = OFF;
+  122          			SET NEXT;
+  123          		}
+  124          	}
+  125          	
+  126          	STATE GetAwayFromSensor2 /*Ждем пока машина уедет от датчика*/
+  127          	{
+  128          		TIMEOUT DrivingTime STOP; 
+  129          	}
+  130          }
+  131          
+  132          PROC RunTwoCars
+  133          {
+  134          	FROM PROC Init S_CAR_NEAR_CROSSROAD, I_SWITCH_TRAFFIC_LIGHT;
+  135          	INT car_number LOCAL;
+  136          	
+  137          	STATE Init
+  138          	{
+  139          		car_number = 1; /*1-ая машина*/	
+  140          		SET NEXT;
+  141          	}
+  142          	
+  143          	STATE GetToSensor1
+  144          	{
+  145          		TIMEOUT DrivingTime /*Доедем до датчика наличия машины и включим его*/
+  146          		{
+  147          			S_CAR_NEAR_CROSSROAD = ON;
+  148          			SET NEXT;
+  149          		}
+  150          	}
+  151          	
+  152          	STATE WaitingForSwitching /*Ждем пока светофор переключится на второстепенную дорогу*/
+  153          	{ 
+  154          		IF(I_SWITCH_TRAFFIC_LIGHT == ON)
+  155          			SET NEXT;
+  156          	}
+  157          	
+  158          	STATE WaitingYellowLight /*Ждем пока горит желтый сигнал*/
+  159          	{
+  160          		IF(car_number == 2)
+  161          			SET NEXT;
+  162          		TIMEOUT YellowLightTime SET NEXT;
+  163          	}
+  164          	
+  165          	STATE PassingSensor1 /*Ждем пока машина проедет датчик1*/
+  166          	{
+  167          		IF(I_SWITCH_TRAFFIC_LIGHT == OFF)
+  168          			SET STATE WaitingForSwitching;
+  169          		TIMEOUT SensorTime
+  170          		{
+  171          			S_CAR_NEAR_CROSSROAD = OFF;
+  172          			SET NEXT;
+  173          		}
+  174          	}
+  175          	
+  176          	STATE PassingCrossroad /*Ждем пока машина проедет перекресток*/
+  177          	{
+  178          		TIMEOUT CrossingTime
+  179          		{
+  180          			S_CAR_NEAR_CROSSROAD = ON;
+  181          			SET NEXT;
+  182          		}
+  183          	}
+  184          	
+  185          	STATE PassingSensor2 /*Ждем пока машина проедет датчик2*/
+  186          	{
+  187          		TIMEOUT SensorTime
+  188          		{
+  189          			S_CAR_NEAR_CROSSROAD = OFF;
+  190          			SET NEXT;
+  191          		}
+  192          	}
+  193          	
+  194          	STATE GetAwayFromSensor2 /*Ждем пока машина уедет от датчика*/
+  195          	{
+  196          		TIMEOUT DrivingTime
+  197          		{
+  198          			IF(car_number == 1)
+  199          			{
+  200          				car_number++; /*2-ая машина*/
+  201          				SET STATE GetToSensor1;
+  202          			}
+  203          			ELSE IF(car_number == 2)
+  204          				STOP;
+  205          		}
+  206          	}
+  207          }
+  208          }
+
+%RCSL-I-SUMMARY, Completed with 0 error(s).
+%RCSL-I-SUMMARY, Completed with 0 warning(s).
+
+ %RCSL-I-SUMMARY, Completed with 0 error(s).

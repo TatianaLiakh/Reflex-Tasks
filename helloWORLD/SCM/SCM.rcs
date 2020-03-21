@@ -1,0 +1,76 @@
+PROGR DISPATCHER
+{
+	TACT 50;
+	
+	CONST Idiling 0;
+	CONST RunNextTest 1;
+ 
+	/*Набор команд для PLANT(виртуальный объект управления)*/
+	ENUM
+	{		
+		SCM2VP_MESSAGE_TURN_ON,
+		SCM2VP_MESSAGE_TURN_OFF
+	};
+ 
+	/*Набор команд для VERIFIER(блок верификации)*/
+	
+	ENUM 
+	{
+		SCM2VM_TEST_NORMAL_TURN_ON,
+		SCM2VM_TEST_NORMAL_TURN_OFF, 
+		SCM2VM_FINISH_VERIFICATION
+	};
+
+	/*Набор команд для DISPATCHER(блока управления сценарием) от VERIFIER(блока верификации)*/
+	ENUM
+	{
+		VM2SCM_START_VERIFICATION,
+		VM2SCM_NEXT_TEST
+	};
+	
+	FUNCTION INT SendMsgToVirtualPlantCode(INT);
+	FUNCTION INT SendMsgToVerificationModuleCode(INT);
+	FUNCTION INT GetNextMsgFromVM(VOID);
+	FUNCTION INT GetMsgCodeFromVM(VOID);
+
+	PROC Init
+	{
+		STATE Start
+		{  
+			START PROC ReceiveVerifierOutputMsg; 			
+			STOP;
+		}
+	}	
+	
+	PROC ReceiveVerifierOutputMsg
+	{
+		STATE Start
+		{
+			IF(GetNextMsgFromVM())
+			{
+				SendMsgToVerificationModuleCode(SCM2VM_TEST_NORMAL_TURN_ON);
+			}
+			LOOP;			
+		}
+	}
+}  /* \Прогр */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

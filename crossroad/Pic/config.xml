@@ -1,0 +1,24 @@
+<indicators>
+      <indicator>
+          <positionX> 400 </positionX>  
+	  <positionY> 160 </positionY> 
+	  <type>RoundLED</type>
+	  <portType>in</portType> 
+	  <portNum> 0 </portNum> 
+	  <title> I_CAR_NEAR_CROSSROAD </title>
+	  <colorTrue> 66FF00  </colorTrue>
+	  <colorFalse> 0 </colorFalse>
+	  <bitNum>0</bitNum>
+      </indicator>
+      <indicator>
+          <positionX> 400 </positionX> 
+	  <positionY> 25 </positionY> 
+	  <type>RoundLED</type>
+	  <portType>out</portType> 
+	  <portNum> 0 </portNum> 
+	  <title> O_SWITCH_TRAFFIC_LIGHT </title>
+	  <colorTrue> 66FF00 </colorTrue>
+	  <colorFalse> 0 </colorFalse>
+	  <bitNum>0</bitNum>
+      </indicator>
+</indicators>

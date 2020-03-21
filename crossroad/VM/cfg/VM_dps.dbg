@@ -1,0 +1,17 @@
+ Init
+Start
+ ReceiveSCMOutputMsg
+Start
+ Terminator
+Idling
+Report
+ PausePCyclesControl
+WaitingOfCar
+WaitingPCycles
+PCyclesControl
+Idiling
+ DisableMotionForKCyclesControl
+Start
+WaitingKCycles
+KCyclesControl
+Idiling

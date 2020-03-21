@@ -1,0 +1,186 @@
+PROGR VERIFIER
+{
+	TACT 50;
+	CONST ON 1;
+	CONST OFF 0;
+	CONST PCyclesDelay 200; /*20 сек*/
+	CONST KCyclesDelay 150; /*15 сек*/
+	CONST AlgorithmDelay 10; /*1 сек*/
+	CONST TestIdling 400; /*40 сек*/
+
+	/*Набор команд для VERIFIER(блок верификации)*/
+	ENUM 
+	{
+		SCM2VM_TEST_TRAFFIC_LIGHT_CYCLE, 
+		SCM2VM_FINISH_VERIFICATION
+	};
+
+	/*Набор команд для DISPATCHER(блок управления сценарием) от VERIFIER(блока верификации)*/
+	ENUM
+	{
+		VM2SCM_START_VERIFICATION,
+		VM2SCM_NEXT_TEST
+	};
+
+	/*Набор Команд для GUI */
+	ENUM
+	{
+		VM2GUI_TEST_PASSED_PAUSE_P_CYCLES, 
+		VM2GUI_TEST_PASSED_DISABLE_MOTION_FOR_K_CYCLES,
+		VM2GUI_TEST_FAILED_PAUSE_P_CYCLES,
+		VM2GUI_TEST_FAILED_DISABLE_MOTION_FOR_K_CYCLES,
+		VM2GUI_START_TEST_PAUSE_P_CYCLES,
+		VM2GUI_START_TEST_DISABLE_MOTION_FOR_K_CYCLES,
+		VM2GUI_END_VERIFICATION
+	};
+	
+	FUNCTION INT SendMsgSCMCode(INT);
+	FUNCTION INT SendMsgGUICode(INT);
+	FUNCTION INT GetNextMsgFromSCM(VOID);
+	FUNCTION INT GetMsgCodeFromSCM(VOID);
+
+	INPUT  LOG_CA_INPUT_PORT 0 0 8; /* имя, базовый адрес, доп. адр. порта, 8бит */
+	INPUT  LOG_CA_OUTPUT_PORT  0 1 8; /* имя, базовый адрес, доп. адр. порта, 8бит */
+	
+	PROC Init
+	{	
+		LOG I_CAR_NEAR_CROSSROAD = {LOG_CA_INPUT_PORT[1]} FOR ALL;
+		LOG I_SWITCH_TRAFFIC_LIGHT = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
+				
+		STATE Start 
+		{	
+			SendMsgSCMCode(VM2SCM_START_VERIFICATION); 	
+			START PROC ReceiveSCMOutputMsg;
+			STOP;
+		}
+	} 
+	
+	PROC ReceiveSCMOutputMsg
+	{  
+		INT SCMsgCode LOCAL;
+		STATE Start
+		{
+			/*  читаем код и параметр события из кольцевого буфера в структуру */
+			IF (GetNextMsgFromSCM()) 
+			{
+				SCMsgCode = GetMsgCodeFromSCM();
+				SWITCH (SCMsgCode) 				
+				{
+				
+					CASE SCM2VM_TEST_TRAFFIC_LIGHT_CYCLE:
+						SendMsgGUICode(VM2GUI_START_TEST_PAUSE_P_CYCLES);
+						SendMsgGUICode(VM2GUI_START_TEST_DISABLE_MOTION_FOR_K_CYCLES);		
+						START PROC PausePCyclesControl;						
+						START PROC DisableMotionForKCyclesControl;
+						START PROC Terminator; 	
+						BREAK;
+					CASE SCM2VM_FINISH_VERIFICATION:
+						SendMsgGUICode(VM2GUI_END_VERIFICATION);
+						STOP PROC Terminator; 
+						STOP;
+						BREAK;
+				}
+			}
+			LOOP;
+		}
+	}
+	
+	PROC Terminator
+	{
+		STATE Idling
+		{
+			TIMEOUT TestIdling SET NEXT;
+		}
+		STATE Report
+		{			
+			/*PausePCyclesControl*/
+			IF(PROC PausePCyclesControl SET STATE ACTIVE)
+			{
+				SendMsgGUICode(VM2GUI_TEST_PASSED_PAUSE_P_CYCLES);
+			}
+			IF(PROC PausePCyclesControl SET STATE ERROR)
+			{
+				SendMsgGUICode(VM2GUI_TEST_FAILED_PAUSE_P_CYCLES);
+			}
+
+			STOP PROC PausePCyclesControl;
+			
+			/*DisableMotionForKCyclesControl*/		
+			IF(PROC DisableMotionForKCyclesControl SET STATE ACTIVE)
+			{
+				SendMsgGUICode(VM2GUI_TEST_PASSED_DISABLE_MOTION_FOR_K_CYCLES);
+			}
+
+			IF(PROC DisableMotionForKCyclesControl SET STATE ERROR)
+			{
+				SendMsgGUICode(VM2GUI_TEST_FAILED_DISABLE_MOTION_FOR_K_CYCLES);
+			}
+			 
+			STOP PROC DisableMotionForKCyclesControl; 			
+			SendMsgSCMCode(VM2SCM_NEXT_TEST);
+			STOP;
+		}	
+	}
+
+
+/*Проверка требования: Если появилась машина со стороны сельской дороги, то дорога откроется ровно через P тактов (1 минута)*/
+	PROC PausePCyclesControl
+	{
+		FROM PROC Init I_CAR_NEAR_CROSSROAD, I_SWITCH_TRAFFIC_LIGHT;
+		
+		STATE WaitingOfCar /*Ждем для переключения датчика*/
+		{
+			IF(I_CAR_NEAR_CROSSROAD == ON) 
+				SET NEXT;
+		}		
+
+		STATE WaitingPCycles /*Ждем(Р тактов)*/
+		{
+			IF(I_SWITCH_TRAFFIC_LIGHT == ON) 
+				ERROR;
+			TIMEOUT PCyclesDelay SET NEXT;
+		}
+		
+		STATE PCyclesControl /*Проверяем состояние датчика после Р тактов*/
+		{
+			IF(I_SWITCH_TRAFFIC_LIGHT == ON) 
+				SET NEXT;
+			TIMEOUT AlgorithmDelay ERROR;	
+		}	
+		
+		STATE Idiling
+		{
+			LOOP;
+		}
+	}
+
+/*Проверка требования: Между открытием и закрытием сельской дороги должно пройти ровно K тактов (пол минуты)*/
+	PROC DisableMotionForKCyclesControl
+	{
+		FROM PROC Init I_CAR_NEAR_CROSSROAD, I_SWITCH_TRAFFIC_LIGHT;
+
+		STATE Start /*Ждем пока светофор переключится*/
+		{
+			IF(I_SWITCH_TRAFFIC_LIGHT == ON) 
+				SET NEXT;
+		}
+		
+		STATE WaitingKCycles /*Ждем(K тактов)*/
+		{
+			IF(I_SWITCH_TRAFFIC_LIGHT == OFF) 
+				ERROR;
+			TIMEOUT KCyclesDelay SET NEXT;
+		}
+		
+		STATE KCyclesControl /*Проверяем состояние датчика после Р тактов*/
+		{
+			IF(I_SWITCH_TRAFFIC_LIGHT == OFF) SET NEXT;
+				TIMEOUT AlgorithmDelay ERROR;
+		}
+		
+		STATE Idiling
+		{
+			LOOP;
+		}
+	}
+}
