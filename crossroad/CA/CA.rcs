@@ -3,7 +3,7 @@ PROGR ALGORITHM
 	TACT 100;
 	CONST OFF 0;
 	CONST ON 1;
-	CONST KCyclesDelay 150; /*15 сек*/
+	CONST KCyclesDelay 150; /*15 секунд*/
 	CONST PCyclesDelay 200; /*20 сек*/
 	
 	INPUT  LOG_CA_INPUT_PORT  0 0 8; /* имя, базовый адрес, доп. адр. порта, 8бит */
@@ -43,9 +43,14 @@ PROGR ALGORITHM
 		TIMEOUT PCyclesDelay SET NEXT;
 	}
 	
-	STATE DisableMotionForKCycles
+	STATE Switching
 	{
 		C_SWITCH_TRAFFIC_LIGHT = ON;
+		SET NEXT;
+	}
+	
+	STATE DisableMotionForKCycles
+	{
 		TIMEOUT KCyclesDelay
 		{
 			C_SWITCH_TRAFFIC_LIGHT = OFF;

@@ -120,7 +120,7 @@ PROGR DISPATCHER
 			STOP;
 		}
 	}
-
+	
 	PROC TestNormCar
 	{
 		STATE Start 

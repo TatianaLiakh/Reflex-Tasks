@@ -120,7 +120,7 @@
   120          			STOP;
   121          		}
   122          	}
-  123          
+  123          	
   124          	PROC TestNormCar
   125          	{
   126          		STATE Start 

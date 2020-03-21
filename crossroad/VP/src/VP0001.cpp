@@ -22,7 +22,6 @@ void P1 (void) /* œ–Œ÷≈——: ReceiveSCMOutputMsg */
 
 		case 0:    /*  P1S0() - —Œ—“ŒﬂÕ»≈: Start */
 
-		P1V0 = C_6;
 		if (GetMessageFromScenariousBlock()) 
 		{
 			P1V2 = GetMessageCodeFromScenariousBlock();
@@ -30,16 +29,24 @@ void P1 (void) /* œ–Œ÷≈——: ReceiveSCMOutputMsg */
 			{
 				case C_8:
 					if((Check_State(2) & MASK_OF_INACTIVITY))
+					{
+						P1V0 = C_6;
 						Set_Start(2);	
+					}
 					break;					
 				case C_9:
-					P1V0 = C_7;
 					if((Check_State(2) & MASK_OF_INACTIVITY))
+					{
+						P1V0 = C_7;
 						Set_Start(2);	
+					}
 					break;
 				case C_10:
 					if((Check_State(3) & MASK_OF_INACTIVITY))
+					{
+						P1V0 = C_6;
 						Set_Start(3);	
+					}
 					break;
 			}
 		}
@@ -75,8 +82,11 @@ void P2 (void) /* œ–Œ÷≈——: RunCar */
 
 		if (Timeout(2, C_5)) 
 		{
+			
 			if(P1V0 == C_6)
+			{
 				P0V1[1] = C_1;
+			}
 			Set_State(2, 4);
 		}
 			break;
@@ -84,8 +94,8 @@ void P2 (void) /* œ–Œ÷≈——: RunCar */
 
 		if (Timeout(2, C_3)) 
 		{
-			if(P1V0 == C_6)
-				P0V1[1] = C_0;
+			if(P1V0 == C_6){
+				P0V1[1] = C_0;}
 			Set_State(2, 5);
 		}
 			break;
@@ -93,8 +103,8 @@ void P2 (void) /* œ–Œ÷≈——: RunCar */
 
 		if (Timeout(2, C_5)) 
 		{
-			if(P1V0 == C_6)
-				P0V1[1] = C_1;
+			if(P1V0 == C_6){
+				P0V1[1] = C_1;}
 			Set_State(2, 6);
 		}
 			break;

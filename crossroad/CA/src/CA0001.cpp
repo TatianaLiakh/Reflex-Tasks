@@ -36,9 +36,13 @@ void P1 (void) /* œ–Œ÷≈——: LightWorkCycle */
 		P0V1[1] = C_0;
 		if (Timeout(1, C_3))  Set_State(1, 1);
 			break;
-		case 1:    /*  P1S1() - —Œ—“ŒﬂÕ»≈: DisableMotionForKCycles */
+		case 1:    /*  P1S1() - —Œ—“ŒﬂÕ»≈: Switching */
 
 		P0V1[1] = C_1;
+		Set_State(1, 2);
+			break;
+		case 2:    /*  P1S2() - —Œ—“ŒﬂÕ»≈: DisableMotionForKCycles */
+
 		if (Timeout(1, C_2)) 
 		{
 			P0V1[1] = C_0;

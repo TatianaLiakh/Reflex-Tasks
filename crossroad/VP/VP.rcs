@@ -34,7 +34,7 @@ LOG S_CAR_NEAR_CROSSROAD = {LOG_VP_OUTPUT_PORT[1]} FOR ALL;
 		STOP;  
 	}
 } 
-	
+
 PROC ReceiveSCMOutputMsg
 {
 	LOG CarFlag FOR ALL; 
@@ -43,7 +43,6 @@ PROC ReceiveSCMOutputMsg
 
 	STATE Start
 	{
-		CarFlag = Norm;
 		IF (GetMessageFromScenariousBlock()) 
 		{
 			SCMsgCode = GetMessageCodeFromScenariousBlock();
@@ -51,16 +50,24 @@ PROC ReceiveSCMOutputMsg
 			{
 				CASE SCM2VP_RUN_CAR:
 					IF(PROC RunCar SET STATE PASSIVE)
+					{
+						CarFlag = Norm;
 						START PROC RunCar;	
+					}
 					BREAK;					
 				CASE SCM2VP_RUN_WRONG_CAR:
-					CarFlag = Wrong;
 					IF(PROC RunCar SET STATE PASSIVE)
+					{
+						CarFlag = Wrong;
 						START PROC RunCar;	
+					}
 					BREAK;
 				CASE SCM2VP_RUN_TWO_CARS:
 					IF(PROC RunTwoCars SET STATE PASSIVE)
+					{
+						CarFlag = Norm;
 						START PROC RunTwoCars;	
+					}
 					BREAK;
 			}
 		}
@@ -97,8 +104,11 @@ PROC RunCar
 	{
 		TIMEOUT SensorTime
 		{
+			
 			IF(CarFlag == Norm)
+			{
 				S_CAR_NEAR_CROSSROAD = OFF;
+			}
 			SET NEXT;
 		}
 	}
@@ -107,8 +117,8 @@ PROC RunCar
 	{
 		TIMEOUT CrossingTime
 		{
-			IF(CarFlag == Norm)
-				S_CAR_NEAR_CROSSROAD = ON;
+			IF(CarFlag == Norm){
+				S_CAR_NEAR_CROSSROAD = ON;}
 			SET NEXT;
 		}
 	}
@@ -117,8 +127,8 @@ PROC RunCar
 	{
 		TIMEOUT SensorTime
 		{
-			IF(CarFlag == Norm)
-				S_CAR_NEAR_CROSSROAD = OFF;
+			IF(CarFlag == Norm){
+				S_CAR_NEAR_CROSSROAD = OFF;}
 			SET NEXT;
 		}
 	}
