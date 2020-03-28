@@ -1,24 +1,110 @@
 <indicators>
       <indicator>
-          <positionX> 400 </positionX>  
-	  <positionY> 160 </positionY> 
-	  <type>RoundLED</type>
-	  <portType>in</portType> 
-	  <portNum> 0 </portNum> 
-	  <title> I_CAR_NEAR_CROSSROAD </title>
-	  <colorTrue> 66FF00  </colorTrue>
-	  <colorFalse> 0 </colorFalse>
-	  <bitNum>0</bitNum>
+		<positionX> 475 </positionX>  
+		<positionY> 293 </positionY> 
+		<type>SquareLED</type>
+		<portType>in</portType> 
+		<portNum> 0 </portNum> 
+		<colorTrue> 66FF00  </colorTrue>
+		<colorFalse> 0 </colorFalse>
+		<bitNum>0</bitNum>
+		<width>2</width>
+		<height>15</height>
       </indicator>
       <indicator>
-          <positionX> 400 </positionX> 
-	  <positionY> 25 </positionY> 
-	  <type>RoundLED</type>
-	  <portType>out</portType> 
-	  <portNum> 0 </portNum> 
-	  <title> O_SWITCH_TRAFFIC_LIGHT </title>
-	  <colorTrue> 66FF00 </colorTrue>
-	  <colorFalse> 0 </colorFalse>
-	  <bitNum>0</bitNum>
+        <positionX> 302 </positionX> 
+		<positionY> 71 </positionY> 
+		<type>RoundLED</type>
+		<portType>out</portType> 
+		<portNum> 0 </portNum> 
+		<colorTrue> 0 </colorTrue>
+		<colorFalse> 66FF00 </colorFalse>
+		<bitNum>0</bitNum>
+		<width>2</width>
+		<height>2</height>
+      </indicator>
+	  <indicator>
+        <positionX> 266 </positionX> 
+		<positionY> 71 </positionY> 
+		<type>RoundLED</type>
+		<portType>out</portType> 
+		<portNum> 0 </portNum> 
+		<colorTrue> E60C0C </colorTrue>
+		<colorFalse> 0 </colorFalse>
+		<bitNum>0</bitNum>
+		<width>2</width>
+		<height>2</height>
+      </indicator>
+      <indicator>
+        <positionX> 94 </positionX> 
+		<positionY> 90 </positionY> 
+		<type>RoundLED</type>
+		<portType>out</portType> 
+		<portNum> 0 </portNum> 
+		<colorTrue> 0 </colorTrue>
+		<colorFalse> E60C0C </colorFalse>
+		<bitNum>0</bitNum>
+		<width>2</width>
+		<height>2</height>
+      </indicator>
+	  <indicator>
+        <positionX> 94 </positionX> 
+		<positionY> 56 </positionY> 
+		<type>RoundLED</type>
+		<portType>out</portType> 
+		<portNum> 0 </portNum> 
+		<colorTrue> 66FF00 </colorTrue>
+		<colorFalse> 0 </colorFalse>
+		<bitNum>0</bitNum>
+		<width>2</width>
+		<height>2</height>
+      </indicator>
+      <indicator>
+        <positionX> 73 </positionX> 
+		<positionY> 260 </positionY> 
+		<type>RoundLED</type>
+		<portType>out</portType> 
+		<portNum> 0 </portNum> 
+		<colorTrue> 0 </colorTrue>
+		<colorFalse> 66FF00 </colorFalse>
+		<bitNum>0</bitNum>
+		<width>2</width>
+		<height>2</height>
+      </indicator>
+	  <indicator>
+        <positionX> 109 </positionX> 
+		<positionY> 260 </positionY> 
+		<type>RoundLED</type>
+		<portType>out</portType> 
+		<portNum> 0 </portNum> 
+		<colorTrue> E60C0C </colorTrue>
+		<colorFalse> 0 </colorFalse>
+		<bitNum>0</bitNum>
+		<width>2</width>
+		<height>2</height>
+      </indicator>
+      <indicator>
+        <positionX> 278 </positionX> 
+		<positionY> 247 </positionY> 
+		<type>RoundLED</type>
+		<portType>out</portType> 
+		<portNum> 0 </portNum> 
+		<colorTrue> 0 </colorTrue>
+		<colorFalse> E60C0C </colorFalse>
+		<bitNum>0</bitNum>
+		<width>2</width>
+		<height>2</height>
+      </indicator>
+	  <indicator>
+        <positionX> 278 </positionX> 
+		<positionY> 280 </positionY> 
+		<type>RoundLED</type>
+		<portType>out</portType> 
+		<portNum> 0 </portNum> 
+		<colorTrue> 66FF00 </colorTrue>
+		<colorFalse> 0 </colorFalse>
+		<bitNum>0</bitNum>
+		<width>2</width>
+		<height>2</height>
       </indicator>
 </indicators>

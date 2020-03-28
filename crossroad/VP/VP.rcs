@@ -3,10 +3,10 @@ PROGR PLANT
 TACT 50;
 CONST ON 1;
 CONST OFF 0;
-CONST DrivingTime 10; /*(60)~3 сек машина едет до датчика или от датчика после пересечения автострады*/
-CONST CrossingTime 10; /*(60)~3 сек для пересечения автострады*/
-CONST YellowLightTime 20; /*(160)~8 сек горит желтый свет светофора*/
-CONST SensorTime 10; /*(40)~2 сек машина проезжает датчик*/
+CONST DrivingTime 10; /*~1 сек машина едет до датчика или от датчика после пересечения автострады*/
+CONST CrossingTime 10; /*~1 сек для пересечения автострады*/
+CONST YellowLightTime 20; /*~2 сек горит желтый свет светофора*/
+CONST SensorTime 10; /*~ сек машина проезжает датчик*/
 CONST Norm 1;
 CONST Wrong 0;
 
@@ -79,6 +79,12 @@ PROC RunCar
 {
 	FROM PROC ReceiveSCMOutputMsg CarFlag;
 	FROM PROC Init S_CAR_NEAR_CROSSROAD, I_SWITCH_TRAFFIC_LIGHT;
+	
+	STATE Start
+	{
+		S_CAR_NEAR_CROSSROAD = OFF;
+		SET NEXT;
+	}
 
 	STATE GetToSensor1 /*Доедем до датчика наличия машины и включим его*/
 	{
@@ -106,9 +112,7 @@ PROC RunCar
 		{
 			
 			IF(CarFlag == Norm)
-			{
 				S_CAR_NEAR_CROSSROAD = OFF;
-			}
 			SET NEXT;
 		}
 	}
@@ -117,8 +121,8 @@ PROC RunCar
 	{
 		TIMEOUT CrossingTime
 		{
-			IF(CarFlag == Norm){
-				S_CAR_NEAR_CROSSROAD = ON;}
+			IF(CarFlag == Norm)
+				S_CAR_NEAR_CROSSROAD = ON;
 			SET NEXT;
 		}
 	}
@@ -127,15 +131,17 @@ PROC RunCar
 	{
 		TIMEOUT SensorTime
 		{
-			IF(CarFlag == Norm){
-				S_CAR_NEAR_CROSSROAD = OFF;}
-			SET NEXT;
+			IF(CarFlag == Norm || I_SWITCH_TRAFFIC_LIGHT == OFF)
+			{
+				S_CAR_NEAR_CROSSROAD = OFF;
+				SET NEXT;
+			}
 		}
 	}
 	
 	STATE GetAwayFromSensor2 /*Ждем пока машина уедет от датчика*/
 	{
-		TIMEOUT DrivingTime STOP; 
+		TIMEOUT DrivingTime STOP;
 	}
 }
 
@@ -144,7 +150,7 @@ PROC RunTwoCars
 	FROM PROC Init S_CAR_NEAR_CROSSROAD, I_SWITCH_TRAFFIC_LIGHT;
 	INT car_number LOCAL;
 	
-	STATE Init
+	STATE Start
 	{
 		car_number = 1; /*1-ая машина*/	
 		SET NEXT;

@@ -3,6 +3,7 @@ Start
  ReceiveSCMOutputMsg
 Start
  RunCar
+Start
 GetToSensor1
 WaitingForSwitching
 WaitingYellowLight
@@ -11,7 +12,7 @@ PassingCrossroad
 PassingSensor2
 GetAwayFromSensor2
  RunTwoCars
-Init
+Start
 GetToSensor1
 WaitingForSwitching
 WaitingYellowLight

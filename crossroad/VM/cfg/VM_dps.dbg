@@ -5,12 +5,12 @@ Start
  Terminator
 Idling
 Report
- PausePCyclesControl
+ NormalOpenRoadDelayControl
 WaitingOfCar
 WaitingPCycles
 PCyclesControl
 Idiling
- DisableMotionForKCyclesControl
+ NormalCloseRoadDelayControl
 Start
 WaitingKCycles
 KCyclesControl

@@ -6,12 +6,14 @@ PROGR VERIFIER
 	CONST PCyclesDelay 200; /*20 сек*/
 	CONST KCyclesDelay 150; /*15 сек*/
 	CONST AlgorithmDelay 10; /*1 сек*/
-	CONST TestIdling 400; /*40 сек*/
+	CONST TestIdling 370; /*37 сек*/
 
 	/*Ќабор команд дл€ VERIFIER(блок верификации)*/
 	ENUM 
 	{
-		SCM2VM_TEST_TRAFFIC_LIGHT_CYCLE, 
+		SCM2VM_TEST_RUN_CAR,
+		SCM2VM_TEST_RUN_WRONG_CAR,
+		SCM2VM_TEST_RUN_TWO_CARS, 
 		SCM2VM_FINISH_VERIFICATION
 	};
 
@@ -25,12 +27,13 @@ PROGR VERIFIER
 	/*Ќабор  оманд дл€ GUI */
 	ENUM
 	{
-		VM2GUI_TEST_PASSED_PAUSE_P_CYCLES, 
-		VM2GUI_TEST_PASSED_DISABLE_MOTION_FOR_K_CYCLES,
-		VM2GUI_TEST_FAILED_PAUSE_P_CYCLES,
-		VM2GUI_TEST_FAILED_DISABLE_MOTION_FOR_K_CYCLES,
-		VM2GUI_START_TEST_PAUSE_P_CYCLES,
-		VM2GUI_START_TEST_DISABLE_MOTION_FOR_K_CYCLES,
+		VM2GUI_START_TEST_RUN_CAR,
+		VM2GUI_START_TEST_RUN_WRONG_CAR,
+		VM2GUI_START_TEST_RUN_TWO_CARS,
+		VM2GUI_TEST_PASSED_NORMAL_OPEN_ROAD_DELAY, 
+		VM2GUI_TEST_PASSED_NORMAL_CLOSE_ROAD_DELAY,
+		VM2GUI_TEST_FAILED_NORMAL_OPEN_ROAD_DELAY,
+		VM2GUI_TEST_FAILED_NORMAL_CLOSE_ROAD_DELAY,
 		VM2GUI_END_VERIFICATION
 	};
 	
@@ -57,23 +60,36 @@ PROGR VERIFIER
 	
 	PROC ReceiveSCMOutputMsg
 	{  
-		INT SCMsgCode LOCAL;
+		INT SCMsgCode LOCAL; 
 		STATE Start
 		{
 			/*  читаем код и параметр событи€ из кольцевого буфера в структуру */
-			IF (GetNextMsgFromSCM()) 
+			IF(GetNextMsgFromSCM()) 
 			{
 				SCMsgCode = GetMsgCodeFromSCM();
 				SWITCH (SCMsgCode) 				
-				{
-				
-					CASE SCM2VM_TEST_TRAFFIC_LIGHT_CYCLE:
-						SendMsgGUICode(VM2GUI_START_TEST_PAUSE_P_CYCLES);
-						SendMsgGUICode(VM2GUI_START_TEST_DISABLE_MOTION_FOR_K_CYCLES);		
-						START PROC PausePCyclesControl;						
-						START PROC DisableMotionForKCyclesControl;
-						START PROC Terminator; 	
+				{				
+					CASE SCM2VM_TEST_RUN_CAR:
+						SendMsgGUICode(VM2GUI_START_TEST_RUN_CAR);
+						START PROC NormalOpenRoadDelayControl;						
+						START PROC NormalCloseRoadDelayControl;
+						START PROC Terminator; 
 						BREAK;
+						
+					CASE SCM2VM_TEST_RUN_WRONG_CAR:
+						SendMsgGUICode(VM2GUI_START_TEST_RUN_WRONG_CAR);
+						START PROC NormalOpenRoadDelayControl;						
+						START PROC NormalCloseRoadDelayControl;
+						START PROC Terminator; 
+						BREAK;
+					
+					CASE SCM2VM_TEST_RUN_TWO_CARS:
+						SendMsgGUICode(VM2GUI_START_TEST_RUN_TWO_CARS);
+						START PROC NormalOpenRoadDelayControl;						
+						START PROC NormalCloseRoadDelayControl;
+						START PROC Terminator; 
+						BREAK;
+
 					CASE SCM2VM_FINISH_VERIFICATION:
 						SendMsgGUICode(VM2GUI_END_VERIFICATION);
 						STOP PROC Terminator; 
@@ -93,38 +109,38 @@ PROGR VERIFIER
 		}
 		STATE Report
 		{			
-			/*PausePCyclesControl*/
-			IF(PROC PausePCyclesControl SET STATE ACTIVE)
+			/*NormalOpenRoadDelayControl*/
+			IF(PROC NormalOpenRoadDelayControl SET STATE ACTIVE)
 			{
-				SendMsgGUICode(VM2GUI_TEST_PASSED_PAUSE_P_CYCLES);
+				SendMsgGUICode(VM2GUI_TEST_PASSED_NORMAL_OPEN_ROAD_DELAY);
 			}
-			IF(PROC PausePCyclesControl SET STATE ERROR)
+			IF(PROC NormalOpenRoadDelayControl SET STATE ERROR)
 			{
-				SendMsgGUICode(VM2GUI_TEST_FAILED_PAUSE_P_CYCLES);
+				SendMsgGUICode(VM2GUI_TEST_FAILED_NORMAL_OPEN_ROAD_DELAY);
 			}
 
-			STOP PROC PausePCyclesControl;
+			STOP PROC NormalOpenRoadDelayControl;
 			
-			/*DisableMotionForKCyclesControl*/		
-			IF(PROC DisableMotionForKCyclesControl SET STATE ACTIVE)
+			/*NormalCloseRoadDelayControl*/		
+			IF(PROC NormalCloseRoadDelayControl SET STATE ACTIVE)
 			{
-				SendMsgGUICode(VM2GUI_TEST_PASSED_DISABLE_MOTION_FOR_K_CYCLES);
+				SendMsgGUICode(VM2GUI_TEST_PASSED_NORMAL_CLOSE_ROAD_DELAY);
 			}
 
-			IF(PROC DisableMotionForKCyclesControl SET STATE ERROR)
+			IF(PROC NormalCloseRoadDelayControl SET STATE ERROR)
 			{
-				SendMsgGUICode(VM2GUI_TEST_FAILED_DISABLE_MOTION_FOR_K_CYCLES);
+				SendMsgGUICode(VM2GUI_TEST_FAILED_NORMAL_CLOSE_ROAD_DELAY);
 			}
 			 
-			STOP PROC DisableMotionForKCyclesControl; 			
+			STOP PROC NormalCloseRoadDelayControl; 			
 			SendMsgSCMCode(VM2SCM_NEXT_TEST);
 			STOP;
 		}	
 	}
 
 
-/*ѕроверка требовани€: ≈сли по€вилась машина со стороны сельской дороги, то дорога откроетс€ ровно через P тактов (1 минута)*/
-	PROC PausePCyclesControl
+/*ѕроверка требовани€: ≈сли по€вилась машина со стороны сельской дороги, то дорога откроетс€ ровно через P тактов*/
+	PROC NormalOpenRoadDelayControl
 	{
 		FROM PROC Init I_CAR_NEAR_CROSSROAD, I_SWITCH_TRAFFIC_LIGHT;
 		
@@ -145,7 +161,7 @@ PROGR VERIFIER
 		{
 			IF(I_SWITCH_TRAFFIC_LIGHT == ON) 
 				SET NEXT;
-			TIMEOUT AlgorithmDelay ERROR;	
+			TIMEOUT AlgorithmDelay ERROR;
 		}	
 		
 		STATE Idiling
@@ -154,8 +170,8 @@ PROGR VERIFIER
 		}
 	}
 
-/*ѕроверка требовани€: ћежду открытием и закрытием сельской дороги должно пройти ровно K тактов (пол минуты)*/
-	PROC DisableMotionForKCyclesControl
+/*ѕроверка требовани€: ћежду открытием и закрытием сельской дороги должно пройти ровно K тактов*/
+	PROC NormalCloseRoadDelayControl
 	{
 		FROM PROC Init I_CAR_NEAR_CROSSROAD, I_SWITCH_TRAFFIC_LIGHT;
 

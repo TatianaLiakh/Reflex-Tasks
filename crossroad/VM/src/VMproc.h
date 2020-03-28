@@ -5,8 +5,8 @@
 void P0(void);  /* Process Init */
 void P1(void);  /* Process ReceiveSCMOutputMsg */
 void P2(void);  /* Process Terminator */
-void P3(void);  /* Process PausePCyclesControl */
-void P4(void);  /* Process DisableMotionForKCyclesControl */
+void P3(void);  /* Process NormalOpenRoadDelayControl */
+void P4(void);  /* Process NormalCloseRoadDelayControl */
 
 #define PROCESS_N1 0
 #define PROCESS_Nn 4 /* Number Of Proc */

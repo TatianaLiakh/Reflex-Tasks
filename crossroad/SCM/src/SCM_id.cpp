@@ -30,8 +30,18 @@ main () {
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 
- 	i = SCM2VM_TEST_TRAFFIC_LIGHT_CYCLE; /* SCM2VM_TEST_TRAFFIC_LIGHT_CYCLE */
-	fputs( "SCM2VM_TEST_TRAFFIC_LIGHT_CYCLE = " , file);
+ 	i = SCM2VM_TEST_RUN_CAR; /* SCM2VM_TEST_RUN_CAR */
+	fputs( "SCM2VM_TEST_RUN_CAR = " , file);
+	sprintf(string, "%d\n", i );
+	fputs( string, file);
+
+ 	i = SCM2VM_TEST_RUN_WRONG_CAR; /* SCM2VM_TEST_RUN_WRONG_CAR */
+	fputs( "SCM2VM_TEST_RUN_WRONG_CAR = " , file);
+	sprintf(string, "%d\n", i );
+	fputs( string, file);
+
+ 	i = SCM2VM_TEST_RUN_TWO_CARS; /* SCM2VM_TEST_RUN_TWO_CARS */
+	fputs( "SCM2VM_TEST_RUN_TWO_CARS = " , file);
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 

@@ -6,17 +6,20 @@
  хлъ йнмярюмрш: KCyclesDelay,  гмювемхе: ,    кнц.хлъ: C_3
  хлъ йнмярюмрш: AlgorithmDelay,  гмювемхе: ,    кнц.хлъ: C_4
  хлъ йнмярюмрш: TestIdling,  гмювемхе: ,    кнц.хлъ: C_5
- хлъ йнмярюмрш: SCM2VM_TEST_TRAFFIC_LIGHT_CYCLE,  гмювемхе: ,    кнц.хлъ: C_6
- хлъ йнмярюмрш: SCM2VM_FINISH_VERIFICATION,  гмювемхе: ,    кнц.хлъ: C_7
- хлъ йнмярюмрш: VM2SCM_START_VERIFICATION,  гмювемхе: ,    кнц.хлъ: C_8
- хлъ йнмярюмрш: VM2SCM_NEXT_TEST,  гмювемхе: ,    кнц.хлъ: C_9
- хлъ йнмярюмрш: VM2GUI_TEST_PASSED_PAUSE_P_CYCLES,  гмювемхе: ,    кнц.хлъ: C_10
- хлъ йнмярюмрш: VM2GUI_TEST_PASSED_DISABLE_MOTION_FOR_K_CYCLES,  гмювемхе: ,    кнц.хлъ: C_11
- хлъ йнмярюмрш: VM2GUI_TEST_FAILED_PAUSE_P_CYCLES,  гмювемхе: ,    кнц.хлъ: C_12
- хлъ йнмярюмрш: VM2GUI_TEST_FAILED_DISABLE_MOTION_FOR_K_CYCLES,  гмювемхе: ,    кнц.хлъ: C_13
- хлъ йнмярюмрш: VM2GUI_START_TEST_PAUSE_P_CYCLES,  гмювемхе: ,    кнц.хлъ: C_14
- хлъ йнмярюмрш: VM2GUI_START_TEST_DISABLE_MOTION_FOR_K_CYCLES,  гмювемхе: ,    кнц.хлъ: C_15
- хлъ йнмярюмрш: VM2GUI_END_VERIFICATION,  гмювемхе: ,    кнц.хлъ: C_16
+ хлъ йнмярюмрш: SCM2VM_TEST_RUN_CAR,  гмювемхе: ,    кнц.хлъ: C_6
+ хлъ йнмярюмрш: SCM2VM_TEST_RUN_WRONG_CAR,  гмювемхе: ,    кнц.хлъ: C_7
+ хлъ йнмярюмрш: SCM2VM_TEST_RUN_TWO_CARS,  гмювемхе: ,    кнц.хлъ: C_8
+ хлъ йнмярюмрш: SCM2VM_FINISH_VERIFICATION,  гмювемхе: ,    кнц.хлъ: C_9
+ хлъ йнмярюмрш: VM2SCM_START_VERIFICATION,  гмювемхе: ,    кнц.хлъ: C_10
+ хлъ йнмярюмрш: VM2SCM_NEXT_TEST,  гмювемхе: ,    кнц.хлъ: C_11
+ хлъ йнмярюмрш: VM2GUI_START_TEST_RUN_CAR,  гмювемхе: ,    кнц.хлъ: C_12
+ хлъ йнмярюмрш: VM2GUI_START_TEST_RUN_WRONG_CAR,  гмювемхе: ,    кнц.хлъ: C_13
+ хлъ йнмярюмрш: VM2GUI_START_TEST_RUN_TWO_CARS,  гмювемхе: ,    кнц.хлъ: C_14
+ хлъ йнмярюмрш: VM2GUI_TEST_PASSED_NORMAL_OPEN_ROAD_DELAY,  гмювемхе: ,    кнц.хлъ: C_15
+ хлъ йнмярюмрш: VM2GUI_TEST_PASSED_NORMAL_CLOSE_ROAD_DELAY,  гмювемхе: ,    кнц.хлъ: C_16
+ хлъ йнмярюмрш: VM2GUI_TEST_FAILED_NORMAL_OPEN_ROAD_DELAY,  гмювемхе: ,    кнц.хлъ: C_17
+ хлъ йнмярюмрш: VM2GUI_TEST_FAILED_NORMAL_CLOSE_ROAD_DELAY,  гмювемхе: ,    кнц.хлъ: C_18
+ хлъ йнмярюмрш: VM2GUI_END_VERIFICATION,  гмювемхе: ,    кнц.хлъ: C_19
 /*= онпрш =*/
  хлъ онпрю:    LOG_CA_INPUT_PORT
  рхо онпрю:    Input
@@ -39,13 +42,13 @@
 ###### янярнъмхъ опнжеяю: 
       хлъ янярнъмхъ: Idling,    кнц.хлъ: P2S0
       хлъ янярнъмхъ: Report,    кнц.хлъ: P2S1
-### хлъ опнжеяяю: PausePCyclesControl, кнц. хлъ : P3
+### хлъ опнжеяяю: NormalOpenRoadDelayControl, кнц. хлъ : P3
 ###### янярнъмхъ опнжеяю: 
       хлъ янярнъмхъ: WaitingOfCar,    кнц.хлъ: P3S0
       хлъ янярнъмхъ: WaitingPCycles,    кнц.хлъ: P3S1
       хлъ янярнъмхъ: PCyclesControl,    кнц.хлъ: P3S2
       хлъ янярнъмхъ: Idiling,    кнц.хлъ: P3S3
-### хлъ опнжеяяю: DisableMotionForKCyclesControl, кнц. хлъ : P4
+### хлъ опнжеяяю: NormalCloseRoadDelayControl, кнц. хлъ : P4
 ###### янярнъмхъ опнжеяю: 
       хлъ янярнъмхъ: Start,    кнц.хлъ: P4S0
       хлъ янярнъмхъ: WaitingKCycles,    кнц.хлъ: P4S1

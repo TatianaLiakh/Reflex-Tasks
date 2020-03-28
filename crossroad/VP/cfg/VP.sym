@@ -32,16 +32,17 @@
       хлъ янярнъмхъ: Start,    кнц.хлъ: P1S0
 ### хлъ опнжеяяю: RunCar, кнц. хлъ : P2
 ###### янярнъмхъ опнжеяю: 
-      хлъ янярнъмхъ: GetToSensor1,    кнц.хлъ: P2S0
-      хлъ янярнъмхъ: WaitingForSwitching,    кнц.хлъ: P2S1
-      хлъ янярнъмхъ: WaitingYellowLight,    кнц.хлъ: P2S2
-      хлъ янярнъмхъ: PassingSensor1,    кнц.хлъ: P2S3
-      хлъ янярнъмхъ: PassingCrossroad,    кнц.хлъ: P2S4
-      хлъ янярнъмхъ: PassingSensor2,    кнц.хлъ: P2S5
-      хлъ янярнъмхъ: GetAwayFromSensor2,    кнц.хлъ: P2S6
+      хлъ янярнъмхъ: Start,    кнц.хлъ: P2S0
+      хлъ янярнъмхъ: GetToSensor1,    кнц.хлъ: P2S1
+      хлъ янярнъмхъ: WaitingForSwitching,    кнц.хлъ: P2S2
+      хлъ янярнъмхъ: WaitingYellowLight,    кнц.хлъ: P2S3
+      хлъ янярнъмхъ: PassingSensor1,    кнц.хлъ: P2S4
+      хлъ янярнъмхъ: PassingCrossroad,    кнц.хлъ: P2S5
+      хлъ янярнъмхъ: PassingSensor2,    кнц.хлъ: P2S6
+      хлъ янярнъмхъ: GetAwayFromSensor2,    кнц.хлъ: P2S7
 ### хлъ опнжеяяю: RunTwoCars, кнц. хлъ : P3
 ###### янярнъмхъ опнжеяю: 
-      хлъ янярнъмхъ: Init,    кнц.хлъ: P3S0
+      хлъ янярнъмхъ: Start,    кнц.хлъ: P3S0
       хлъ янярнъмхъ: GetToSensor1,    кнц.хлъ: P3S1
       хлъ янярнъмхъ: WaitingForSwitching,    кнц.хлъ: P3S2
       хлъ янярнъмхъ: WaitingYellowLight,    кнц.хлъ: P3S3

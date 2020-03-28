@@ -28,10 +28,10 @@ void P1 (void) /* œ–Œ÷≈——: ReceiveVMOutputMsg */
 				P1V1 = GetMsgCodeFromVM();
 				switch (P1V1)
 				{
-				case C_7:
+				case C_9:
 					Set_Start(2);
 					break;
-				case C_8:
+				case C_10:
 					P1V0 = C_1;
 					break;
 				}
@@ -88,7 +88,7 @@ void P2 (void) /* œ–Œ÷≈——: TestDriver */
 			break;
 		case 6:    /*  P2S6() - —Œ—“ŒﬂÕ»≈: Finish */
 
-			SendMsgToVerificationModuleCode(C_6);
+			SendMsgToVerificationModuleCode(C_8);
 			Set_Stop(2);
 			break;
 		default:
@@ -122,7 +122,7 @@ void P4 (void) /* œ–Œ÷≈——: TestWrongCar */
 		case 0:    /*  P4S0() - —Œ—“ŒﬂÕ»≈: Start */
 
 			SendMsgToVirtualPlantCode(C_3);
-			SendMsgToVerificationModuleCode(C_5);
+			SendMsgToVerificationModuleCode(C_6);
 			Set_State(4, 1);
 			break;
 		case 1:    /*  P4S1() - —Œ—“ŒﬂÕ»≈: Idiling */
@@ -141,7 +141,7 @@ void P5 (void) /* œ–Œ÷≈——: TestTwoCars */
 		case 0:    /*  P5S0() - —Œ—“ŒﬂÕ»≈: Start */
 
 			SendMsgToVirtualPlantCode(C_4);
-			SendMsgToVerificationModuleCode(C_5);
+			SendMsgToVerificationModuleCode(C_7);
 			Set_State(5, 1);
 			break;
 		case 1:    /*  P5S1() - —Œ—“ŒﬂÕ»≈: Idiling */

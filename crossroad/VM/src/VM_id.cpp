@@ -35,8 +35,18 @@ main () {
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 
- 	i = SCM2VM_TEST_TRAFFIC_LIGHT_CYCLE; /* SCM2VM_TEST_TRAFFIC_LIGHT_CYCLE */
-	fputs( "SCM2VM_TEST_TRAFFIC_LIGHT_CYCLE = " , file);
+ 	i = SCM2VM_TEST_RUN_CAR; /* SCM2VM_TEST_RUN_CAR */
+	fputs( "SCM2VM_TEST_RUN_CAR = " , file);
+	sprintf(string, "%d\n", i );
+	fputs( string, file);
+
+ 	i = SCM2VM_TEST_RUN_WRONG_CAR; /* SCM2VM_TEST_RUN_WRONG_CAR */
+	fputs( "SCM2VM_TEST_RUN_WRONG_CAR = " , file);
+	sprintf(string, "%d\n", i );
+	fputs( string, file);
+
+ 	i = SCM2VM_TEST_RUN_TWO_CARS; /* SCM2VM_TEST_RUN_TWO_CARS */
+	fputs( "SCM2VM_TEST_RUN_TWO_CARS = " , file);
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 
@@ -55,33 +65,38 @@ main () {
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 
- 	i = VM2GUI_TEST_PASSED_PAUSE_P_CYCLES; /* VM2GUI_TEST_PASSED_PAUSE_P_CYCLES */
-	fputs( "VM2GUI_TEST_PASSED_PAUSE_P_CYCLES = " , file);
+ 	i = VM2GUI_START_TEST_RUN_CAR; /* VM2GUI_START_TEST_RUN_CAR */
+	fputs( "VM2GUI_START_TEST_RUN_CAR = " , file);
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 
- 	i = VM2GUI_TEST_PASSED_DISABLE_MOTION_FOR_K_CYCLES; /* VM2GUI_TEST_PASSED_DISABLE_MOTION_FOR_K_CYCLES */
-	fputs( "VM2GUI_TEST_PASSED_DISABLE_MOTION_FOR_K_CYCLES = " , file);
+ 	i = VM2GUI_START_TEST_RUN_WRONG_CAR; /* VM2GUI_START_TEST_RUN_WRONG_CAR */
+	fputs( "VM2GUI_START_TEST_RUN_WRONG_CAR = " , file);
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 
- 	i = VM2GUI_TEST_FAILED_PAUSE_P_CYCLES; /* VM2GUI_TEST_FAILED_PAUSE_P_CYCLES */
-	fputs( "VM2GUI_TEST_FAILED_PAUSE_P_CYCLES = " , file);
+ 	i = VM2GUI_START_TEST_RUN_TWO_CARS; /* VM2GUI_START_TEST_RUN_TWO_CARS */
+	fputs( "VM2GUI_START_TEST_RUN_TWO_CARS = " , file);
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 
- 	i = VM2GUI_TEST_FAILED_DISABLE_MOTION_FOR_K_CYCLES; /* VM2GUI_TEST_FAILED_DISABLE_MOTION_FOR_K_CYCLES */
-	fputs( "VM2GUI_TEST_FAILED_DISABLE_MOTION_FOR_K_CYCLES = " , file);
+ 	i = VM2GUI_TEST_PASSED_NORMAL_OPEN_ROAD_DELAY; /* VM2GUI_TEST_PASSED_NORMAL_OPEN_ROAD_DELAY */
+	fputs( "VM2GUI_TEST_PASSED_NORMAL_OPEN_ROAD_DELAY = " , file);
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 
- 	i = VM2GUI_START_TEST_PAUSE_P_CYCLES; /* VM2GUI_START_TEST_PAUSE_P_CYCLES */
-	fputs( "VM2GUI_START_TEST_PAUSE_P_CYCLES = " , file);
+ 	i = VM2GUI_TEST_PASSED_NORMAL_CLOSE_ROAD_DELAY; /* VM2GUI_TEST_PASSED_NORMAL_CLOSE_ROAD_DELAY */
+	fputs( "VM2GUI_TEST_PASSED_NORMAL_CLOSE_ROAD_DELAY = " , file);
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 
- 	i = VM2GUI_START_TEST_DISABLE_MOTION_FOR_K_CYCLES; /* VM2GUI_START_TEST_DISABLE_MOTION_FOR_K_CYCLES */
-	fputs( "VM2GUI_START_TEST_DISABLE_MOTION_FOR_K_CYCLES = " , file);
+ 	i = VM2GUI_TEST_FAILED_NORMAL_OPEN_ROAD_DELAY; /* VM2GUI_TEST_FAILED_NORMAL_OPEN_ROAD_DELAY */
+	fputs( "VM2GUI_TEST_FAILED_NORMAL_OPEN_ROAD_DELAY = " , file);
+	sprintf(string, "%d\n", i );
+	fputs( string, file);
+
+ 	i = VM2GUI_TEST_FAILED_NORMAL_CLOSE_ROAD_DELAY; /* VM2GUI_TEST_FAILED_NORMAL_CLOSE_ROAD_DELAY */
+	fputs( "VM2GUI_TEST_FAILED_NORMAL_CLOSE_ROAD_DELAY = " , file);
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 

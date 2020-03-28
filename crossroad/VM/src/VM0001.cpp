@@ -8,7 +8,7 @@ void P0 (void) /* œ–Œ÷≈——: Init */
 
 		case 0:    /*  P0S0() - —Œ—“ŒﬂÕ»≈: Start */
 	
-			SendMsgSCMCode(C_8); 	
+			SendMsgSCMCode(C_10); 	
 			Set_Start(1);
 			Set_Stop(0);
 			break;
@@ -24,21 +24,34 @@ void P1 (void) /* œ–Œ÷≈——: ReceiveSCMOutputMsg */
 		case 0:    /*  P1S0() - —Œ—“ŒﬂÕ»≈: Start */
 
 			
-			if (GetNextMsgFromSCM()) 
+			if(GetNextMsgFromSCM()) 
 			{
 				P1V0 = GetMsgCodeFromSCM();
 				switch (P1V0) 				
-				{
-				
+				{				
 					case C_6:
-						SendMsgGUICode(C_14);
-						SendMsgGUICode(C_15);		
+						SendMsgGUICode(C_12);
 						Set_Start(3);						
 						Set_Start(4);
-						Set_Start(2); 	
+						Set_Start(2); 
 						break;
+						
 					case C_7:
-						SendMsgGUICode(C_16);
+						SendMsgGUICode(C_13);
+						Set_Start(3);						
+						Set_Start(4);
+						Set_Start(2); 
+						break;
+					
+					case C_8:
+						SendMsgGUICode(C_14);
+						Set_Start(3);						
+						Set_Start(4);
+						Set_Start(2); 
+						break;
+
+					case C_9:
+						SendMsgGUICode(C_19);
 						Set_Stop(2); 
 						Set_Stop(1);
 						break;
@@ -64,11 +77,11 @@ void P2 (void) /* œ–Œ÷≈——: Terminator */
 			
 			if((!(Check_State(3) & MASK_OF_INACTIVITY)))
 			{
-				SendMsgGUICode(C_10);
+				SendMsgGUICode(C_15);
 			}
 			if((Check_State(3) == STATE_OF_ERROR))
 			{
-				SendMsgGUICode(C_12);
+				SendMsgGUICode(C_17);
 			}
 
 			Set_Stop(3);
@@ -76,16 +89,16 @@ void P2 (void) /* œ–Œ÷≈——: Terminator */
 					
 			if((!(Check_State(4) & MASK_OF_INACTIVITY)))
 			{
-				SendMsgGUICode(C_11);
+				SendMsgGUICode(C_16);
 			}
 
 			if((Check_State(4) == STATE_OF_ERROR))
 			{
-				SendMsgGUICode(C_13);
+				SendMsgGUICode(C_18);
 			}
 			 
 			Set_Stop(4); 			
-			SendMsgSCMCode(C_9);
+			SendMsgSCMCode(C_11);
 			Set_Stop(2);
 			break;
 		default:
@@ -93,7 +106,7 @@ void P2 (void) /* œ–Œ÷≈——: Terminator */
 	}
 }
 
-void P3 (void) /* œ–Œ÷≈——: PausePCyclesControl */
+void P3 (void) /* œ–Œ÷≈——: NormalOpenRoadDelayControl */
 {
 	switch (Check_State(3)) {
 
@@ -123,7 +136,7 @@ void P3 (void) /* œ–Œ÷≈——: PausePCyclesControl */
 	}
 }
 
-void P4 (void) /* œ–Œ÷≈——: DisableMotionForKCyclesControl */
+void P4 (void) /* œ–Œ÷≈——: NormalCloseRoadDelayControl */
 {
 	switch (Check_State(4)) {
 

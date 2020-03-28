@@ -61,54 +61,59 @@ void P2 (void) /* œ–Œ÷≈——: RunCar */
 {
 	switch (Check_State(2)) {
 
-		case 0:    /*  P2S0() - —Œ—“ŒﬂÕ»≈: GetToSensor1 */
+		case 0:    /*  P2S0() - —Œ—“ŒﬂÕ»≈: Start */
+
+		P0V1[1] = C_1;
+		Set_State(2, 1);
+			break;
+		case 1:    /*  P2S1() - —Œ—“ŒﬂÕ»≈: GetToSensor1 */
 
 		if (Timeout(2, C_2))  
 		{
 			P0V1[1] = C_0;
-			Set_State(2, 1);
+			Set_State(2, 2);
 		}
 			break;
-		case 1:    /*  P2S1() - —Œ—“ŒﬂÕ»≈: WaitingForSwitching */
+		case 2:    /*  P2S2() - —Œ—“ŒﬂÕ»≈: WaitingForSwitching */
  
 		if(P0V0 == C_0)
-			Set_State(2, 2);
+			Set_State(2, 3);
 			break;
-		case 2:    /*  P2S2() - —Œ—“ŒﬂÕ»≈: WaitingYellowLight */
+		case 3:    /*  P2S3() - —Œ—“ŒﬂÕ»≈: WaitingYellowLight */
 
-		if (Timeout(2, C_4))  Set_State(2, 3);
+		if (Timeout(2, C_4))  Set_State(2, 4);
 			break;
-		case 3:    /*  P2S3() - —Œ—“ŒﬂÕ»≈: PassingSensor1 */
+		case 4:    /*  P2S4() - —Œ—“ŒﬂÕ»≈: PassingSensor1 */
 
 		if (Timeout(2, C_5)) 
 		{
 			
 			if(P1V0 == C_6)
-			{
 				P0V1[1] = C_1;
-			}
-			Set_State(2, 4);
-		}
-			break;
-		case 4:    /*  P2S4() - —Œ—“ŒﬂÕ»≈: PassingCrossroad */
-
-		if (Timeout(2, C_3)) 
-		{
-			if(P1V0 == C_6){
-				P0V1[1] = C_0;}
 			Set_State(2, 5);
 		}
 			break;
-		case 5:    /*  P2S5() - —Œ—“ŒﬂÕ»≈: PassingSensor2 */
+		case 5:    /*  P2S5() - —Œ—“ŒﬂÕ»≈: PassingCrossroad */
 
-		if (Timeout(2, C_5)) 
+		if (Timeout(2, C_3)) 
 		{
-			if(P1V0 == C_6){
-				P0V1[1] = C_1;}
+			if(P1V0 == C_6)
+				P0V1[1] = C_0;
 			Set_State(2, 6);
 		}
 			break;
-		case 6:    /*  P2S6() - —Œ—“ŒﬂÕ»≈: GetAwayFromSensor2 */
+		case 6:    /*  P2S6() - —Œ—“ŒﬂÕ»≈: PassingSensor2 */
+
+		if (Timeout(2, C_5)) 
+		{
+			if(P1V0 == C_6 || P0V0 == C_1)
+			{
+				P0V1[1] = C_1;
+				Set_State(2, 7);
+			}
+		}
+			break;
+		case 7:    /*  P2S7() - —Œ—“ŒﬂÕ»≈: GetAwayFromSensor2 */
 
 		if (Timeout(2, C_2))  Set_Stop(2);
 			break;
@@ -121,7 +126,7 @@ void P3 (void) /* œ–Œ÷≈——: RunTwoCars */
 {
 	switch (Check_State(3)) {
 
-		case 0:    /*  P3S0() - —Œ—“ŒﬂÕ»≈: Init */
+		case 0:    /*  P3S0() - —Œ—“ŒﬂÕ»≈: Start */
 
 		P3V2 = 1; 	
 		Set_State(3, 1);
