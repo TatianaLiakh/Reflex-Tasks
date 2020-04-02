@@ -1,0 +1,61 @@
+PROGR ALGORITHM
+{
+	TACT 100;
+	CONST OFF 0;
+	CONST ON 1;
+	CONST KCyclesDelay 150; /*15 секунд*/
+	CONST PCyclesDelay 200; /*20 сек*/
+	
+	INPUT  LOG_CA_INPUT_PORT  0 0 8; /* имя, базовый адрес, доп. адр. порта, 8бит */
+	OUTPUT LOG_CA_OUTPUT_PORT 1 0 8;
+
+	PROC Init
+	{
+	LOG S_CAR_NEAR_CROSSROAD = {LOG_CA_INPUT_PORT[1]} FOR ALL;
+	LOG C_SWITCH_TRAFFIC_LIGHT = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
+ 
+		STATE Start
+		{  
+			C_SWITCH_TRAFFIC_LIGHT = OFF;
+			SET NEXT;
+		}	
+		
+		STATE SecondaryRoadControl
+		{			
+			IF(S_CAR_NEAR_CROSSROAD == ON)
+			{
+				IF(PROC LightWorkCycle SET STATE PASSIVE)
+				{
+					START PROC LightWorkCycle;
+				}
+			}
+			LOOP;
+		}
+	}
+	
+	PROC LightWorkCycle
+	{
+	FROM PROC Init C_SWITCH_TRAFFIC_LIGHT;
+	
+	STATE PausePCycles
+	{
+		C_SWITCH_TRAFFIC_LIGHT = OFF;
+		TIMEOUT PCyclesDelay SET NEXT;
+	}
+	
+	STATE Switching
+	{
+		C_SWITCH_TRAFFIC_LIGHT = ON;
+		SET NEXT;
+	}
+	
+	STATE DisableMotionForKCycles
+	{
+		TIMEOUT KCyclesDelay
+		{
+			C_SWITCH_TRAFFIC_LIGHT = OFF;
+			STOP;
+		}
+	}
+	}
+} 

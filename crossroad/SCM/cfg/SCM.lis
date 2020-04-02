@@ -1,0 +1,172 @@
+    1          PROGR DISPATCHER
+    2          {
+    3          	TACT 50;
+    4          	
+    5          	CONST Idiling 0;
+    6          	CONST RunNextTest 1;
+    7           
+    8          	/*Набор команд для PLANT(виртуальный объект управления)*/
+    9          	ENUM
+   10          	{		
+   11          		SCM2VP_RUN_CAR,
+   12          		SCM2VP_RUN_WRONG_CAR,
+   13          		SCM2VP_RUN_TWO_CARS
+   14          	};
+   15           
+   16          	/*Набор команд для VERIFIER(блок верификации)*/	
+   17          	ENUM
+   18          	{
+   19          		SCM2VM_TEST_RUN_CAR,
+   20          		SCM2VM_TEST_RUN_WRONG_CAR,
+   21          		SCM2VM_TEST_RUN_TWO_CARS,
+   22          		SCM2VM_FINISH_VERIFICATION
+   23          	};
+   24          
+   25          	/*Набор команд для DISPATCHER(блока управления сценарием) от VERIFIER(блока верификации)*/
+   26          	ENUM
+   27          	{
+   28          		VM2SCM_START_VERIFICATION,
+   29          		VM2SCM_NEXT_TEST
+   30          	};
+   31          	
+   32          	FUNCTION INT SendMsgToVirtualPlantCode(INT);
+   33          	FUNCTION INT SendMsgToVerificationModuleCode(INT);
+   34          	FUNCTION INT GetNextMsgFromVM(VOID);
+   35          	FUNCTION INT GetMsgCodeFromVM(VOID);
+   36          
+   37          	PROC Init
+   38          	{
+   39          		STATE Start
+   40          		{  
+   41          			START PROC ReceiveVMOutputMsg; 			
+   42          			STOP;
+   43          		}
+   44          	}	
+   45          	
+   46          	PROC ReceiveVMOutputMsg
+   47          	{
+   48          		LOG nextTest FOR ALL; 
+   49          		INT VMMsgCode LOCAL;
+   50          		STATE Start
+   51          		{
+   52          			nextTest = Idiling;
+   53          			IF (GetNextMsgFromVM()) 
+   54          			{
+   55          				VMMsgCode = GetMsgCodeFromVM();
+   56          				SWITCH (VMMsgCode)
+   57          				{
+   58          				CASE VM2SCM_START_VERIFICATION:
+   59          					START PROC TestDriver;
+   60          					BREAK;
+   61          				CASE VM2SCM_NEXT_TEST:
+   62          					nextTest = RunNextTest;
+   63          					BREAK;
+   64          				}
+   65          			}
+   66          		LOOP;			
+   67          		}
+   68          	}
+   69          	
+   70          	PROC TestDriver
+   71          	{
+   72          		FROM PROC ReceiveVMOutputMsg nextTest;
+   73          		
+   74          		STATE RunTestNormCar
+   75          		{
+   76          			START PROC TestNormCar;
+   77          			SET NEXT;
+   78          		}
+   79          		
+   80          		STATE IdilingTest1
+   81          		{
+   82          			IF (nextTest == RunNextTest)
+   83          			{
+   84          				STOP PROC TestNormCar;
+   85          				SET NEXT;
+   86          			}		
+   87          		}
+   88          		
+   89          		STATE RunTestWrongCar
+   90          		{
+   91          			START PROC TestWrongCar;
+   92          			SET NEXT;
+   93          		}
+   94          		
+   95          		STATE IdilingTest2
+   96          		{
+   97          			IF (nextTest == RunNextTest)
+   98          			{
+   99          				STOP PROC TestWrongCar;
+  100          				SET NEXT;
+  101          			}		
+  102          		}
+  103          		
+  104          		STATE RunTestTwoCars
+  105          		{
+  106          			START PROC TestTwoCars;
+  107          			SET NEXT;
+  108          		}
+  109          		
+  110          		STATE IdilingTest3
+  111          		{
+  112          			IF (nextTest == RunNextTest)
+  113          			{
+  114          				STOP PROC TestTwoCars;
+  115          				SET NEXT;
+  116          			}		
+  117          		}
+  118          
+  119          		STATE Finish
+  120          		{
+  121          			SendMsgToVerificationModuleCode(SCM2VM_FINISH_VERIFICATION);
+  122          			STOP;
+  123          		}
+  124          	}
+  125          	
+  126          	PROC TestNormCar
+  127          	{
+  128          		STATE Start 
+  129          		{
+  130          			SendMsgToVirtualPlantCode(SCM2VP_RUN_CAR);
+  131          			SendMsgToVerificationModuleCode(SCM2VM_TEST_RUN_CAR);
+  132          			SET NEXT;
+  133          		}
+  134          		STATE Idiling
+  135          		{
+  136          			LOOP;
+  137          		}
+  138          	}
+  139          	
+  140          	PROC TestWrongCar
+  141          	{
+  142          		STATE Start 
+  143          		{
+  144          			SendMsgToVirtualPlantCode(SCM2VP_RUN_WRONG_CAR);
+  145          			SendMsgToVerificationModuleCode(SCM2VM_TEST_RUN_WRONG_CAR);
+  146          			SET NEXT;
+  147          		}
+  148          		STATE Idiling
+  149          		{
+  150          			LOOP;
+  151          		}
+  152          	}
+  153          	
+  154          	PROC TestTwoCars
+  155          	{
+  156          		STATE Start 
+  157          		{
+  158          			SendMsgToVirtualPlantCode(SCM2VP_RUN_TWO_CARS);
+  159          			SendMsgToVerificationModuleCode(SCM2VM_TEST_RUN_TWO_CARS);
+  160          			SET NEXT;
+  161          		}
+  162          		STATE Idiling
+  163          		{
+  164          			LOOP;
+  165          		}
+  166          	}
+  167          }  /* \Прогр */
+
+%RCSL-I-SUMMARY, Completed with 0 error(s).
+%RCSL-I-SUMMARY, Completed with 0 warning(s).
+
+ %RCSL-I-SUMMARY, Completed with 0 error(s).

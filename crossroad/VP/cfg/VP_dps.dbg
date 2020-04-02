@@ -1,0 +1,22 @@
+ Init
+Start
+ ReceiveSCMOutputMsg
+Start
+ RunCar
+Start
+GetToSensor1
+WaitingForSwitching
+WaitingYellowLight
+PassingSensor1
+PassingCrossroad
+PassingSensor2
+GetAwayFromSensor2
+ RunTwoCars
+Start
+GetToSensor1
+WaitingForSwitching
+WaitingYellowLight
+PassingSensor1
+PassingCrossroad
+PassingSensor2
+GetAwayFromSensor2

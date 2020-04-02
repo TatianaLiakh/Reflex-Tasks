@@ -1,0 +1,21 @@
+ Init
+Start
+ ReceiveVMOutputMsg
+Start
+ TestDriver
+RunTestNormCar
+IdilingTest1
+RunTestWrongCar
+IdilingTest2
+RunTestTwoCars
+IdilingTest3
+Finish
+ TestNormCar
+Start
+Idiling
+ TestWrongCar
+Start
+Idiling
+ TestTwoCars
+Start
+Idiling

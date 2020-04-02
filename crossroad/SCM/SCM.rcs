@@ -1,0 +1,187 @@
+PROGR DISPATCHER
+{
+	TACT 50;
+	
+	CONST Idiling 0;
+	CONST RunNextTest 1;
+ 
+	/*Набор команд для PLANT(виртуальный объект управления)*/
+	ENUM
+	{		
+		SCM2VP_RUN_CAR,
+		SCM2VP_RUN_WRONG_CAR,
+		SCM2VP_RUN_TWO_CARS
+	};
+ 
+	/*Набор команд для VERIFIER(блок верификации)*/	
+	ENUM
+	{
+		SCM2VM_TEST_RUN_CAR,
+		SCM2VM_TEST_RUN_WRONG_CAR,
+		SCM2VM_TEST_RUN_TWO_CARS,
+		SCM2VM_FINISH_VERIFICATION
+	};
+
+	/*Набор команд для DISPATCHER(блока управления сценарием) от VERIFIER(блока верификации)*/
+	ENUM
+	{
+		VM2SCM_START_VERIFICATION,
+		VM2SCM_NEXT_TEST
+	};
+	
+	FUNCTION INT SendMsgToVirtualPlantCode(INT);
+	FUNCTION INT SendMsgToVerificationModuleCode(INT);
+	FUNCTION INT GetNextMsgFromVM(VOID);
+	FUNCTION INT GetMsgCodeFromVM(VOID);
+
+	PROC Init
+	{
+		STATE Start
+		{  
+			START PROC ReceiveVMOutputMsg; 			
+			STOP;
+		}
+	}	
+	
+	PROC ReceiveVMOutputMsg
+	{
+		LOG nextTest FOR ALL; 
+		INT VMMsgCode LOCAL;
+		STATE Start
+		{
+			nextTest = Idiling;
+			IF (GetNextMsgFromVM()) 
+			{
+				VMMsgCode = GetMsgCodeFromVM();
+				SWITCH (VMMsgCode)
+				{
+				CASE VM2SCM_START_VERIFICATION:
+					START PROC TestDriver;
+					BREAK;
+				CASE VM2SCM_NEXT_TEST:
+					nextTest = RunNextTest;
+					BREAK;
+				}
+			}
+		LOOP;			
+		}
+	}
+	
+	PROC TestDriver
+	{
+		FROM PROC ReceiveVMOutputMsg nextTest;
+		
+		STATE RunTestNormCar
+		{
+			START PROC TestNormCar;
+			SET NEXT;
+		}
+		
+		STATE IdilingTest1
+		{
+			IF (nextTest == RunNextTest)
+			{
+				STOP PROC TestNormCar;
+				SET NEXT;
+			}		
+		}
+		
+		STATE RunTestWrongCar
+		{
+			START PROC TestWrongCar;
+			SET NEXT;
+		}
+		
+		STATE IdilingTest2
+		{
+			IF (nextTest == RunNextTest)
+			{
+				STOP PROC TestWrongCar;
+				SET NEXT;
+			}		
+		}
+		
+		STATE RunTestTwoCars
+		{
+			START PROC TestTwoCars;
+			SET NEXT;
+		}
+		
+		STATE IdilingTest3
+		{
+			IF (nextTest == RunNextTest)
+			{
+				STOP PROC TestTwoCars;
+				SET NEXT;
+			}		
+		}
+
+		STATE Finish
+		{
+			SendMsgToVerificationModuleCode(SCM2VM_FINISH_VERIFICATION);
+			STOP;
+		}
+	}
+	
+	PROC TestNormCar
+	{
+		STATE Start 
+		{
+			SendMsgToVirtualPlantCode(SCM2VP_RUN_CAR);
+			SendMsgToVerificationModuleCode(SCM2VM_TEST_RUN_CAR);
+			SET NEXT;
+		}
+		STATE Idiling
+		{
+			LOOP;
+		}
+	}
+	
+	PROC TestWrongCar
+	{
+		STATE Start 
+		{
+			SendMsgToVirtualPlantCode(SCM2VP_RUN_WRONG_CAR);
+			SendMsgToVerificationModuleCode(SCM2VM_TEST_RUN_WRONG_CAR);
+			SET NEXT;
+		}
+		STATE Idiling
+		{
+			LOOP;
+		}
+	}
+	
+	PROC TestTwoCars
+	{
+		STATE Start 
+		{
+			SendMsgToVirtualPlantCode(SCM2VP_RUN_TWO_CARS);
+			SendMsgToVerificationModuleCode(SCM2VM_TEST_RUN_TWO_CARS);
+			SET NEXT;
+		}
+		STATE Idiling
+		{
+			LOOP;
+		}
+	}
+}  /* \Прогр */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

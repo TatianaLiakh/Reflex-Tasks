@@ -1,0 +1,17 @@
+ Init
+Start
+ ReceiveSCMOutputMsg
+Start
+ Terminator
+Idling
+Report
+ NormalOpenRoadDelayControl
+WaitingOfCar
+WaitingPCycles
+PCyclesControl
+Idiling
+ NormalCloseRoadDelayControl
+Start
+WaitingKCycles
+KCyclesControl
+Idiling
