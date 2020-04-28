@@ -1,0 +1,175 @@
+    1          PROGR PLANT
+    2          {
+    3          TACT 50;
+    4          CONST ON 1;
+    5          CONST OFF 0;
+    6          CONST SensorDelay 20; /*~2 сек коробка проезжает датчик*/
+    7          CONST RemovingDelay 10; /*~1 сек коробка удаляется*/
+    8          CONST Norm 01;
+    9          CONST PresenceSensorWrong 00;
+   10          CONST ColorSensorWrong 10;
+   11          
+   12          ENUM
+   13          {		
+   14          	SCM2VP_PUT_BOXES_ON_CONVEYOR,
+   15          	SCM2VP_BROKEN_PRESENCE_SENSOR,
+   16          	SCM2VP_BROKEN_COLOR_SENSORS,
+   17          	SCM2VP_FINISH_VERIFICATION
+   18          };
+   19          
+   20          FUNCTION INT GetMessageFromScenariousBlock(VOID);
+   21          FUNCTION INT GetMessageCodeFromScenariousBlock(VOID);
+   22          FUNCTION INT Random( VOID );
+   23          	
+   24          INPUT  LOG_VP_INPUT_PORT  0 0 8; 
+   25          OUTPUT LOG_VP_OUTPUT_PORT 1 0 8;
+   26          	
+   27          PROC Init
+   28          {
+   29          	LOG O_BOX_UNDER_SENSOR = {LOG_VP_OUTPUT_PORT[1]} FOR ALL;
+   30          	LOG O_BOX_RED = {LOG_VP_OUTPUT_PORT[1]} FOR ALL;
+   31          	LOG O_BOX_GREEN = {LOG_VP_OUTPUT_PORT[1]} FOR ALL;
+   32          		
+   33          	LOG I_TURN_ON_MAIN_CONVEYOR = {LOG_VP_INPUT_PORT[1]} FOR ALL;
+   34          	LOG I_TURN_ON_SIDE_CONVEYOR = {LOG_VP_INPUT_PORT[1]} FOR ALL;
+   35          	LOG I_REMOVE_BOX = {LOG_VP_INPUT_PORT[1]} FOR ALL;
+   36          		
+   37          	STATE Start
+   38          	{ 			
+   39          		START PROC ReceiveSCMOutputMsg;
+   40          		STOP; 
+   41          	}
+   42          }
+   43          
+   44          PROC ReceiveSCMOutputMsg
+   45          {
+   46          	LOG Flag FOR ALL; 
+   47          	INT SCMsgCode LOCAL;
+   48          
+   49          	STATE Start
+   50          	{
+   51          		IF (GetMessageFromScenariousBlock()) 
+   52          		{
+   53          			SCMsgCode = GetMessageCodeFromScenariousBlock();
+   54          			SWITCH (SCMsgCode)
+   55          			{
+   56          				CASE SCM2VP_PUT_BOXES_ON_CONVEYOR:
+   57          					IF(PROC PutBoxesOnConveyor SET STATE PASSIVE)
+   58          					{
+   59          						Flag = Norm;
+   60          						START PROC PutBoxesOnConveyor;	
+   61          					}
+   62          					BREAK;		
+   63          				CASE SCM2VP_BROKEN_PRESENCE_SENSOR:
+   64          					Flag = PresenceSensorWrong;
+   65          					BREAK;
+   66          				CASE SCM2VP_BROKEN_COLOR_SENSORS:
+   67          					Flag = ColorSensorWrong;
+   68          					BREAK;
+   69          				CASE SCM2VP_FINISH_VERIFICATION:
+   70          					STOP PROC PutBoxesOnConveyor;	
+   71          					STOP;
+   72          					BREAK;
+   73          			}
+   74          		}
+   75          		LOOP;
+   76          	}
+   77          }
+   78          
+   79          PROC PutBoxesOnConveyor
+   80          {
+   81          	FROM PROC ReceiveSCMOutputMsg Flag;
+   82          	FROM PROC Init O_BOX_UNDER_SENSOR, O_BOX_RED, O_BOX_GREEN, I_TURN_ON_MAIN_CONVEYOR, I_TURN_ON_SIDE_CONVEYOR, I_REMOVE_BOX;
+   83          	INT time LOCAL;
+   84          	INT color LOCAL;
+   85          
+   86          	STATE Start
+   87          	{
+   88          		O_BOX_UNDER_SENSOR = OFF;
+   89          		O_BOX_RED = OFF;
+   90          		O_BOX_GREEN = OFF;
+   91          		SET NEXT;
+   92          	}
+   93          	
+   94          	STATE Randomize /*Генерируем время между подачами коробок и цвет*/
+   95          	{
+   96          		time = Random();
+   97          		color = Random();
+   98          		SET NEXT;
+   99          	}
+  100          	
+  101          	STATE ColorChoice 
+  102          	{
+  103          		IF (color >= 20 && color <= 35) SET STATE GreenBoxMode;
+  104          		ELSE IF (color > 35 && color <= 50) SET STATE RedBoxMode;	
+  105          		ELSE
+  106          		{
+  107          			IF((Flag == Norm) || (Flag == ColorSensorWrong)) 
+  108          				SET STATE BlueBoxMode; 
+  109          			ELSE SET STATE Randomize;
+  110          		}
+  111          	}	
+  112          	
+  113          	STATE BlueBoxMode
+  114          	{
+  115          		TIMEOUT time
+  116          		{
+  117          			O_BOX_UNDER_SENSOR = ON;
+  118          			SET NEXT;
+  119          		}
+  120          	}
+  121          	
+  122          	STATE WaitRemoving
+  123          	{
+  124          		TIMEOUT RemovingDelay
+  125          		{
+  126          			IF(I_REMOVE_BOX && !I_TURN_ON_MAIN_CONVEYOR && !I_TURN_ON_SIDE_CONVEYOR)
+  127          				SET STATE RemovingControl;
+  128          		}
+  129          	}
+  130          	
+  131          	STATE RemovingControl
+  132          	{
+  133          		O_BOX_UNDER_SENSOR = OFF;
+  134          		IF(!I_REMOVE_BOX && I_TURN_ON_MAIN_CONVEYOR)
+  135          			SET STATE Start;
+  136          	}
+  137          		
+  138          	STATE GreenBoxMode /*Вкл датчик зеленая коробка*/
+  139          	{
+  140          		TIMEOUT time
+  141          		{
+  142          			IF((Flag == Norm) || (Flag == ColorSensorWrong)) 
+  143          				O_BOX_UNDER_SENSOR = ON;
+  144          			IF(Flag == ColorSensorWrong)
+  145          				O_BOX_RED = ON;
+  146          			O_BOX_GREEN = ON;
+  147          			SET STATE PassingSensor;
+  148          		}
+  149          	}
+  150          	
+  151          	STATE RedBoxMode /*Вкл датчик красная коробка*/
+  152          	{
+  153          		TIMEOUT time
+  154          		{
+  155          			IF((Flag == Norm) || (Flag == ColorSensorWrong))
+  156          				O_BOX_UNDER_SENSOR = ON;
+  157          			IF(Flag == ColorSensorWrong)
+  158          				O_BOX_GREEN = ON;
+  159          			O_BOX_RED = ON;
+  160          			SET STATE PassingSensor;
+  161          		}
+  162          	}
+  163          	
+  164          	STATE PassingSensor
+  165          	{
+  166          		TIMEOUT SensorDelay 
+  167          			SET STATE Start;
+  168          	}
+  169          }
+  170          }
+
+%RCSL-I-SUMMARY, Completed with 0 error(s).
+%RCSL-I-SUMMARY, Completed with 0 warning(s).
+
+ %RCSL-I-SUMMARY, Completed with 0 error(s).

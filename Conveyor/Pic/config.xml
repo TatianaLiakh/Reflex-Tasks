@@ -1,0 +1,79 @@
+<indicators>
+	  <indicator>
+		<positionX> 169 </positionX>  
+		<positionY> 47 </positionY> 
+		<type>RoundLED</type>
+		<portType>in</portType> 
+		<portNum> 0 </portNum> 
+		<colorTrue> 66FF00  </colorTrue>
+		<colorFalse> 0 </colorFalse>
+		<bitNum>0</bitNum>
+		<width>3</width>
+		<height>3</height>
+      </indicator>
+	  <indicator>
+		<positionX> 230 </positionX>  
+		<positionY> 16 </positionY> 
+		<type>RoundLED</type>
+		<portType>in</portType> 
+		<portNum> 0 </portNum> 
+		<title> BOX_RED </title>
+		<colorTrue> 66FF00  </colorTrue>
+		<colorFalse> 0 </colorFalse>
+		<bitNum>1</bitNum>
+		<width>3</width>
+		<height>3</height>
+      </indicator>
+	  <indicator>
+		<positionX> 303 </positionX>  
+		<positionY> 16 </positionY> 
+		<type>RoundLED</type>
+		<portType>in</portType> 
+		<portNum> 0 </portNum> 
+		<title> BOX_GREEN </title>
+		<colorTrue> 66FF00  </colorTrue>
+		<colorFalse> 0 </colorFalse>
+		<bitNum>2</bitNum>
+		<width>3</width>
+		<height>3</height>
+      </indicator>
+	  <indicator>
+		<positionX> 445 </positionX>  
+		<positionY> 65 </positionY> 
+		<type>SquareLED</type>
+		<portType>out</portType> 
+		<portNum> 0 </portNum> 
+		<title> MAIN_CONVEYOR </title>
+		<colorTrue> 66FF00  </colorTrue>
+		<colorFalse> 0 </colorFalse>
+		<bitNum>0</bitNum>
+		<width>10</width>
+		<height>6</height>
+      </indicator>
+	  <indicator>
+		<positionX> 177 </positionX>  
+		<positionY> 293 </positionY> 
+		<type>SquareLED</type>
+		<portType>out</portType> 
+		<portNum> 0 </portNum> 
+		<title> SIDE_CONVEYOR </title>
+		<colorTrue> 66FF00  </colorTrue>
+		<colorFalse> 0 </colorFalse>
+		<bitNum>1</bitNum>
+		<width>10</width>
+		<height>6</height>
+      </indicator>
+	  <indicator>
+		<positionX> 162 </positionX>  
+		<positionY> 16 </positionY> 
+		<type>SquareLED</type>
+		<portType>out</portType> 
+		<portNum> 0 </portNum> 
+		<title> REMOVE </title>
+		<colorTrue> E60C0C  </colorTrue>
+		<colorFalse> 0 </colorFalse>
+		<bitNum>2</bitNum>
+		<width>10</width>
+		<height>6</height>
+      </indicator>
+</indicators>

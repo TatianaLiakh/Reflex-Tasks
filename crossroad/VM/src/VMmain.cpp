@@ -12,8 +12,11 @@ void Control_Loop (void)    /* ”правл€ющий алгоритм */
 	P0();  /* Process Init */
 	P1();  /* Process ReceiveSCMOutputMsg */
 	P2();  /* Process Terminator */
-	P3();  /* Process NormalOpenRoadDelayControl */
-	P4();  /* Process NormalCloseRoadDelayControl */
+	P3();  /* Process NoCarsControl */
+	P4();  /* Process OpenRoadDelayControl */
+	P5();  /* Process ErrorControlForOpenRoad */
+	P6();  /* Process CloseRoadDelayControl */
+	P7();  /* Process ErrorControlForCloseRoad */
 	Output();
 	Prepare_PSW((INT16S)(PROCESS_N1), (INT16S)PROCESS_Nn);
 }

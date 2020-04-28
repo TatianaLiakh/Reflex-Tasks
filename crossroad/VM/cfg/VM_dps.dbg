@@ -3,15 +3,20 @@ Start
  ReceiveSCMOutputMsg
 Start
  Terminator
-Idling
 Report
- NormalOpenRoadDelayControl
+ NoCarsControl
+Start
+ OpenRoadDelayControl
+Start
 WaitingOfCar
 WaitingPCycles
 PCyclesControl
-Idiling
- NormalCloseRoadDelayControl
+ ErrorControlForOpenRoad
 Start
+ CloseRoadDelayControl
+Start
+WaitingOfSwitching
 WaitingKCycles
 KCyclesControl
-Idiling
+ ErrorControlForCloseRoad
+Start

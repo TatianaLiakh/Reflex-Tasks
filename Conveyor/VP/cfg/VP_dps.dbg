@@ -1,0 +1,14 @@
+ Init
+Start
+ ReceiveSCMOutputMsg
+Start
+ PutBoxesOnConveyor
+Start
+Randomize
+ColorChoice
+BlueBoxMode
+WaitRemoving
+RemovingControl
+GreenBoxMode
+RedBoxMode
+PassingSensor

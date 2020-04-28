@@ -12,9 +12,9 @@ void Control_Loop (void)    /* ”правл€ющий алгоритм */
 	P0();  /* Process Init */
 	P1();  /* Process ReceiveVMOutputMsg */
 	P2();  /* Process TestDriver */
-	P3();  /* Process TestNormCar */
-	P4();  /* Process TestWrongCar */
-	P5();  /* Process TestTwoCars */
+	P3();  /* Process TestNoCars */
+	P4();  /* Process TestNormCars */
+	P5();  /* Process TestWrongCar */
 	Output();
 	Prepare_PSW((INT16S)(PROCESS_N1), (INT16S)PROCESS_Nn);
 }

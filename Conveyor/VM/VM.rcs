@@ -1,0 +1,402 @@
+PROGR VERIFIER
+{
+	TACT 50;
+	CONST AlgorithmDelay 10; /*2 сек*/
+	CONST TestIdling 300; /*1 мин*/
+	CONST Error 0;
+	CONST Norm 1;
+	
+	/*Набор команд от CA*/
+	ENUM 
+	{
+		CA2GUI_PRESENCE_SENSOR_ERROR,
+		CA2GUI_COLOR_SENSORS_ERROR
+	};
+
+	/*Набор команд для VERIFIER(блок верификации)*/
+	ENUM 
+	{
+		SCM2VM_TEST_PUT_BOXES_ON_CONVEYOR,
+		SCM2VM_TEST_BROKEN_PRESENCE_SENSOR,
+		SCM2VM_TEST_BROKEN_COLOR_SENSORS,
+		SCM2VM_FINISH_VERIFICATION
+	};
+
+	/*Набор команд для DISPATCHER(блок управления сценарием) от VERIFIER(блока верификации)*/
+	ENUM
+	{
+		VM2SCM_START_VERIFICATION,
+		VM2SCM_NEXT_TEST
+	};
+
+	/*Набор Команд для GUI */
+	ENUM
+	{
+		VM2GUI_TEST_PASSED_WRONG_PRESENCE_SENSOR,
+		VM2GUI_TEST_PASSED_WRONG_COLOR_SENSORS,
+		VM2GUI_TEST_FAILED_WRONG_PRESENCE_SENSOR,
+		VM2GUI_TEST_FAILED_WRONG_COLOR_SENSORS,
+		VM2GUI_TEST_PASSED_GREEN_BOXES_CONTROL,
+		VM2GUI_TEST_FAILED_GREEN_BOXES_CONTROL,		
+		VM2GUI_TEST_PASSED_RED_BOXES_CONTROL,
+		VM2GUI_TEST_FAILED_RED_BOXES_CONTROL,
+		VM2GUI_TEST_PASSED_BLUE_BOXES_CONTROL,
+		VM2GUI_TEST_FAILED_BLUE_BOXES_CONTROL,
+		VM2GUI_TEST_PASSED_MAIN_CONVEYOR_CONTROL,
+		VM2GUI_TEST_FAILED_MAIN_CONVEYOR_CONTROL,
+		VM2GUI_START_TEST_RANDOM_BOXES,
+		VM2GUI_START_TEST_WRONG_PRESENCE_SENSOR,
+		VM2GUI_START_TEST_WRONG_COLOR_SENSORS,
+		VM2GUI_END_VERIFICATION
+	};
+	
+	FUNCTION INT SendMsgSCMCode(INT);
+	FUNCTION INT SendMsgGUICode(INT);
+	FUNCTION INT GetNextMsgFromSCM(VOID);
+	FUNCTION INT GetMsgCodeFromSCM(VOID);
+	FUNCTION INT GetNextMsgFromCA(VOID);
+	FUNCTION INT GetMsgCodeFromCA(VOID);
+
+	INPUT  LOG_CA_INPUT_PORT 0 0 8; /* имя, базовый адрес, доп. адр. порта, 8бит */
+	INPUT  LOG_CA_OUTPUT_PORT 0 1 8;
+	
+	PROC Init
+	{	
+		LOG I_BOX_UNDER_SENSOR = {LOG_CA_INPUT_PORT[1]} FOR ALL;
+		LOG I_BOX_RED = {LOG_CA_INPUT_PORT[1]} FOR ALL;
+		LOG I_BOX_GREEN = {LOG_CA_INPUT_PORT[1]} FOR ALL;
+		
+		LOG I_TURN_ON_MAIN_CONVEYOR = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
+		LOG I_TURN_ON_SIDE_CONVEYOR = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
+		LOG I_REMOVE_BOX = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
+		
+		STATE Start 
+		{	
+			SendMsgSCMCode(VM2SCM_START_VERIFICATION); 	
+			START PROC ReceiveSCMOutputMsg;
+			START PROC ReceiveCAOutputMsg;
+			STOP;
+		}
+	} 
+	
+	PROC ReceiveCAOutputMsg
+	{
+		INT CAMsgCode LOCAL;
+		LOG PresenceFlag FOR ALL; 
+		LOG ColorFlag FOR ALL;
+
+		STATE Init
+		{		
+			PresenceFlag = Norm;
+			ColorFlag = Norm;
+			SET NEXT;
+		}
+		
+		STATE Start
+		{
+			/*  читаем код и параметр события из кольцевого буфера в структуру */
+			IF (GetNextMsgFromCA()) 
+			{
+				CAMsgCode = GetMsgCodeFromCA();
+				SWITCH (CAMsgCode) 				
+				{
+					CASE CA2GUI_PRESENCE_SENSOR_ERROR:
+						PresenceFlag = Error;
+					BREAK;
+					CASE CA2GUI_COLOR_SENSORS_ERROR:
+						ColorFlag = Error;
+					BREAK;
+				}
+			}
+			LOOP;
+		}
+	}
+	
+	PROC ReceiveSCMOutputMsg
+	{  
+		INT SCMsgCode LOCAL;
+		
+		STATE Start
+		{
+			/*  читаем код и параметр события из кольцевого буфера в структуру */
+			IF (GetNextMsgFromSCM()) 
+			{
+				SCMsgCode = GetMsgCodeFromSCM();
+				SWITCH (SCMsgCode) 				
+				{			
+					CASE SCM2VM_TEST_PUT_BOXES_ON_CONVEYOR:			
+						SendMsgGUICode(VM2GUI_START_TEST_RANDOM_BOXES);
+						START PROC GreenBoxControl; 
+						START PROC RedBoxControl;
+						START PROC BlueBoxControl;
+						START PROC MainConveyorControl;
+						START PROC Terminator; 	
+						BREAK;
+						
+					CASE SCM2VM_TEST_BROKEN_PRESENCE_SENSOR:
+						SendMsgGUICode(VM2GUI_START_TEST_WRONG_PRESENCE_SENSOR);
+						START PROC PresenceSensorControl;
+						START PROC Terminator; 	
+					BREAK;
+					
+					CASE SCM2VM_TEST_BROKEN_COLOR_SENSORS:
+						SendMsgGUICode(VM2GUI_START_TEST_WRONG_COLOR_SENSORS);
+						START PROC ColorSensorsControl;
+						START PROC Terminator; 	
+					BREAK;
+					
+					CASE SCM2VM_FINISH_VERIFICATION:
+						SendMsgGUICode(VM2GUI_END_VERIFICATION);
+						STOP PROC Terminator; 
+						STOP;
+						BREAK;
+				}
+			}
+			LOOP;
+		}
+	}
+	
+	PROC Terminator
+	{
+		STATE Idling
+		{
+			TIMEOUT TestIdling SET NEXT;
+		}
+		STATE Report
+		{			
+			IF(PROC GreenBoxControl SET STATE ACTIVE)
+			{
+				SendMsgGUICode(VM2GUI_TEST_PASSED_GREEN_BOXES_CONTROL);
+			}
+			IF (PROC GreenBoxControl SET STATE ERROR)
+			{
+				SendMsgGUICode(VM2GUI_TEST_FAILED_GREEN_BOXES_CONTROL);
+			}
+
+			STOP PROC GreenBoxControl;
+			
+			IF(PROC RedBoxControl SET STATE ACTIVE)
+			{
+				SendMsgGUICode(VM2GUI_TEST_PASSED_RED_BOXES_CONTROL);
+			}
+			IF (PROC RedBoxControl SET STATE ERROR)
+			{
+				SendMsgGUICode(VM2GUI_TEST_FAILED_RED_BOXES_CONTROL);
+			}
+
+			STOP PROC RedBoxControl;
+			
+			IF(PROC BlueBoxControl SET STATE ACTIVE)
+			{
+				SendMsgGUICode(VM2GUI_TEST_PASSED_BLUE_BOXES_CONTROL);
+			}
+			IF (PROC BlueBoxControl SET STATE ERROR)
+			{
+				SendMsgGUICode(VM2GUI_TEST_FAILED_BLUE_BOXES_CONTROL);
+			}
+
+			STOP PROC BlueBoxControl;
+			
+			IF(PROC MainConveyorControl SET STATE ACTIVE)
+			{
+				SendMsgGUICode(VM2GUI_TEST_PASSED_MAIN_CONVEYOR_CONTROL); 
+			}
+			IF (PROC MainConveyorControl SET STATE ERROR)
+			{
+				SendMsgGUICode(VM2GUI_TEST_FAILED_MAIN_CONVEYOR_CONTROL);
+			}
+
+			STOP PROC MainConveyorControl;
+			
+			IF(PROC PresenceSensorControl SET STATE ACTIVE)
+			{
+				SendMsgGUICode(VM2GUI_TEST_FAILED_WRONG_PRESENCE_SENSOR); 
+			}
+			IF (PROC PresenceSensorControl SET STATE ERROR)
+			{
+				SendMsgGUICode(VM2GUI_TEST_PASSED_WRONG_PRESENCE_SENSOR);
+			}
+
+			STOP PROC PresenceSensorControl;
+			
+			IF(PROC ColorSensorsControl SET STATE ACTIVE)
+			{
+				SendMsgGUICode(VM2GUI_TEST_FAILED_WRONG_COLOR_SENSORS); 
+			}
+			IF (PROC ColorSensorsControl SET STATE ERROR)
+			{
+				SendMsgGUICode(VM2GUI_TEST_PASSED_WRONG_COLOR_SENSORS);
+			}
+
+			STOP PROC ColorSensorsControl;
+		
+			SendMsgSCMCode(VM2SCM_NEXT_TEST);
+			STOP;
+		}	
+	}
+	
+PROC PresenceSensorControl
+{
+	FROM PROC ReceiveCAOutputMsg PresenceFlag;
+	
+	STATE Control
+	{
+		IF(PresenceFlag == Error)
+			ERROR;
+		LOOP;
+	}
+}
+
+PROC ColorSensorsControl
+{
+	FROM PROC ReceiveCAOutputMsg ColorFlag;
+	
+	STATE Control
+	{
+		IF(ColorFlag == Error)
+			ERROR;
+		LOOP;
+	}
+}
+	
+/*Проверка требования: Если под датчиком появилась коробка зеленого цвета,*/
+/*то боковой конвейер будет включен в течение F тактов*/
+PROC GreenBoxControl
+{
+	FROM PROC Init I_BOX_UNDER_SENSOR, I_BOX_GREEN, I_TURN_ON_SIDE_CONVEYOR, I_REMOVE_BOX;	
+	
+	STATE WaitingOfGreenBox /*Ждем появления зеленой коробки*/
+	{
+		IF(I_BOX_UNDER_SENSOR && I_BOX_GREEN)
+			SET STATE WaitingOnLaunch;
+	}
+	
+	STATE WaitingOnLaunch /*Коробка под датчиком -> конвейер вкл*/
+	{
+		IF(I_TURN_ON_SIDE_CONVEYOR)
+			SET NEXT;
+		TIMEOUT AlgorithmDelay ERROR;
+	}
+	
+	STATE PassingSensorControl /*Конвейер не выкл пока коробка под датчиком*/
+	{
+		IF(I_BOX_UNDER_SENSOR)
+		{	
+			IF(!I_TURN_ON_SIDE_CONVEYOR || I_REMOVE_BOX)
+				ERROR;
+		}
+		ELSE
+			SET STATE WaitingOfGreenBox;	
+		LOOP;
+	}
+}
+
+/*Проверка требования: Если под датчиком появилась коробка красного цвета,*/
+/*то боковой конвейер выключается в течение F тактов, а основной конвейер*/
+/*будет включен в течение J тактов*/
+PROC RedBoxControl
+{
+	FROM PROC Init I_BOX_UNDER_SENSOR, I_BOX_RED, I_TURN_ON_SIDE_CONVEYOR, I_TURN_ON_MAIN_CONVEYOR, I_REMOVE_BOX;	
+	
+	STATE WaitingOfRedBox /*Ждем появления красной коробки*/
+	{
+		IF(I_BOX_UNDER_SENSOR && I_BOX_RED)
+			SET STATE WaitingOnLaunch;
+	}
+	
+	STATE WaitingOnLaunch /*Коробка под датчиком -> конвейер вкл*/
+	{
+		IF(!I_TURN_ON_SIDE_CONVEYOR && I_TURN_ON_MAIN_CONVEYOR)
+			SET NEXT;
+		TIMEOUT AlgorithmDelay ERROR;
+	}
+	
+	STATE PassingSensorControl /*Конвейер не выкл пока коробка под датчиком*/
+	{
+		IF(I_BOX_UNDER_SENSOR)
+		{	
+			IF(I_TURN_ON_SIDE_CONVEYOR || !I_TURN_ON_MAIN_CONVEYOR || I_REMOVE_BOX) 
+				ERROR;
+		}
+		ELSE
+			SET STATE WaitingOfRedBox;	
+		LOOP;
+	}
+}
+
+/*Проверка требования: Если под датчиком появилась коробка синего цвета, то в 
+/*течение F тактов выключаются оба конвейера, а коробка будет удалена*/
+/*в течение M тактов;*/
+PROC BlueBoxControl
+{
+	FROM PROC Init I_REMOVE_BOX, I_BOX_RED, I_BOX_GREEN, I_BOX_UNDER_SENSOR, I_TURN_ON_SIDE_CONVEYOR, I_TURN_ON_MAIN_CONVEYOR;	
+	
+	STATE WaitingOfBlueBox /*Ждем появления синей коробки*/
+	{
+		IF(I_BOX_UNDER_SENSOR && !I_BOX_RED && !I_BOX_GREEN)
+			SET STATE WaitingForShutdown;
+	}
+	
+	STATE WaitingForShutdown /*Коробка под датчиком -> оба конвейера выкл*/
+	{
+		IF(!I_TURN_ON_SIDE_CONVEYOR && !I_TURN_ON_MAIN_CONVEYOR)
+			SET NEXT;
+		TIMEOUT AlgorithmDelay ERROR;
+	}
+	
+	STATE RemovingControl /*Коробка должна удалиться*/
+	{
+		IF(I_BOX_UNDER_SENSOR)
+		{	
+			IF(I_TURN_ON_SIDE_CONVEYOR || I_TURN_ON_MAIN_CONVEYOR || !I_REMOVE_BOX) 
+				ERROR;
+		}
+		ELSE
+			SET STATE WaitingOfBlueBox;	
+		LOOP;
+	}
+}
+
+/*Проверка требования: Основной конвейер выключается не дольше чем на M + 2*F тактов.*/
+PROC MainConveyorControl
+{
+	FROM PROC Init I_BOX_RED, I_BOX_GREEN, I_BOX_UNDER_SENSOR, I_TURN_ON_MAIN_CONVEYOR;	
+	
+	STATE TurnOnControl /*Конвейер вкл пока нет синей коробки*/
+	{
+		IF(!I_TURN_ON_MAIN_CONVEYOR)
+		{
+			IF(I_BOX_UNDER_SENSOR && !I_BOX_RED && !I_BOX_GREEN) /*-> BLUE*/
+				SET NEXT;
+			ELSE 
+				ERROR;	
+		}
+		LOOP;
+	}
+	
+	STATE TurnOffControl /*Конвейер выкл пока синяя коробка под датчиком*/
+	{
+		IF(I_BOX_UNDER_SENSOR)
+		{	
+			IF(I_TURN_ON_MAIN_CONVEYOR)
+				ERROR;
+		}
+		ELSE 
+			SET STATE TurnOnControl;	
+		LOOP;
+	}
+}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

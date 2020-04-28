@@ -1,0 +1,188 @@
+PROGR PLANT
+{
+TACT 50;
+CONST ON 1;
+CONST OFF 0;
+CONST SensorDelay 20; /*~2 сек коробка проезжает датчик*/
+CONST RemovingDelay 10; /*~1 сек коробка удаляется*/
+CONST Norm 01;
+CONST PresenceSensorWrong 00;
+CONST ColorSensorWrong 10;
+
+ENUM
+{		
+	SCM2VP_PUT_BOXES_ON_CONVEYOR,
+	SCM2VP_BROKEN_PRESENCE_SENSOR,
+	SCM2VP_BROKEN_COLOR_SENSORS,
+	SCM2VP_FINISH_VERIFICATION
+};
+
+FUNCTION INT GetMessageFromScenariousBlock(VOID);
+FUNCTION INT GetMessageCodeFromScenariousBlock(VOID);
+FUNCTION INT Random( VOID );
+	
+INPUT  LOG_VP_INPUT_PORT  0 0 8; 
+OUTPUT LOG_VP_OUTPUT_PORT 1 0 8;
+	
+PROC Init
+{
+	LOG O_BOX_UNDER_SENSOR = {LOG_VP_OUTPUT_PORT[1]} FOR ALL;
+	LOG O_BOX_RED = {LOG_VP_OUTPUT_PORT[1]} FOR ALL;
+	LOG O_BOX_GREEN = {LOG_VP_OUTPUT_PORT[1]} FOR ALL;
+		
+	LOG I_TURN_ON_MAIN_CONVEYOR = {LOG_VP_INPUT_PORT[1]} FOR ALL;
+	LOG I_TURN_ON_SIDE_CONVEYOR = {LOG_VP_INPUT_PORT[1]} FOR ALL;
+	LOG I_REMOVE_BOX = {LOG_VP_INPUT_PORT[1]} FOR ALL;
+		
+	STATE Start
+	{ 			
+		START PROC ReceiveSCMOutputMsg;
+		STOP; 
+	}
+}
+
+PROC ReceiveSCMOutputMsg
+{
+	LOG Flag FOR ALL; 
+	INT SCMsgCode LOCAL;
+
+	STATE Start
+	{
+		IF (GetMessageFromScenariousBlock()) 
+		{
+			SCMsgCode = GetMessageCodeFromScenariousBlock();
+			SWITCH (SCMsgCode)
+			{
+				CASE SCM2VP_PUT_BOXES_ON_CONVEYOR:
+					IF(PROC PutBoxesOnConveyor SET STATE PASSIVE)
+					{
+						Flag = Norm;
+						START PROC PutBoxesOnConveyor;	
+					}
+					BREAK;		
+				CASE SCM2VP_BROKEN_PRESENCE_SENSOR:
+					Flag = PresenceSensorWrong;
+					BREAK;
+				CASE SCM2VP_BROKEN_COLOR_SENSORS:
+					Flag = ColorSensorWrong;
+					BREAK;
+				CASE SCM2VP_FINISH_VERIFICATION:
+					STOP PROC PutBoxesOnConveyor;	
+					STOP;
+					BREAK;
+			}
+		}
+		LOOP;
+	}
+}
+
+PROC PutBoxesOnConveyor
+{
+	FROM PROC ReceiveSCMOutputMsg Flag;
+	FROM PROC Init O_BOX_UNDER_SENSOR, O_BOX_RED, O_BOX_GREEN, I_TURN_ON_MAIN_CONVEYOR, I_TURN_ON_SIDE_CONVEYOR, I_REMOVE_BOX;
+	INT time LOCAL;
+	INT color LOCAL;
+
+	STATE Start
+	{
+		O_BOX_UNDER_SENSOR = OFF;
+		O_BOX_RED = OFF;
+		O_BOX_GREEN = OFF;
+		SET NEXT;
+	}
+	
+	STATE Randomize /*Генерируем время между подачами коробок и цвет*/
+	{
+		time = Random();
+		color = Random();
+		SET NEXT;
+	}
+	
+	STATE ColorChoice 
+	{
+		IF (color >= 20 && color <= 35) SET STATE GreenBoxMode;
+		ELSE IF (color > 35 && color <= 50) SET STATE RedBoxMode;	
+		ELSE
+		{
+			IF((Flag == Norm) || (Flag == ColorSensorWrong)) 
+				SET STATE BlueBoxMode; 
+			ELSE SET STATE Randomize;
+		}
+	}	
+	
+	STATE BlueBoxMode
+	{
+		TIMEOUT time
+		{
+			O_BOX_UNDER_SENSOR = ON;
+			SET NEXT;
+		}
+	}
+	
+	STATE WaitRemoving
+	{
+		TIMEOUT RemovingDelay
+		{
+			IF(I_REMOVE_BOX && !I_TURN_ON_MAIN_CONVEYOR && !I_TURN_ON_SIDE_CONVEYOR)
+				SET STATE RemovingControl;
+		}
+	}
+	
+	STATE RemovingControl
+	{
+		O_BOX_UNDER_SENSOR = OFF;
+		IF(!I_REMOVE_BOX && I_TURN_ON_MAIN_CONVEYOR)
+			SET STATE Start;
+	}
+		
+	STATE GreenBoxMode /*Вкл датчик зеленая коробка*/
+	{
+		TIMEOUT time
+		{
+			IF((Flag == Norm) || (Flag == ColorSensorWrong)) 
+				O_BOX_UNDER_SENSOR = ON;
+			IF(Flag == ColorSensorWrong)
+				O_BOX_RED = ON;
+			O_BOX_GREEN = ON;
+			SET STATE PassingSensor;
+		}
+	}
+	
+	STATE RedBoxMode /*Вкл датчик красная коробка*/
+	{
+		TIMEOUT time
+		{
+			IF((Flag == Norm) || (Flag == ColorSensorWrong))
+				O_BOX_UNDER_SENSOR = ON;
+			IF(Flag == ColorSensorWrong)
+				O_BOX_GREEN = ON;
+			O_BOX_RED = ON;
+			SET STATE PassingSensor;
+		}
+	}
+	
+	STATE PassingSensor
+	{
+		TIMEOUT SensorDelay 
+			SET STATE Start;
+	}
+}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,10 +1,9 @@
-#include "vpusr1.h"
+#include "VPusr1.h"
 #include "msg_queue.h"
 QueueMsg last_msg;
 
 MsgQueue MainInputQueue;
 MsgQueue MainOutputQueue;
-
 
 int GetOutMsgNumberFromScenariousBlock(void)
 {
@@ -46,35 +45,35 @@ long GetLongParamFromScenariousBlock()
 	return last_msg.param.pr_long;
 }
 
-//ÔÓÍÊÖÈß ÖÅË  SendMsgToGUICode       (ÖÅË);
-int SendMsgToGUICode(int code)
+//ÔÓÍÊÖÈß ÖÅË  SendMsgFromScenariousBlockCode       (ÖÅË);
+int SendMsgFromScenariousBlockCode(int code)
 {
 	return PutTailMsgQueue(&MainOutputQueue, code);
 }
 
-//ÔÓÍÊÖÈß ÖÅË  SendMsgFloatParamToGUI (ÖÅË, ÏËÀÂ);
-int SendMsgFloatParamToGUI(int code, float param)
+//ÔÓÍÊÖÈß ÖÅË  SendMsgFloatParamFromScenariousBlock (ÖÅË, ÏËÀÂ);
+int SendMsgFloatParamFromScenariousBlock(int code, float param)
 {
 	return PutTailMsgQueueF(&MainOutputQueue, code, param);
 
 }
 
-/* ÔÓÍÊÖÈß ÖÅË  SendMsgShortParamToGUI (ÖÅË, ÊÖÅË); */
-int SendMsgShortParamToGUI(int code, short param)
+/* ÔÓÍÊÖÈß ÖÅË  SendMsgShortParamFromScenariousBlock (ÖÅË, ÊÖÅË); */
+int SendMsgShortParamFromScenariousBlock(int code, short param)
 {
 	return PutTailMsgQueueS(&MainOutputQueue, code, param);
 
 }
 
-/* ÔÓÍÊÖÈß ÖÅË  SendMsgIntParamToGUI   (ÖÅË, ÖÅË); */
-int SendMsgIntParamToGUI(int code, int param)
+/* ÔÓÍÊÖÈß ÖÅË  SendMsgIntParamFromScenariousBlock   (ÖÅË, ÖÅË); */
+int SendMsgIntParamFromScenariousBlock(int code, int param)
 {
 	return PutTailMsgQueueI(&MainOutputQueue, code, param);
 
 }
 
-//ÔÓÍÊÖÈß ÖÅË  SendMsgLongParamToGUI  (ÖÅË, ÄÖÅË);
-int SendMsgLongParamToGUI(int code, long param)
+//ÔÓÍÊÖÈß ÖÅË  SendMsgLongParamFromScenariousBlock  (ÖÅË, ÄÖÅË);
+int SendMsgLongParamFromScenariousBlock(int code, long param)
 {
 	return PutTailMsgQueueL(&MainOutputQueue, code, param);
 }
@@ -85,26 +84,8 @@ int GetInpMsgNumber_FromScenariousBlock()
 	return GetLenMsgQueue(&MainInputQueue);
 }
 
-int GetBit(float val, int num)
-{
-	int int_val = *(int*)(&val);
-	int local = (int_val >> ((3 - num) * 8)) & 0xFF; 
-	return local; 
-}
-
-
-float PortsToFloat( int zero_bit,  int first,  int second, int third)
-{
-		int int_rez = ((zero_bit & 0xFF) << 24) 
-				+ ( (first & 0xFF) << 16 ) 
-				+ (( second& 0xFF) << 8 ) + (third & 0xFF);
-				
-	float rez = *(float *)(&int_rez);
-	return rez;
-}
 #include <math.h>
-float SQRT(float f)
+int Random()
 {
-	return sqrt(f);
-	
+	return rand() % 141 + 10;	
 }

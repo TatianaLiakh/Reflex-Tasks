@@ -1,0 +1,21 @@
+ Init
+Start
+ ReceiveVMOutputMsg
+Start
+ TestDriver
+RunTestPutBoxesOnConveyor
+IdilingTest1
+RunTestBrokenPresenceSensor
+IdilingTest2
+RunTestBrokenColorSensors
+IdilingTest3
+Finish
+ TestRandomBoxes
+Start
+Idiling
+ TestBrokenPresenceSensor
+Start
+Idiling
+ TestBrokenColorSensors
+Start
+Idiling

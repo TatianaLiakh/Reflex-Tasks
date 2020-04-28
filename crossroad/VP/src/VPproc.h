@@ -4,10 +4,9 @@
 
 void P0(void);  /* Process Init */
 void P1(void);  /* Process ReceiveSCMOutputMsg */
-void P2(void);  /* Process RunCar */
-void P3(void);  /* Process RunTwoCars */
+void P2(void);  /* Process RunCars */
 
 #define PROCESS_N1 0
-#define PROCESS_Nn 3 /* Number Of Proc */
+#define PROCESS_Nn 2 /* Number Of Proc */
 
 #endif

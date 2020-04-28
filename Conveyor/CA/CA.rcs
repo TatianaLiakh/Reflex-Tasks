@@ -1,0 +1,126 @@
+/*Датчик мигает каждые 2 секунды*/
+PROGR ALGORITHM
+{
+	TACT 100;
+	CONST OFF 0;
+	CONST ON 1;
+	
+	/*Набор Команд для GUI */
+	ENUM
+	{
+		CA2GUI_PRESENCE_SENSOR_ERROR,
+		CA2GUI_COLOR_SENSORS_ERROR
+	};
+	
+	FUNCTION INT SendMsgGUICode(INT);
+	
+	INPUT  LOG_CA_INPUT_PORT 0 0 8; /* имя, базовый адрес, доп. адр. порта, 8бит */	
+	OUTPUT LOG_CA_OUTPUT_PORT 1 0 8;
+
+	PROC Init
+	{
+		LOG S_BOX_UNDER_SENSOR = {LOG_CA_INPUT_PORT[1]} FOR ALL;
+		LOG S_BOX_RED = {LOG_CA_INPUT_PORT[1]} FOR ALL;
+		LOG S_BOX_GREEN = {LOG_CA_INPUT_PORT[1]} FOR ALL;
+		
+		LOG C_TURN_ON_MAIN_CONVEYOR = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
+		LOG C_TURN_ON_SIDE_CONVEYOR = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
+		LOG C_REMOVE_BOX = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
+		
+		STATE Start
+		{  
+			C_REMOVE_BOX = OFF;
+			C_TURN_ON_SIDE_CONVEYOR = OFF;
+			C_TURN_ON_MAIN_CONVEYOR = OFF;
+			START PROC SortingBoxes;
+			START PROC MainConveyorOperation;
+			START PROC PresenceSensorControl;
+			START PROC ColorSensorsControl;
+			STOP;
+		}	
+	}
+
+	PROC SortingBoxes
+	{
+		FROM PROC Init S_BOX_UNDER_SENSOR, S_BOX_RED, S_BOX_GREEN, C_TURN_ON_MAIN_CONVEYOR, C_TURN_ON_SIDE_CONVEYOR, C_REMOVE_BOX;
+		
+		STATE Start
+		{
+			IF(S_BOX_UNDER_SENSOR && !S_BOX_RED && !S_BOX_GREEN)
+			{
+				C_REMOVE_BOX = ON;
+				C_TURN_ON_SIDE_CONVEYOR = OFF;
+				C_TURN_ON_MAIN_CONVEYOR = OFF;
+			}
+			ELSE
+				C_REMOVE_BOX = OFF;
+			IF(S_BOX_UNDER_SENSOR && S_BOX_RED)
+			{
+				C_REMOVE_BOX = OFF;
+				C_TURN_ON_SIDE_CONVEYOR = OFF;
+				C_TURN_ON_MAIN_CONVEYOR = ON;
+			}
+			IF(S_BOX_UNDER_SENSOR && S_BOX_GREEN)
+			{
+				C_REMOVE_BOX = OFF;
+				C_TURN_ON_SIDE_CONVEYOR = ON;
+				C_TURN_ON_MAIN_CONVEYOR = ON;
+			}
+			LOOP;
+		}
+	}
+
+	PROC MainConveyorOperation
+	{
+		FROM PROC Init S_BOX_UNDER_SENSOR, C_TURN_ON_MAIN_CONVEYOR;
+		
+		STATE Start
+		{
+			IF(!S_BOX_UNDER_SENSOR)
+				C_TURN_ON_MAIN_CONVEYOR = ON;		
+			LOOP;
+		}
+	}
+	
+	PROC PresenceSensorControl
+	{
+		FROM PROC Init S_BOX_UNDER_SENSOR, S_BOX_RED, S_BOX_GREEN;
+
+		STATE Control
+		{
+			IF(!S_BOX_UNDER_SENSOR && (S_BOX_RED || S_BOX_GREEN))
+			{
+				SendMsgGUICode(CA2GUI_PRESENCE_SENSOR_ERROR);	
+				STOP;
+			}
+			LOOP;
+		}		
+	} 
+	
+	PROC ColorSensorsControl
+	{
+		FROM PROC Init S_BOX_UNDER_SENSOR, S_BOX_RED, S_BOX_GREEN;
+
+		STATE Control
+		{
+			IF(S_BOX_UNDER_SENSOR && S_BOX_RED && S_BOX_GREEN)
+			{
+				SendMsgGUICode(CA2GUI_COLOR_SENSORS_ERROR);		
+				STOP;
+			}
+			LOOP;
+		}		
+	}
+} 
+
+
+
+
+
+
+
+
+
+
+
+

@@ -11,8 +11,7 @@ void Control_Loop (void)    /* ”правл€ющий алгоритм */
 	Input();
 	P0();  /* Process Init */
 	P1();  /* Process ReceiveSCMOutputMsg */
-	P2();  /* Process RunCar */
-	P3();  /* Process RunTwoCars */
+	P2();  /* Process RunCars */
 	Output();
 	Prepare_PSW((INT16S)(PROCESS_N1), (INT16S)PROCESS_Nn);
 }

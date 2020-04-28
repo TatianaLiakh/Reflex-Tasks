@@ -3,19 +3,19 @@ Start
  ReceiveVMOutputMsg
 Start
  TestDriver
-RunTestNormCar
+RunTestNoCars
 IdilingTest1
-RunTestWrongCar
+RunTestNormCars
 IdilingTest2
-RunTestTwoCars
+RunTestWrongCar
 IdilingTest3
 Finish
- TestNormCar
+ TestNoCars
 Start
-Idiling
+End
+ TestNormCars
+Start
+End
  TestWrongCar
 Start
-Idiling
- TestTwoCars
-Start
-Idiling
+End

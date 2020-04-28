@@ -1,205 +1,270 @@
     1          PROGR VERIFIER
     2          {
     3          	TACT 50;
-    4          	CONST ON 1;
-    5          	CONST OFF 0;
-    6          	CONST PCyclesDelay 200; /*20 сек*/
-    7          	CONST KCyclesDelay 150; /*15 сек*/
-    8          	CONST AlgorithmDelay 10; /*1 сек*/
-    9          	CONST TestIdling 370; /*37 сек*/
-   10          
-   11          	/*Набор команд для VERIFIER(блок верификации)*/
-   12          	ENUM 
-   13          	{
-   14          		SCM2VM_TEST_RUN_CAR,
-   15          		SCM2VM_TEST_RUN_WRONG_CAR,
-   16          		SCM2VM_TEST_RUN_TWO_CARS, 
+    4          	CONST PCyclesDelay 198; /*19.8 sec*/
+    5          	CONST KCyclesDelay 148; /*14.8 sec*/
+    6          	CONST AlgorithmDelay 10; /*1 sec*/
+    7          	CONST Active 1;
+    8          	CONST Error 0;
+    9          
+   10          	/*List of commands for VM (Verification Module)*/
+   11          	ENUM 
+   12          	{
+   13          		SCM2VM_TEST_RUN_CARS,
+   14          		SCM2VM_TEST_NO_CARS,
+   15          		SCM2VM_TEST_RUN_WRONG_CAR, 
+   16          		SCM2VM_TEST_COMPLETED,
    17          		SCM2VM_FINISH_VERIFICATION
    18          	};
    19          
-   20          	/*Набор команд для DISPATCHER(блок управления сценарием) от VERIFIER(блока верификации)*/
+   20          	/*List of commands for SCM (Script Control Module) from VM (Verification Module)*/ 
    21          	ENUM
    22          	{
-   23          		VM2SCM_START_VERIFICATION,
-   24          		VM2SCM_NEXT_TEST
-   25          	};
-   26          
-   27          	/*Набор Команд для GUI */
-   28          	ENUM
-   29          	{
-   30          		VM2GUI_START_TEST_RUN_CAR,
+   23          		VM2SCM_START_VERIFICATION
+   24          	};
+   25          
+   26          	/*List of commands for GUI*/
+   27          	ENUM
+   28          	{
+   29          		VM2GUI_START_TEST_RUN_CARS,
+   30          		VM2GUI_START_TEST_NO_CARS,
    31          		VM2GUI_START_TEST_RUN_WRONG_CAR,
-   32          		VM2GUI_START_TEST_RUN_TWO_CARS,
+   32          		VM2GUI_TEST_PASSED_NO_CARS,
    33          		VM2GUI_TEST_PASSED_NORMAL_OPEN_ROAD_DELAY, 
    34          		VM2GUI_TEST_PASSED_NORMAL_CLOSE_ROAD_DELAY,
-   35          		VM2GUI_TEST_FAILED_NORMAL_OPEN_ROAD_DELAY,
-   36          		VM2GUI_TEST_FAILED_NORMAL_CLOSE_ROAD_DELAY,
-   37          		VM2GUI_END_VERIFICATION
-   38          	};
-   39          	
-   40          	FUNCTION INT SendMsgSCMCode(INT);
-   41          	FUNCTION INT SendMsgGUICode(INT);
-   42          	FUNCTION INT GetNextMsgFromSCM(VOID);
-   43          	FUNCTION INT GetMsgCodeFromSCM(VOID);
-   44          
-   45          	INPUT  LOG_CA_INPUT_PORT 0 0 8; /* имя, базовый адрес, доп. адр. порта, 8бит */
-   46          	INPUT  LOG_CA_OUTPUT_PORT  0 1 8; /* имя, базовый адрес, доп. адр. порта, 8бит */
-   47          	
-   48          	PROC Init
-   49          	{	
-   50          		LOG I_CAR_NEAR_CROSSROAD = {LOG_CA_INPUT_PORT[1]} FOR ALL;
-   51          		LOG I_SWITCH_TRAFFIC_LIGHT = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
-   52          				
-   53          		STATE Start 
-   54          		{	
-   55          			SendMsgSCMCode(VM2SCM_START_VERIFICATION); 	
-   56          			START PROC ReceiveSCMOutputMsg;
-   57          			STOP;
-   58          		}
-   59          	} 
-   60          	
-   61          	PROC ReceiveSCMOutputMsg
-   62          	{  
-   63          		INT SCMsgCode LOCAL; 
-   64          		STATE Start
-   65          		{
-   66          			/*  читаем код и параметр события из кольцевого буфера в структуру */
-   67          			IF(GetNextMsgFromSCM()) 
-   68          			{
-   69          				SCMsgCode = GetMsgCodeFromSCM();
-   70          				SWITCH (SCMsgCode) 				
-   71          				{				
-   72          					CASE SCM2VM_TEST_RUN_CAR:
-   73          						SendMsgGUICode(VM2GUI_START_TEST_RUN_CAR);
-   74          						START PROC NormalOpenRoadDelayControl;						
-   75          						START PROC NormalCloseRoadDelayControl;
-   76          						START PROC Terminator; 
-   77          						BREAK;
-   78          						
-   79          					CASE SCM2VM_TEST_RUN_WRONG_CAR:
-   80          						SendMsgGUICode(VM2GUI_START_TEST_RUN_WRONG_CAR);
-   81          						START PROC NormalOpenRoadDelayControl;						
-   82          						START PROC NormalCloseRoadDelayControl;
-   83          						START PROC Terminator; 
+   35          		VM2GUI_TEST_FAILED_NO_CARS,
+   36          		VM2GUI_TEST_FAILED_NORMAL_OPEN_ROAD_DELAY,
+   37          		VM2GUI_TEST_FAILED_NORMAL_CLOSE_ROAD_DELAY,
+   38          		VM2GUI_END_VERIFICATION
+   39          	};
+   40          	
+   41          	FUNCTION INT SendMsgSCMCode(INT);
+   42          	FUNCTION INT SendMsgGUICode(INT);
+   43          	FUNCTION INT GetNextMsgFromSCM(VOID);
+   44          	FUNCTION INT GetMsgCodeFromSCM(VOID);
+   45          
+   46          	INPUT  LOG_CA_INPUT_PORT 0 0 8; /*name, base address, add. addr port, 8bit*/
+   47          	INPUT  LOG_CA_OUTPUT_PORT  0 1 8; /*name, base address, add. addr port, 8bit*/
+   48          	
+   49          	PROC Init
+   50          	{	
+   51          		LOG I_CAR_NEAR_CROSSROAD = {LOG_CA_INPUT_PORT[1]} FOR ALL;
+   52          		LOG I_SWITCH_TRAFFIC_LIGHT = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
+   53          				
+   54          		STATE Start 
+   55          		{	
+   56          			SendMsgSCMCode(VM2SCM_START_VERIFICATION); 	
+   57          			START PROC ReceiveSCMOutputMsg;
+   58          			STOP;
+   59          		}
+   60          	} 
+   61          	
+   62          	PROC ReceiveSCMOutputMsg
+   63          	{  
+   64          		INT SCMsgCode LOCAL; 
+   65          		STATE Start
+   66          		{
+   67          			/*Read code and event parameter from ring buffer into the structure*/
+   68          			IF(GetNextMsgFromSCM()) 
+   69          			{
+   70          				SCMsgCode = GetMsgCodeFromSCM();
+   71          				SWITCH (SCMsgCode) 				
+   72          				{						
+   73          					CASE SCM2VM_TEST_NO_CARS:
+   74          						SendMsgGUICode(VM2GUI_START_TEST_NO_CARS);
+   75          						START PROC NoCarsControl;
+   76          						START PROC OpenRoadDelayControl;						
+   77          						START PROC CloseRoadDelayControl;
+   78          						BREAK;
+   79          						
+   80          					CASE SCM2VM_TEST_RUN_CARS:
+   81          						SendMsgGUICode(VM2GUI_START_TEST_RUN_CARS);
+   82          						START PROC ErrorControlForOpenRoad;
+   83          						START PROC ErrorControlForCloseRoad;
    84          						BREAK;
-   85          					
-   86          					CASE SCM2VM_TEST_RUN_TWO_CARS:
-   87          						SendMsgGUICode(VM2GUI_START_TEST_RUN_TWO_CARS);
-   88          						START PROC NormalOpenRoadDelayControl;						
-   89          						START PROC NormalCloseRoadDelayControl;
-   90          						START PROC Terminator; 
-   91          						BREAK;
-   92          
-   93          					CASE SCM2VM_FINISH_VERIFICATION:
-   94          						SendMsgGUICode(VM2GUI_END_VERIFICATION);
-   95          						STOP PROC Terminator; 
-   96          						STOP;
-   97          						BREAK;
-   98          				}
-   99          			}
-  100          			LOOP;
-  101          		}
-  102          	}
-  103          	
-  104          	PROC Terminator
-  105          	{
-  106          		STATE Idling
-  107          		{
-  108          			TIMEOUT TestIdling SET NEXT;
-  109          		}
-  110          		STATE Report
-  111          		{			
-  112          			/*NormalOpenRoadDelayControl*/
-  113          			IF(PROC NormalOpenRoadDelayControl SET STATE ACTIVE)
-  114          			{
-  115          				SendMsgGUICode(VM2GUI_TEST_PASSED_NORMAL_OPEN_ROAD_DELAY);
-  116          			}
-  117          			IF(PROC NormalOpenRoadDelayControl SET STATE ERROR)
-  118          			{
-  119          				SendMsgGUICode(VM2GUI_TEST_FAILED_NORMAL_OPEN_ROAD_DELAY);
-  120          			}
-  121          
-  122          			STOP PROC NormalOpenRoadDelayControl;
-  123          			
-  124          			/*NormalCloseRoadDelayControl*/		
-  125          			IF(PROC NormalCloseRoadDelayControl SET STATE ACTIVE)
-  126          			{
-  127          				SendMsgGUICode(VM2GUI_TEST_PASSED_NORMAL_CLOSE_ROAD_DELAY);
-  128          			}
-  129          
-  130          			IF(PROC NormalCloseRoadDelayControl SET STATE ERROR)
-  131          			{
-  132          				SendMsgGUICode(VM2GUI_TEST_FAILED_NORMAL_CLOSE_ROAD_DELAY);
-  133          			}
-  134          			 
-  135          			STOP PROC NormalCloseRoadDelayControl; 			
-  136          			SendMsgSCMCode(VM2SCM_NEXT_TEST);
-  137          			STOP;
-  138          		}	
-  139          	}
-  140          
-  141          
-  142          /*Проверка требования: Если появилась машина со стороны сельской дороги, то дорога откроется ровно через P тактов*/
-  143          	PROC NormalOpenRoadDelayControl
-  144          	{
-  145          		FROM PROC Init I_CAR_NEAR_CROSSROAD, I_SWITCH_TRAFFIC_LIGHT;
-  146          		
-  147          		STATE WaitingOfCar /*Ждем для переключения датчика*/
-  148          		{
-  149          			IF(I_CAR_NEAR_CROSSROAD == ON) 
-  150          				SET NEXT;
-  151          		}		
-  152          
-  153          		STATE WaitingPCycles /*Ждем(Р тактов)*/
-  154          		{
-  155          			IF(I_SWITCH_TRAFFIC_LIGHT == ON) 
-  156          				ERROR;
-  157          			TIMEOUT PCyclesDelay SET NEXT;
-  158          		}
-  159          		
-  160          		STATE PCyclesControl /*Проверяем состояние датчика после Р тактов*/
-  161          		{
-  162          			IF(I_SWITCH_TRAFFIC_LIGHT == ON) 
-  163          				SET NEXT;
-  164          			TIMEOUT AlgorithmDelay ERROR;
-  165          		}	
-  166          		
-  167          		STATE Idiling
-  168          		{
-  169          			LOOP;
-  170          		}
-  171          	}
-  172          
-  173          /*Проверка требования: Между открытием и закрытием сельской дороги должно пройти ровно K тактов*/
-  174          	PROC NormalCloseRoadDelayControl
-  175          	{
-  176          		FROM PROC Init I_CAR_NEAR_CROSSROAD, I_SWITCH_TRAFFIC_LIGHT;
-  177          
-  178          		STATE Start /*Ждем пока светофор переключится*/
-  179          		{
-  180          			IF(I_SWITCH_TRAFFIC_LIGHT == ON) 
-  181          				SET NEXT;
-  182          		}
-  183          		
-  184          		STATE WaitingKCycles /*Ждем(K тактов)*/
-  185          		{
-  186          			IF(I_SWITCH_TRAFFIC_LIGHT == OFF) 
-  187          				ERROR;
-  188          			TIMEOUT KCyclesDelay SET NEXT;
-  189          		}
-  190          		
-  191          		STATE KCyclesControl /*Проверяем состояние датчика после Р тактов*/
-  192          		{
-  193          			IF(I_SWITCH_TRAFFIC_LIGHT == OFF) SET NEXT;
-  194          				TIMEOUT AlgorithmDelay ERROR;
-  195          		}
-  196          		
-  197          		STATE Idiling
-  198          		{
-  199          			LOOP;
-  200          		}
-  201          	}
-  202          }
+   85          						
+   86          					CASE SCM2VM_TEST_RUN_WRONG_CAR:
+   87          						SendMsgGUICode(VM2GUI_START_TEST_RUN_WRONG_CAR);
+   88          						START PROC ErrorControlForOpenRoad;
+   89          						START PROC ErrorControlForCloseRoad;					
+   90          						BREAK;
+   91          					
+   92          					CASE SCM2VM_TEST_COMPLETED:
+   93          						START PROC Terminator; 
+   94          						BREAK;
+   95          
+   96          					CASE SCM2VM_FINISH_VERIFICATION:
+   97          						SendMsgGUICode(VM2GUI_END_VERIFICATION);
+   98          						STOP PROC OpenRoadDelayControl;	
+   99          						STOP PROC CloseRoadDelayControl;
+  100          						STOP PROC Terminator; 
+  101          						STOP;
+  102          						BREAK;
+  103          				}
+  104          			}
+  105          			LOOP;
+  106          		}
+  107          	}
+  108          	
+  109          	PROC Terminator
+  110          	{
+  111          		STATE Report
+  112          		{			
+  113          			/*OpenRoadDelayControl*/
+  114          			IF(PROC ErrorControlForOpenRoad SET STATE ACTIVE)
+  115          			{
+  116          				SendMsgGUICode(VM2GUI_TEST_PASSED_NORMAL_OPEN_ROAD_DELAY);
+  117          			}
+  118          			IF(PROC ErrorControlForOpenRoad SET STATE ERROR)
+  119          			{
+  120          				SendMsgGUICode(VM2GUI_TEST_FAILED_NORMAL_OPEN_ROAD_DELAY);
+  121          			}
+  122          			
+  123          			STOP PROC ErrorControlForOpenRoad;
+  124          			
+  125          			/*CloseRoadDelayControl*/		
+  126          			IF(PROC ErrorControlForCloseRoad SET STATE ACTIVE)
+  127          			{
+  128          				SendMsgGUICode(VM2GUI_TEST_PASSED_NORMAL_CLOSE_ROAD_DELAY);
+  129          			}
+  130          
+  131          			IF(PROC ErrorControlForCloseRoad SET STATE ERROR)
+  132          			{
+  133          				SendMsgGUICode(VM2GUI_TEST_FAILED_NORMAL_CLOSE_ROAD_DELAY);
+  134          			}
+  135          			
+  136          			STOP PROC ErrorControlForCloseRoad;
+  137          			
+  138          			/*NoCarsControl*/		
+  139          			IF(PROC NoCarsControl SET STATE ACTIVE)
+  140          			{
+  141          				SendMsgGUICode(VM2GUI_TEST_PASSED_NO_CARS);
+  142          			}
+  143          
+  144          			IF(PROC NoCarsControl SET STATE ERROR) 
+  145          			{
+  146          				SendMsgGUICode(VM2GUI_TEST_FAILED_NO_CARS);
+  147          			}
+  148          			
+  149          			STOP PROC NoCarsControl;
+  150          			STOP;
+  151          		}	
+  152          	}
+  153          	
+  154          /*Checking requirement: A traffic light starts regulation only if*/
+  155          /*there is a car on the side of a country road*/	
+  156          PROC NoCarsControl
+  157          {
+  158          	FROM PROC Init I_CAR_NEAR_CROSSROAD, I_SWITCH_TRAFFIC_LIGHT;
+  159          	
+  160          	STATE Start
+  161          	{
+  162          		IF(!I_CAR_NEAR_CROSSROAD && I_SWITCH_TRAFFIC_LIGHT)
+  163          			ERROR;
+  164          		LOOP;
+  165          	}	
+  166          }
+  167          
+  168          /*Checking requirement: If car appeared on the side of country road, 
+  169          /*then the road will open exactly after P measures*/
+  170          	PROC OpenRoadDelayControl
+  171          	{
+  172          		FROM PROC Init I_CAR_NEAR_CROSSROAD, I_SWITCH_TRAFFIC_LIGHT;
+  173          		LOG flag FOR ALL;		
+  174          					
+  175          		STATE Start
+  176          		{
+  177          			flag = Active;
+  178          			SET NEXT;
+  179          		}
+  180          		
+  181          		STATE WaitingOfCar /*Wait to switch the sensor*/
+  182          		{
+  183          			IF(I_CAR_NEAR_CROSSROAD && !I_SWITCH_TRAFFIC_LIGHT) 
+  184          				SET NEXT;
+  185          		}		
+  186          
+  187          		STATE WaitingPCycles /*Wait P cycles*/
+  188          		{
+  189          			IF(I_SWITCH_TRAFFIC_LIGHT) 
+  190          				flag = Error;
+  191          			TIMEOUT PCyclesDelay SET NEXT;
+  192          		}
+  193          		
+  194          		STATE PCyclesControl /*Check state of sensor after P cycles*/
+  195          		{
+  196          			IF(I_SWITCH_TRAFFIC_LIGHT) 
+  197          				SET STATE Start;
+  198          			TIMEOUT AlgorithmDelay
+  199          			{
+  200          				flag = Error;
+  201          				SET STATE Start;
+  202          			}
+  203          		}	
+  204          	}	
+  205          	
+  206          	PROC ErrorControlForOpenRoad
+  207          	{
+  208          		FROM PROC OpenRoadDelayControl flag;		
+  209          	
+  210          		STATE Start
+  211          		{
+  212          			IF(flag == Error)
+  213          				ERROR;
+  214          			LOOP;
+  215          		}
+  216          	}
+  217          
+  218          /*Checking requirement: Between opening and closing of country road
+  219          /*should pass exactly K cycles*/
+  220          	PROC CloseRoadDelayControl
+  221          	{
+  222          		FROM PROC Init I_CAR_NEAR_CROSSROAD, I_SWITCH_TRAFFIC_LIGHT;
+  223          		LOG flag FOR ALL;
+  224          		
+  225          		STATE Start
+  226          		{
+  227          			flag = Active;
+  228          			SET NEXT;
+  229          		}
+  230          
+  231          		STATE WaitingOfSwitching /*Wait until traffic light switches*/
+  232          		{
+  233          			IF(I_CAR_NEAR_CROSSROAD && I_SWITCH_TRAFFIC_LIGHT) 
+  234          				SET NEXT;
+  235          		}
+  236          		
+  237          		STATE WaitingKCycles /*Wait K cycles*/
+  238          		{
+  239          			IF(!I_SWITCH_TRAFFIC_LIGHT) 
+  240          				flag = Error;
+  241          			TIMEOUT KCyclesDelay SET NEXT;
+  242          		}
+  243          		
+  244          		STATE KCyclesControl /*Check state of sensor after K cycles*/
+  245          		{
+  246          			IF(!I_SWITCH_TRAFFIC_LIGHT) 
+  247          				SET STATE Start;
+  248          			TIMEOUT AlgorithmDelay
+  249          			{
+  250          				flag = Error;
+  251          				SET STATE Start;
+  252          			}
+  253          		}
+  254          	}
+  255          
+  256          	PROC ErrorControlForCloseRoad
+  257          	{
+  258          		FROM PROC CloseRoadDelayControl flag;		
+  259          	
+  260          		STATE Start
+  261          		{
+  262          			IF(flag == Error)
+  263          				ERROR;
+  264          			LOOP;
+  265          		}
+  266          	}
+  267          }
 %RCSL-I-SUMMARY, Completed with 0 error(s).
 %RCSL-I-SUMMARY, Completed with 0 warning(s).
 

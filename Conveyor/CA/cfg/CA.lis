@@ -1,0 +1,119 @@
+    1          /*Датчик мигает каждые 2 секунды*/
+    2          PROGR ALGORITHM
+    3          {
+    4          	TACT 100;
+    5          	CONST OFF 0;
+    6          	CONST ON 1;
+    7          	
+    8          	/*Набор Команд для GUI */
+    9          	ENUM
+   10          	{
+   11          		CA2GUI_PRESENCE_SENSOR_ERROR,
+   12          		CA2GUI_COLOR_SENSORS_ERROR
+   13          	};
+   14          	
+   15          	FUNCTION INT SendMsgGUICode(INT);
+   16          	
+   17          	INPUT  LOG_CA_INPUT_PORT 0 0 8; /* имя, базовый адрес, доп. адр. порта, 8бит */	
+   18          	OUTPUT LOG_CA_OUTPUT_PORT 1 0 8;
+   19          
+   20          	PROC Init
+   21          	{
+   22          		LOG S_BOX_UNDER_SENSOR = {LOG_CA_INPUT_PORT[1]} FOR ALL;
+   23          		LOG S_BOX_RED = {LOG_CA_INPUT_PORT[1]} FOR ALL;
+   24          		LOG S_BOX_GREEN = {LOG_CA_INPUT_PORT[1]} FOR ALL;
+   25          		
+   26          		LOG C_TURN_ON_MAIN_CONVEYOR = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
+   27          		LOG C_TURN_ON_SIDE_CONVEYOR = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
+   28          		LOG C_REMOVE_BOX = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
+   29          		
+   30          		STATE Start
+   31          		{  
+   32          			C_REMOVE_BOX = OFF;
+   33          			C_TURN_ON_SIDE_CONVEYOR = OFF;
+   34          			C_TURN_ON_MAIN_CONVEYOR = OFF;
+   35          			START PROC SortingBoxes;
+   36          			START PROC MainConveyorOperation;
+   37          			START PROC PresenceSensorControl;
+   38          			START PROC ColorSensorsControl;
+   39          			STOP;
+   40          		}	
+   41          	}
+   42          
+   43          	PROC SortingBoxes
+   44          	{
+   45          		FROM PROC Init S_BOX_UNDER_SENSOR, S_BOX_RED, S_BOX_GREEN, C_TURN_ON_MAIN_CONVEYOR, C_TURN_ON_SIDE_CONVEYOR, C_REMOVE_BOX;
+   46          		
+   47          		STATE Start
+   48          		{
+   49          			IF(S_BOX_UNDER_SENSOR && !S_BOX_RED && !S_BOX_GREEN)
+   50          			{
+   51          				C_REMOVE_BOX = ON;
+   52          				C_TURN_ON_SIDE_CONVEYOR = OFF;
+   53          				C_TURN_ON_MAIN_CONVEYOR = OFF;
+   54          			}
+   55          			ELSE
+   56          				C_REMOVE_BOX = OFF;
+   57          			IF(S_BOX_UNDER_SENSOR && S_BOX_RED)
+   58          			{
+   59          				C_REMOVE_BOX = OFF;
+   60          				C_TURN_ON_SIDE_CONVEYOR = OFF;
+   61          				C_TURN_ON_MAIN_CONVEYOR = ON;
+   62          			}
+   63          			IF(S_BOX_UNDER_SENSOR && S_BOX_GREEN)
+   64          			{
+   65          				C_REMOVE_BOX = OFF;
+   66          				C_TURN_ON_SIDE_CONVEYOR = ON;
+   67          				C_TURN_ON_MAIN_CONVEYOR = ON;
+   68          			}
+   69          			LOOP;
+   70          		}
+   71          	}
+   72          
+   73          	PROC MainConveyorOperation
+   74          	{
+   75          		FROM PROC Init S_BOX_UNDER_SENSOR, C_TURN_ON_MAIN_CONVEYOR;
+   76          		
+   77          		STATE Start
+   78          		{
+   79          			IF(!S_BOX_UNDER_SENSOR)
+   80          				C_TURN_ON_MAIN_CONVEYOR = ON;		
+   81          			LOOP;
+   82          		}
+   83          	}
+   84          	
+   85          	PROC PresenceSensorControl
+   86          	{
+   87          		FROM PROC Init S_BOX_UNDER_SENSOR, S_BOX_RED, S_BOX_GREEN;
+   88          
+   89          		STATE Control
+   90          		{
+   91          			IF(!S_BOX_UNDER_SENSOR && (S_BOX_RED || S_BOX_GREEN))
+   92          			{
+   93          				SendMsgGUICode(CA2GUI_PRESENCE_SENSOR_ERROR);	
+   94          				STOP;
+   95          			}
+   96          			LOOP;
+   97          		}		
+   98          	} 
+   99          	
+  100          	PROC ColorSensorsControl
+  101          	{
+  102          		FROM PROC Init S_BOX_UNDER_SENSOR, S_BOX_RED, S_BOX_GREEN;
+  103          
+  104          		STATE Control
+  105          		{
+  106          			IF(S_BOX_UNDER_SENSOR && S_BOX_RED && S_BOX_GREEN)
+  107          			{
+  108          				SendMsgGUICode(CA2GUI_COLOR_SENSORS_ERROR);		
+  109          				STOP;
+  110          			}
+  111          			LOOP;
+  112          		}		
+  113          	}
+  114          } 
+
+%RCSL-I-SUMMARY, Completed with 0 error(s).
+%RCSL-I-SUMMARY, Completed with 0 warning(s).
+
+ %RCSL-I-SUMMARY, Completed with 0 error(s).
