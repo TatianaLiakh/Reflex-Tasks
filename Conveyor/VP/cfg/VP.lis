@@ -119,55 +119,48 @@
   119          		}
   120          	}
   121          	
-  122          	STATE WaitRemoving
+  122          	STATE RemovingOfBlueBox
   123          	{
   124          		TIMEOUT RemovingDelay
   125          		{
   126          			IF(I_REMOVE_BOX && !I_TURN_ON_MAIN_CONVEYOR && !I_TURN_ON_SIDE_CONVEYOR)
-  127          				SET STATE RemovingControl;
+  127          				SET STATE Start;
   128          		}
   129          	}
-  130          	
-  131          	STATE RemovingControl
+  130          		
+  131          	STATE GreenBoxMode /*¬кл датчик зелена€ коробка*/
   132          	{
-  133          		O_BOX_UNDER_SENSOR = OFF;
-  134          		IF(!I_REMOVE_BOX && I_TURN_ON_MAIN_CONVEYOR)
-  135          			SET STATE Start;
-  136          	}
-  137          		
-  138          	STATE GreenBoxMode /*¬кл датчик зелена€ коробка*/
-  139          	{
-  140          		TIMEOUT time
-  141          		{
-  142          			IF((Flag == Norm) || (Flag == ColorSensorWrong)) 
-  143          				O_BOX_UNDER_SENSOR = ON;
-  144          			IF(Flag == ColorSensorWrong)
-  145          				O_BOX_RED = ON;
-  146          			O_BOX_GREEN = ON;
-  147          			SET STATE PassingSensor;
-  148          		}
-  149          	}
-  150          	
-  151          	STATE RedBoxMode /*¬кл датчик красна€ коробка*/
-  152          	{
-  153          		TIMEOUT time
-  154          		{
-  155          			IF((Flag == Norm) || (Flag == ColorSensorWrong))
-  156          				O_BOX_UNDER_SENSOR = ON;
-  157          			IF(Flag == ColorSensorWrong)
-  158          				O_BOX_GREEN = ON;
-  159          			O_BOX_RED = ON;
-  160          			SET STATE PassingSensor;
-  161          		}
-  162          	}
-  163          	
-  164          	STATE PassingSensor
-  165          	{
-  166          		TIMEOUT SensorDelay 
-  167          			SET STATE Start;
-  168          	}
-  169          }
-  170          }
+  133          		TIMEOUT time
+  134          		{
+  135          			IF((Flag == Norm) || (Flag == ColorSensorWrong)) 
+  136          				O_BOX_UNDER_SENSOR = ON;
+  137          			IF(Flag == ColorSensorWrong)
+  138          				O_BOX_RED = ON;
+  139          			O_BOX_GREEN = ON;
+  140          			SET STATE PassingSensor;
+  141          		}
+  142          	}
+  143          	
+  144          	STATE RedBoxMode /*¬кл датчик красна€ коробка*/
+  145          	{
+  146          		TIMEOUT time
+  147          		{
+  148          			IF((Flag == Norm) || (Flag == ColorSensorWrong))
+  149          				O_BOX_UNDER_SENSOR = ON;
+  150          			IF(Flag == ColorSensorWrong)
+  151          				O_BOX_GREEN = ON;
+  152          			O_BOX_RED = ON;
+  153          			SET STATE PassingSensor;
+  154          		}
+  155          	}
+  156          	
+  157          	STATE PassingSensor
+  158          	{
+  159          		TIMEOUT SensorDelay 
+  160          			SET STATE Start;
+  161          	}
+  162          }
+  163          }
 
 %RCSL-I-SUMMARY, Completed with 0 error(s).
 %RCSL-I-SUMMARY, Completed with 0 warning(s).

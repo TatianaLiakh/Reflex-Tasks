@@ -10,8 +10,8 @@ main () {
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 
- 	i = TestIdling; /* C_1 - TestIdling */
-	fputs( "TestIdling = " , file);
+ 	i = RemovingDelay; /* C_1 - RemovingDelay */
+	fputs( "RemovingDelay = " , file);
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 
@@ -50,6 +50,11 @@ main () {
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 
+ 	i = SCM2VM_TEST_COMPLETED; /* SCM2VM_TEST_COMPLETED */
+	fputs( "SCM2VM_TEST_COMPLETED = " , file);
+	sprintf(string, "%d\n", i );
+	fputs( string, file);
+
  	i = SCM2VM_FINISH_VERIFICATION; /* SCM2VM_FINISH_VERIFICATION */
 	fputs( "SCM2VM_FINISH_VERIFICATION = " , file);
 	sprintf(string, "%d\n", i );
@@ -57,11 +62,6 @@ main () {
 
  	i = VM2SCM_START_VERIFICATION; /* VM2SCM_START_VERIFICATION */
 	fputs( "VM2SCM_START_VERIFICATION = " , file);
-	sprintf(string, "%d\n", i );
-	fputs( string, file);
-
- 	i = VM2SCM_NEXT_TEST; /* VM2SCM_NEXT_TEST */
-	fputs( "VM2SCM_NEXT_TEST = " , file);
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 

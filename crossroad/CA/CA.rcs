@@ -3,7 +3,7 @@ PROGR ControlAlgorithm
 	TACT 100;
 	CONST OFF 0;
 	CONST ON 1;
-	CONST KCyclesDelay 130; /*15 sec*/
+	CONST KCyclesDelay 150; /*15 sec*/
 	CONST PCyclesDelay 200; /*20 sec*/
 	/* direction, name, address, offset, size of the port */
 	INPUT  LOG_CA_INPUT_PORT  0 0 8; /*car sensor input port*/

@@ -1,7 +1,7 @@
 
 /* йнмярюмрш */
  хлъ йнмярюмрш: AlgorithmDelay,  гмювемхе: ,    кнц.хлъ: C_0
- хлъ йнмярюмрш: TestIdling,  гмювемхе: ,    кнц.хлъ: C_1
+ хлъ йнмярюмрш: RemovingDelay,  гмювемхе: ,    кнц.хлъ: C_1
  хлъ йнмярюмрш: Error,  гмювемхе: ,    кнц.хлъ: C_2
  хлъ йнмярюмрш: Norm,  гмювемхе: ,    кнц.хлъ: C_3
  хлъ йнмярюмрш: CA2GUI_PRESENCE_SENSOR_ERROR,  гмювемхе: ,    кнц.хлъ: C_4
@@ -9,9 +9,9 @@
  хлъ йнмярюмрш: SCM2VM_TEST_PUT_BOXES_ON_CONVEYOR,  гмювемхе: ,    кнц.хлъ: C_6
  хлъ йнмярюмрш: SCM2VM_TEST_BROKEN_PRESENCE_SENSOR,  гмювемхе: ,    кнц.хлъ: C_7
  хлъ йнмярюмрш: SCM2VM_TEST_BROKEN_COLOR_SENSORS,  гмювемхе: ,    кнц.хлъ: C_8
- хлъ йнмярюмрш: SCM2VM_FINISH_VERIFICATION,  гмювемхе: ,    кнц.хлъ: C_9
- хлъ йнмярюмрш: VM2SCM_START_VERIFICATION,  гмювемхе: ,    кнц.хлъ: C_10
- хлъ йнмярюмрш: VM2SCM_NEXT_TEST,  гмювемхе: ,    кнц.хлъ: C_11
+ хлъ йнмярюмрш: SCM2VM_TEST_COMPLETED,  гмювемхе: ,    кнц.хлъ: C_9
+ хлъ йнмярюмрш: SCM2VM_FINISH_VERIFICATION,  гмювемхе: ,    кнц.хлъ: C_10
+ хлъ йнмярюмрш: VM2SCM_START_VERIFICATION,  гмювемхе: ,    кнц.хлъ: C_11
  хлъ йнмярюмрш: VM2GUI_TEST_PASSED_WRONG_PRESENCE_SENSOR,  гмювемхе: ,    кнц.хлъ: C_12
  хлъ йнмярюмрш: VM2GUI_TEST_PASSED_WRONG_COLOR_SENSORS,  гмювемхе: ,    кнц.хлъ: C_13
  хлъ йнмярюмрш: VM2GUI_TEST_FAILED_WRONG_PRESENCE_SENSOR,  гмювемхе: ,    кнц.хлъ: C_14
@@ -52,8 +52,7 @@
       хлъ янярнъмхъ: Start,    кнц.хлъ: P2S0
 ### хлъ опнжеяяю: Terminator, кнц. хлъ : P3
 ###### янярнъмхъ опнжеяю: 
-      хлъ янярнъмхъ: Idling,    кнц.хлъ: P3S0
-      хлъ янярнъмхъ: Report,    кнц.хлъ: P3S1
+      хлъ янярнъмхъ: Report,    кнц.хлъ: P3S0
 ### хлъ опнжеяяю: PresenceSensorControl, кнц. хлъ : P4
 ###### янярнъмхъ опнжеяю: 
       хлъ янярнъмхъ: Control,    кнц.хлъ: P4S0
@@ -64,12 +63,12 @@
 ###### янярнъмхъ опнжеяю: 
       хлъ янярнъмхъ: WaitingOfGreenBox,    кнц.хлъ: P6S0
       хлъ янярнъмхъ: WaitingOnLaunch,    кнц.хлъ: P6S1
-      хлъ янярнъмхъ: PassingSensorControl,    кнц.хлъ: P6S2
+      хлъ янярнъмхъ: StabilityControl,    кнц.хлъ: P6S2
 ### хлъ опнжеяяю: RedBoxControl, кнц. хлъ : P7
 ###### янярнъмхъ опнжеяю: 
       хлъ янярнъмхъ: WaitingOfRedBox,    кнц.хлъ: P7S0
       хлъ янярнъмхъ: WaitingOnLaunch,    кнц.хлъ: P7S1
-      хлъ янярнъмхъ: PassingSensorControl,    кнц.хлъ: P7S2
+      хлъ янярнъмхъ: StabilityControl,    кнц.хлъ: P7S2
 ### хлъ опнжеяяю: BlueBoxControl, кнц. хлъ : P8
 ###### янярнъмхъ опнжеяю: 
       хлъ янярнъмхъ: WaitingOfBlueBox,    кнц.хлъ: P8S0
@@ -77,8 +76,9 @@
       хлъ янярнъмхъ: RemovingControl,    кнц.хлъ: P8S2
 ### хлъ опнжеяяю: MainConveyorControl, кнц. хлъ : P9
 ###### янярнъмхъ опнжеяю: 
-      хлъ янярнъмхъ: TurnOnControl,    кнц.хлъ: P9S0
-      хлъ янярнъмхъ: TurnOffControl,    кнц.хлъ: P9S1
+      хлъ янярнъмхъ: Start,    кнц.хлъ: P9S0
+      хлъ янярнъмхъ: WaitingForShutdown,    кнц.хлъ: P9S1
+      хлъ янярнъмхъ: TurnOffControl,    кнц.хлъ: P9S2
 /*======================= оепелеммше ============================*/
 
  хлъ оепелеммни: I_BOX_UNDER_SENSOR,	кнц.хлъ: P0V0
@@ -140,3 +140,9 @@
  рюакхжю тхг. напюгю:
  мЕР тХГХВЕЯЙНЦН нАПЮГЮ.
  дНЯРСОМЮ РНКЭЙН ХГ ОПНЖЕЯЯЮ ReceiveSCMOutputMsg
+
+ хлъ оепелеммни: delay,	кнц.хлъ: P9V1
+ рхо: Integer
+ рюакхжю тхг. напюгю:
+ мЕР тХГХВЕЯЙНЦН нАПЮГЮ.
+ дНЯРСОМЮ РНКЭЙН ХГ ОПНЖЕЯЯЮ MainConveyorControl

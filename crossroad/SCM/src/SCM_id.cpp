@@ -5,27 +5,17 @@ main () {
 	FILE * file;
 	char string[2 * 132];
 	file = fopen("SCM_constants.cfg","w");
-	i = Idiling; /* C_0 - Idiling */
-	fputs( "Idiling = " , file);
-	sprintf(string, "%d\n", i );
-	fputs( string, file);
-
- 	i = RunNextTest; /* C_1 - RunNextTest */
-	fputs( "RunNextTest = " , file);
-	sprintf(string, "%d\n", i );
-	fputs( string, file);
-
- 	i = TestIdling1; /* C_2 - TestIdling1 */
+	i = TestIdling1; /* C_0 - TestIdling1 */
 	fputs( "TestIdling1 = " , file);
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 
- 	i = TestIdling2; /* C_3 - TestIdling2 */
+ 	i = TestIdling2; /* C_1 - TestIdling2 */
 	fputs( "TestIdling2 = " , file);
 	sprintf(string, "%d\n", i );
 	fputs( string, file);
 
- 	i = TestIdling3; /* C_4 - TestIdling3 */
+ 	i = TestIdling3; /* C_2 - TestIdling3 */
 	fputs( "TestIdling3 = " , file);
 	sprintf(string, "%d\n", i );
 	fputs( string, file);

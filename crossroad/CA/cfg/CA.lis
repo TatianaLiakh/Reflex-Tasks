@@ -3,7 +3,7 @@
     3          	TACT 100;
     4          	CONST OFF 0;
     5          	CONST ON 1;
-    6          	CONST KCyclesDelay 130; /*15 sec*/
+    6          	CONST KCyclesDelay 150; /*15 sec*/
     7          	CONST PCyclesDelay 200; /*20 sec*/
     8          	/* direction, name, address, offset, size of the port */
     9          	INPUT  LOG_CA_INPUT_PORT  0 0 8; /*car sensor input port*/

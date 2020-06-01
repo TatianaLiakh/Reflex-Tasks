@@ -5,7 +5,7 @@ PROGR ALGORITHM
 	CONST OFF 0;
 	CONST ON 1;
 	
-	/*Набор Команд для GUI */
+	/*List of commands for GUI */
 	ENUM
 	{
 		CA2GUI_PRESENCE_SENSOR_ERROR,

@@ -119,20 +119,13 @@ PROC PutBoxesOnConveyor
 		}
 	}
 	
-	STATE WaitRemoving
+	STATE RemovingOfBlueBox
 	{
 		TIMEOUT RemovingDelay
 		{
 			IF(I_REMOVE_BOX && !I_TURN_ON_MAIN_CONVEYOR && !I_TURN_ON_SIDE_CONVEYOR)
-				SET STATE RemovingControl;
+				SET STATE Start;
 		}
-	}
-	
-	STATE RemovingControl
-	{
-		O_BOX_UNDER_SENSOR = OFF;
-		IF(!I_REMOVE_BOX && I_TURN_ON_MAIN_CONVEYOR)
-			SET STATE Start;
 	}
 		
 	STATE GreenBoxMode /*¬кл датчик зелена€ коробка*/

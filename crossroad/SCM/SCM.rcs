@@ -1,8 +1,6 @@
 PROGR DISPATCHER
 {
 	TACT 50;	
-	CONST Idiling 0;
-	CONST RunNextTest 1;
 	CONST TestIdling1 350; /*35 sec*/
 	CONST TestIdling2 400; /*40 sec*/
 	CONST TestIdling3 350; /*35 sec*/
@@ -47,11 +45,9 @@ PROGR DISPATCHER
 	
 	PROC ReceiveVMOutputMsg
 	{
-		LOG nextTest FOR ALL; 
 		INT VMMsgCode LOCAL;
 		STATE Start
 		{
-			nextTest = Idiling;
 			IF (GetNextMsgFromVM()) 
 			{
 				VMMsgCode = GetMsgCodeFromVM();
@@ -67,9 +63,7 @@ PROGR DISPATCHER
 	}
 	
 	PROC TestDriver
-	{
-		FROM PROC ReceiveVMOutputMsg nextTest;		
-		
+	{		
 		STATE RunTestNoCars
 		{
 			START PROC TestNoCars;

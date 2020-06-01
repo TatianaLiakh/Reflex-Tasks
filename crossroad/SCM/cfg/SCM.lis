@@ -1,176 +1,170 @@
     1          PROGR DISPATCHER
     2          {
     3          	TACT 50;	
-    4          	CONST Idiling 0;
-    5          	CONST RunNextTest 1;
-    6          	CONST TestIdling1 350; /*35 sec*/
-    7          	CONST TestIdling2 400; /*40 sec*/
-    8          	CONST TestIdling3 350; /*35 sec*/
-    9           
-   10          	/*List of commands for VP (Virtual Plant)*/
-   11          	ENUM
-   12          	{		
-   13          		SCM2VP_RUN_CARS,
-   14          		SCM2VP_NO_CARS,
-   15          		SCM2VP_RUN_WRONG_CAR
-   16          	};
-   17           
-   18          	/*List of commands for VM (Verification Module)*/	
-   19          	ENUM
-   20          	{
-   21          		SCM2VM_TEST_RUN_CARS,
-   22          		SCM2VM_TEST_NO_CARS,
-   23          		SCM2VM_TEST_RUN_WRONG_CAR,
-   24          		SCM2VM_TEST_COMPLETED,
-   25          		SCM2VM_FINISH_VERIFICATION
-   26          	};
-   27          
-   28          	/*List of commands for SCM (Script Control Module) from VM (Verification Module)*/
-   29          	ENUM
-   30          	{
-   31          		VM2SCM_START_VERIFICATION
-   32          	};
-   33          	
-   34          	FUNCTION INT SendMsgToVirtualPlantCode(INT);
-   35          	FUNCTION INT SendMsgToVerificationModuleCode(INT);
-   36          	FUNCTION INT GetNextMsgFromVM(VOID);
-   37          	FUNCTION INT GetMsgCodeFromVM(VOID);
-   38          
-   39          	PROC Init
-   40          	{
-   41          		STATE Start
-   42          		{  
-   43          			START PROC ReceiveVMOutputMsg; 			
-   44          			STOP;
-   45          		}
-   46          	}	
-   47          	
-   48          	PROC ReceiveVMOutputMsg
-   49          	{
-   50          		LOG nextTest FOR ALL; 
-   51          		INT VMMsgCode LOCAL;
-   52          		STATE Start
-   53          		{
-   54          			nextTest = Idiling;
-   55          			IF (GetNextMsgFromVM()) 
-   56          			{
-   57          				VMMsgCode = GetMsgCodeFromVM();
-   58          				SWITCH (VMMsgCode)
-   59          				{
-   60          					CASE VM2SCM_START_VERIFICATION:
-   61          						START PROC TestDriver;
-   62          					BREAK;
-   63          				}
-   64          			}
-   65          		LOOP;			
-   66          		}
-   67          	}
-   68          	
-   69          	PROC TestDriver
-   70          	{
-   71          		FROM PROC ReceiveVMOutputMsg nextTest;		
+    4          	CONST TestIdling1 350; /*35 sec*/
+    5          	CONST TestIdling2 400; /*40 sec*/
+    6          	CONST TestIdling3 350; /*35 sec*/
+    7           
+    8          	/*List of commands for VP (Virtual Plant)*/
+    9          	ENUM
+   10          	{		
+   11          		SCM2VP_RUN_CARS,
+   12          		SCM2VP_NO_CARS,
+   13          		SCM2VP_RUN_WRONG_CAR
+   14          	};
+   15           
+   16          	/*List of commands for VM (Verification Module)*/	
+   17          	ENUM
+   18          	{
+   19          		SCM2VM_TEST_RUN_CARS,
+   20          		SCM2VM_TEST_NO_CARS,
+   21          		SCM2VM_TEST_RUN_WRONG_CAR,
+   22          		SCM2VM_TEST_COMPLETED,
+   23          		SCM2VM_FINISH_VERIFICATION
+   24          	};
+   25          
+   26          	/*List of commands for SCM (Script Control Module) from VM (Verification Module)*/
+   27          	ENUM
+   28          	{
+   29          		VM2SCM_START_VERIFICATION
+   30          	};
+   31          	
+   32          	FUNCTION INT SendMsgToVirtualPlantCode(INT);
+   33          	FUNCTION INT SendMsgToVerificationModuleCode(INT);
+   34          	FUNCTION INT GetNextMsgFromVM(VOID);
+   35          	FUNCTION INT GetMsgCodeFromVM(VOID);
+   36          
+   37          	PROC Init
+   38          	{
+   39          		STATE Start
+   40          		{  
+   41          			START PROC ReceiveVMOutputMsg; 			
+   42          			STOP;
+   43          		}
+   44          	}	
+   45          	
+   46          	PROC ReceiveVMOutputMsg
+   47          	{
+   48          		INT VMMsgCode LOCAL;
+   49          		STATE Start
+   50          		{
+   51          			IF (GetNextMsgFromVM()) 
+   52          			{
+   53          				VMMsgCode = GetMsgCodeFromVM();
+   54          				SWITCH (VMMsgCode)
+   55          				{
+   56          					CASE VM2SCM_START_VERIFICATION:
+   57          						START PROC TestDriver;
+   58          					BREAK;
+   59          				}
+   60          			}
+   61          		LOOP;			
+   62          		}
+   63          	}
+   64          	
+   65          	PROC TestDriver
+   66          	{		
+   67          		STATE RunTestNoCars
+   68          		{
+   69          			START PROC TestNoCars;
+   70          			SET NEXT;
+   71          		}
    72          		
-   73          		STATE RunTestNoCars
+   73          		STATE IdilingTest1
    74          		{
-   75          			START PROC TestNoCars;
-   76          			SET NEXT;
+   75          			IF (PROC TestNoCars SET STATE PASSIVE)
+   76          				SET NEXT;	
    77          		}
    78          		
-   79          		STATE IdilingTest1
+   79          		STATE RunTestNormCars
    80          		{
-   81          			IF (PROC TestNoCars SET STATE PASSIVE)
-   82          				SET NEXT;	
+   81          			START PROC TestNormCars;
+   82          			SET NEXT;
    83          		}
    84          		
-   85          		STATE RunTestNormCars
+   85          		STATE IdilingTest2
    86          		{
-   87          			START PROC TestNormCars;
-   88          			SET NEXT;
+   87          			IF (PROC TestNormCars SET STATE PASSIVE)
+   88          				SET NEXT;		
    89          		}
    90          		
-   91          		STATE IdilingTest2
+   91          		STATE RunTestWrongCar
    92          		{
-   93          			IF (PROC TestNormCars SET STATE PASSIVE)
-   94          				SET NEXT;		
+   93          			START PROC TestWrongCar;
+   94          			SET NEXT;
    95          		}
    96          		
-   97          		STATE RunTestWrongCar
+   97          		STATE IdilingTest3
    98          		{
-   99          			START PROC TestWrongCar;
-  100          			SET NEXT;
+   99          			IF (PROC TestWrongCar SET STATE PASSIVE)
+  100          				SET NEXT;		
   101          		}
-  102          		
-  103          		STATE IdilingTest3
+  102          
+  103          		STATE Finish
   104          		{
-  105          			IF (PROC TestWrongCar SET STATE PASSIVE)
-  106          				SET NEXT;		
+  105          			SendMsgToVerificationModuleCode(SCM2VM_FINISH_VERIFICATION);
+  106          			STOP;
   107          		}
-  108          
-  109          		STATE Finish
-  110          		{
-  111          			SendMsgToVerificationModuleCode(SCM2VM_FINISH_VERIFICATION);
-  112          			STOP;
-  113          		}
-  114          	}
-  115          	
-  116          		
-  117          	PROC TestNoCars
-  118          	{
-  119          		STATE Start
-  120          		{
-  121          			SendMsgToVirtualPlantCode(SCM2VP_NO_CARS);
-  122          			SendMsgToVerificationModuleCode(SCM2VM_TEST_NO_CARS);
-  123          			SET NEXT;
-  124          		}
-  125          		
-  126          		STATE End
-  127          		{
-  128          			TIMEOUT TestIdling1 
-  129          			{
-  130          				SendMsgToVerificationModuleCode(SCM2VM_TEST_COMPLETED);
-  131          				STOP;
-  132          			}
-  133          		}
-  134          	}
-  135          	
-  136          	PROC TestNormCars
-  137          	{
-  138          		STATE Start
-  139          		{
-  140          			SendMsgToVirtualPlantCode(SCM2VP_RUN_CARS);
-  141          			SendMsgToVerificationModuleCode(SCM2VM_TEST_RUN_CARS);
-  142          			SET NEXT;
-  143          		}
-  144          		
-  145          		STATE End
-  146          		{
-  147          			TIMEOUT TestIdling2 
-  148          			{
-  149          				SendMsgToVerificationModuleCode(SCM2VM_TEST_COMPLETED);
-  150          				STOP;
-  151          			}
-  152          		}
-  153          	}
-  154          	
-  155          	PROC TestWrongCar
-  156          	{
-  157          		STATE Start
-  158          		{
-  159          			SendMsgToVirtualPlantCode(SCM2VP_RUN_WRONG_CAR);
-  160          			SendMsgToVerificationModuleCode(SCM2VM_TEST_RUN_WRONG_CAR);
-  161          			SET NEXT;
-  162          		}		
-  163          				
-  164          		STATE End
-  165          		{
-  166          			TIMEOUT TestIdling3 
-  167          			{
-  168          				SendMsgToVerificationModuleCode(SCM2VM_TEST_COMPLETED);
-  169          				STOP;
-  170          			}
-  171          		}
-  172          	}
-  173          } 
+  108          	}
+  109          	
+  110          		
+  111          	PROC TestNoCars
+  112          	{
+  113          		STATE Start
+  114          		{
+  115          			SendMsgToVirtualPlantCode(SCM2VP_NO_CARS);
+  116          			SendMsgToVerificationModuleCode(SCM2VM_TEST_NO_CARS);
+  117          			SET NEXT;
+  118          		}
+  119          		
+  120          		STATE End
+  121          		{
+  122          			TIMEOUT TestIdling1 
+  123          			{
+  124          				SendMsgToVerificationModuleCode(SCM2VM_TEST_COMPLETED);
+  125          				STOP;
+  126          			}
+  127          		}
+  128          	}
+  129          	
+  130          	PROC TestNormCars
+  131          	{
+  132          		STATE Start
+  133          		{
+  134          			SendMsgToVirtualPlantCode(SCM2VP_RUN_CARS);
+  135          			SendMsgToVerificationModuleCode(SCM2VM_TEST_RUN_CARS);
+  136          			SET NEXT;
+  137          		}
+  138          		
+  139          		STATE End
+  140          		{
+  141          			TIMEOUT TestIdling2 
+  142          			{
+  143          				SendMsgToVerificationModuleCode(SCM2VM_TEST_COMPLETED);
+  144          				STOP;
+  145          			}
+  146          		}
+  147          	}
+  148          	
+  149          	PROC TestWrongCar
+  150          	{
+  151          		STATE Start
+  152          		{
+  153          			SendMsgToVirtualPlantCode(SCM2VP_RUN_WRONG_CAR);
+  154          			SendMsgToVerificationModuleCode(SCM2VM_TEST_RUN_WRONG_CAR);
+  155          			SET NEXT;
+  156          		}		
+  157          				
+  158          		STATE End
+  159          		{
+  160          			TIMEOUT TestIdling3 
+  161          			{
+  162          				SendMsgToVerificationModuleCode(SCM2VM_TEST_COMPLETED);
+  163          				STOP;
+  164          			}
+  165          		}
+  166          	}
+  167          } 
 
 %RCSL-I-SUMMARY, Completed with 0 error(s).
 %RCSL-I-SUMMARY, Completed with 0 warning(s).

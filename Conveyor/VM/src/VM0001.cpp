@@ -8,7 +8,7 @@ void P0 (void) /* œ–Œ÷≈——: Init */
 
 		case 0:    /*  P0S0() - —Œ—“ŒﬂÕ»≈: Start */
 	
-			SendMsgSCMCode(C_10); 	
+			SendMsgSCMCode(C_11); 	
 			Set_Start(2);
 			Set_Start(1);
 			Set_Stop(0);
@@ -68,23 +68,24 @@ void P2 (void) /* œ–Œ÷≈——: ReceiveSCMOutputMsg */
 						Set_Start(6); 
 						Set_Start(7);
 						Set_Start(8);
-						Set_Start(9);
-						Set_Start(3); 	
+						Set_Start(9);	
 						break;
 						
 					case C_7:
 						SendMsgGUICode(C_25);
-						Set_Start(4);
-						Set_Start(3); 	
+						Set_Start(4);	
 					break;
 					
 					case C_8:
 						SendMsgGUICode(C_26);
-						Set_Start(5);
-						Set_Start(3); 	
+						Set_Start(5);	
 					break;
 					
 					case C_9:
+						Set_Start(3); 
+						break;
+					
+					case C_10:
 						SendMsgGUICode(C_27);
 						Set_Stop(3); 
 						Set_Stop(2);
@@ -102,11 +103,7 @@ void P3 (void) /* œ–Œ÷≈——: Terminator */
 {
 	switch (Check_State(3)) {
 
-		case 0:    /*  P3S0() - —Œ—“ŒﬂÕ»≈: Idling */
-
-			if (Timeout(3, C_1))  Set_State(3, 1);
-			break;
-		case 1:    /*  P3S1() - —Œ—“ŒﬂÕ»≈: Report */
+		case 0:    /*  P3S0() - —Œ—“ŒﬂÕ»≈: Report */
 			
 			if((!(Check_State(6) & MASK_OF_INACTIVITY)))
 			{
@@ -173,8 +170,6 @@ void P3 (void) /* œ–Œ÷≈——: Terminator */
 			}
 
 			Set_Stop(5);
-		
-			SendMsgSCMCode(C_11);
 			Set_Stop(3);
 			break;
 		default:
@@ -227,16 +222,11 @@ void P6 (void) /* œ–Œ÷≈——: GreenBoxControl */
 			Set_State(6, 2);
 		if (Timeout(6, C_0))  Set_Error(6);
 			break;
-		case 2:    /*  P6S2() - —Œ—“ŒﬂÕ»≈: PassingSensorControl */
+		case 2:    /*  P6S2() - —Œ—“ŒﬂÕ»≈: StabilityControl */
 
-		if(P0V0)
-		{	
-			if(!P0V4 || P0V5)
-				Set_Error(6);
-		}
-		else
+		if(!P0V0)
 			Set_State(6, 0);	
-		
+		else if(!P0V4 || P0V5) Set_Error(6);
 			break;
 		default:
 			break;
@@ -258,16 +248,11 @@ void P7 (void) /* œ–Œ÷≈——: RedBoxControl */
 			Set_State(7, 2);
 		if (Timeout(7, C_0))  Set_Error(7);
 			break;
-		case 2:    /*  P7S2() - —Œ—“ŒﬂÕ»≈: PassingSensorControl */
-
-		if(P0V0)
-		{	
-			if(P0V4 || !P0V3 || P0V5) 
-				Set_Error(7);
-		}
-		else
-			Set_State(7, 0);	
+		case 2:    /*  P7S2() - —Œ—“ŒﬂÕ»≈: StabilityControl */
 		
+		if(!P0V0)
+			Set_State(7, 0);	
+		else if(P0V4 || !P0V3 || P0V5) Set_Error(7);
 			break;
 		default:
 			break;
@@ -282,6 +267,7 @@ void P8 (void) /* œ–Œ÷≈——: BlueBoxControl */
 
 		if(P0V0 && !P0V1 && !P0V2)
 			Set_State(8, 1);
+		else if(P0V5) Set_Error(8);
 			break;
 		case 1:    /*  P8S1() - —Œ—“ŒﬂÕ»≈: WaitingForShutdown */
 
@@ -291,14 +277,9 @@ void P8 (void) /* œ–Œ÷≈——: BlueBoxControl */
 			break;
 		case 2:    /*  P8S2() - —Œ—“ŒﬂÕ»≈: RemovingControl */
 
-		if(P0V0)
-		{	
-			if(P0V4 || P0V3 || !P0V5) 
-				Set_Error(8);
-		}
-		else
+		if((P0V5 && !P0V4 && !P0V3) || !P0V0) 
 			Set_State(8, 0);	
-		
+		if (Timeout(8, C_1))  Set_Error(8);
 			break;
 		default:
 			break;
@@ -309,27 +290,24 @@ void P9 (void) /* œ–Œ÷≈——: MainConveyorControl */
 {
 	switch (Check_State(9)) {
 
-		case 0:    /*  P9S0() - —Œ—“ŒﬂÕ»≈: TurnOnControl */
+		case 0:    /*  P9S0() - —Œ—“ŒﬂÕ»≈: Start */
+
+		P9V1 = 2*C_0 + C_1;
+		Set_State(9, 1);
+			break;
+		case 1:    /*  P9S1() - —Œ—“ŒﬂÕ»≈: WaitingForShutdown */
 
 		if(!P0V3)
-		{
-			if(P0V0 && !P0V1 && !P0V2) 
-				Set_State(9, 1);
-			else 
-				Set_Error(9);	
-		}
-		
+			Set_State(9, 2);
 			break;
-		case 1:    /*  P9S1() - —Œ—“ŒﬂÕ»≈: TurnOffControl */
+		case 2:    /*  P9S2() - —Œ—“ŒﬂÕ»≈: TurnOffControl */
 
-		if(P0V0)
-		{	
+		if (Timeout(9, P9V1)) 
+		{
 			if(P0V3)
-				Set_Error(9);
+				Set_State(9, 1);
+			else Set_Error(9);
 		}
-		else 
-			Set_State(9, 0);	
-		
 			break;
 		default:
 			break;

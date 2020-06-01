@@ -1,9 +1,7 @@
 	
-	#define Idiling /* C_0 - Idiling */ 0
-	#define RunNextTest /* C_1 - RunNextTest */ 1
-	#define TestIdling1 /* C_2 - TestIdling1 */ 350 
-	#define TestIdling2 /* C_3 - TestIdling2 */ 400 
-	#define TestIdling3 /* C_4 - TestIdling3 */ 350 
+	#define TestIdling1 /* C_0 - TestIdling1 */ 350 
+	#define TestIdling2 /* C_1 - TestIdling2 */ 400 
+	#define TestIdling3 /* C_2 - TestIdling3 */ 350 
  
 	
 	enum EN0 {		

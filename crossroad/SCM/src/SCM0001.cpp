@@ -22,13 +22,12 @@ void P1 (void) /* œ–Œ÷≈——: ReceiveVMOutputMsg */
 
 		case 0:    /*  P1S0() - —Œ—“ŒﬂÕ»≈: Start */
 
-			P1V0 = C_0;
 			if (GetNextMsgFromVM()) 
 			{
-				P1V1 = GetMsgCodeFromVM();
-				switch (P1V1)
+				P1V0 = GetMsgCodeFromVM();
+				switch (P1V0)
 				{
-					case C_13:
+					case C_11:
 						Set_Start(2);
 					break;
 				}
@@ -76,7 +75,7 @@ void P2 (void) /* œ–Œ÷≈——: TestDriver */
 			break;
 		case 6:    /*  P2S6() - —Œ—“ŒﬂÕ»≈: Finish */
 
-			SendMsgToVerificationModuleCode(C_12);
+			SendMsgToVerificationModuleCode(C_10);
 			Set_Stop(2);
 			break;
 		default:
@@ -90,15 +89,15 @@ void P3 (void) /* œ–Œ÷≈——: TestNoCars */
 
 		case 0:    /*  P3S0() - —Œ—“ŒﬂÕ»≈: Start */
 
-			SendMsgToVirtualPlantCode(C_6);
-			SendMsgToVerificationModuleCode(C_9);
+			SendMsgToVirtualPlantCode(C_4);
+			SendMsgToVerificationModuleCode(C_7);
 			Set_State(3, 1);
 			break;
 		case 1:    /*  P3S1() - —Œ—“ŒﬂÕ»≈: End */
 
-			if (Timeout(3, C_2))  
+			if (Timeout(3, C_0))  
 			{
-				SendMsgToVerificationModuleCode(C_11);
+				SendMsgToVerificationModuleCode(C_9);
 				Set_Stop(3);
 			}
 			break;
@@ -113,15 +112,15 @@ void P4 (void) /* œ–Œ÷≈——: TestNormCars */
 
 		case 0:    /*  P4S0() - —Œ—“ŒﬂÕ»≈: Start */
 
-			SendMsgToVirtualPlantCode(C_5);
-			SendMsgToVerificationModuleCode(C_8);
+			SendMsgToVirtualPlantCode(C_3);
+			SendMsgToVerificationModuleCode(C_6);
 			Set_State(4, 1);
 			break;
 		case 1:    /*  P4S1() - —Œ—“ŒﬂÕ»≈: End */
 
-			if (Timeout(4, C_3))  
+			if (Timeout(4, C_1))  
 			{
-				SendMsgToVerificationModuleCode(C_11);
+				SendMsgToVerificationModuleCode(C_9);
 				Set_Stop(4);
 			}
 			break;
@@ -136,15 +135,15 @@ void P5 (void) /* œ–Œ÷≈——: TestWrongCar */
 
 		case 0:    /*  P5S0() - —Œ—“ŒﬂÕ»≈: Start */
 
-			SendMsgToVirtualPlantCode(C_7);
-			SendMsgToVerificationModuleCode(C_10);
+			SendMsgToVirtualPlantCode(C_5);
+			SendMsgToVerificationModuleCode(C_8);
 			Set_State(5, 1);
 			break;
 		case 1:    /*  P5S1() - —Œ—“ŒﬂÕ»≈: End */
 
-			if (Timeout(5, C_4))  
+			if (Timeout(5, C_2))  
 			{
-				SendMsgToVerificationModuleCode(C_11);
+				SendMsgToVerificationModuleCode(C_9);
 				Set_Stop(5);
 			}
 			break;

@@ -6,7 +6,6 @@ Start
  ReceiveSCMOutputMsg
 Start
  Terminator
-Idling
 Report
  PresenceSensorControl
 Control
@@ -15,15 +14,16 @@ Control
  GreenBoxControl
 WaitingOfGreenBox
 WaitingOnLaunch
-PassingSensorControl
+StabilityControl
  RedBoxControl
 WaitingOfRedBox
 WaitingOnLaunch
-PassingSensorControl
+StabilityControl
  BlueBoxControl
 WaitingOfBlueBox
 WaitingForShutdown
 RemovingControl
  MainConveyorControl
-TurnOnControl
+Start
+WaitingForShutdown
 TurnOffControl

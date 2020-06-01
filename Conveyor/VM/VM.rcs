@@ -1,8 +1,8 @@
 PROGR VERIFIER
 {
 	TACT 50;
-	CONST AlgorithmDelay 10; /*2 сек*/
-	CONST TestIdling 300; /*1 мин*/
+	CONST AlgorithmDelay 10; /*1 сек*/
+	CONST RemovingDelay 10;
 	CONST Error 0;
 	CONST Norm 1;
 	
@@ -19,14 +19,14 @@ PROGR VERIFIER
 		SCM2VM_TEST_PUT_BOXES_ON_CONVEYOR,
 		SCM2VM_TEST_BROKEN_PRESENCE_SENSOR,
 		SCM2VM_TEST_BROKEN_COLOR_SENSORS,
+		SCM2VM_TEST_COMPLETED,
 		SCM2VM_FINISH_VERIFICATION
 	};
 
 	/*Набор команд для DISPATCHER(блок управления сценарием) от VERIFIER(блока верификации)*/
 	ENUM
 	{
-		VM2SCM_START_VERIFICATION,
-		VM2SCM_NEXT_TEST
+		VM2SCM_START_VERIFICATION
 	};
 
 	/*Набор Команд для GUI */
@@ -129,21 +129,22 @@ PROGR VERIFIER
 						START PROC GreenBoxControl; 
 						START PROC RedBoxControl;
 						START PROC BlueBoxControl;
-						START PROC MainConveyorControl;
-						START PROC Terminator; 	
+						START PROC MainConveyorControl;	
 						BREAK;
 						
 					CASE SCM2VM_TEST_BROKEN_PRESENCE_SENSOR:
 						SendMsgGUICode(VM2GUI_START_TEST_WRONG_PRESENCE_SENSOR);
-						START PROC PresenceSensorControl;
-						START PROC Terminator; 	
+						START PROC PresenceSensorControl;	
 					BREAK;
 					
 					CASE SCM2VM_TEST_BROKEN_COLOR_SENSORS:
 						SendMsgGUICode(VM2GUI_START_TEST_WRONG_COLOR_SENSORS);
-						START PROC ColorSensorsControl;
-						START PROC Terminator; 	
+						START PROC ColorSensorsControl;	
 					BREAK;
+					
+					CASE SCM2VM_TEST_COMPLETED:
+						START PROC Terminator; 
+						BREAK;
 					
 					CASE SCM2VM_FINISH_VERIFICATION:
 						SendMsgGUICode(VM2GUI_END_VERIFICATION);
@@ -158,10 +159,6 @@ PROGR VERIFIER
 	
 	PROC Terminator
 	{
-		STATE Idling
-		{
-			TIMEOUT TestIdling SET NEXT;
-		}
 		STATE Report
 		{			
 			IF(PROC GreenBoxControl SET STATE ACTIVE)
@@ -229,8 +226,6 @@ PROGR VERIFIER
 			}
 
 			STOP PROC ColorSensorsControl;
-		
-			SendMsgSCMCode(VM2SCM_NEXT_TEST);
 			STOP;
 		}	
 	}
@@ -278,22 +273,16 @@ PROC GreenBoxControl
 		TIMEOUT AlgorithmDelay ERROR;
 	}
 	
-	STATE PassingSensorControl /*Конвейер не выкл пока коробка под датчиком*/
+	STATE StabilityControl /*Конвейер не выкл пока коробка под датчиком*/
 	{
-		IF(I_BOX_UNDER_SENSOR)
-		{	
-			IF(!I_TURN_ON_SIDE_CONVEYOR || I_REMOVE_BOX)
-				ERROR;
-		}
-		ELSE
+		IF(!I_BOX_UNDER_SENSOR)
 			SET STATE WaitingOfGreenBox;	
-		LOOP;
+		ELSE IF(!I_TURN_ON_SIDE_CONVEYOR || I_REMOVE_BOX) ERROR;	
 	}
 }
 
 /*Проверка требования: Если под датчиком появилась коробка красного цвета,*/
-/*то боковой конвейер выключается в течение F тактов, а основной конвейер*/
-/*будет включен в течение J тактов*/
+/*то боковой конвейер выключается в течение F тактов*/
 PROC RedBoxControl
 {
 	FROM PROC Init I_BOX_UNDER_SENSOR, I_BOX_RED, I_TURN_ON_SIDE_CONVEYOR, I_TURN_ON_MAIN_CONVEYOR, I_REMOVE_BOX;	
@@ -311,16 +300,11 @@ PROC RedBoxControl
 		TIMEOUT AlgorithmDelay ERROR;
 	}
 	
-	STATE PassingSensorControl /*Конвейер не выкл пока коробка под датчиком*/
-	{
-		IF(I_BOX_UNDER_SENSOR)
-		{	
-			IF(I_TURN_ON_SIDE_CONVEYOR || !I_TURN_ON_MAIN_CONVEYOR || I_REMOVE_BOX) 
-				ERROR;
-		}
-		ELSE
+	STATE StabilityControl /*Конвейер не выкл пока коробка под датчиком*/
+	{		
+		IF(!I_BOX_UNDER_SENSOR)
 			SET STATE WaitingOfRedBox;	
-		LOOP;
+		ELSE IF(I_TURN_ON_SIDE_CONVEYOR || !I_TURN_ON_MAIN_CONVEYOR || I_REMOVE_BOX) ERROR;	
 	}
 }
 
@@ -335,8 +319,9 @@ PROC BlueBoxControl
 	{
 		IF(I_BOX_UNDER_SENSOR && !I_BOX_RED && !I_BOX_GREEN)
 			SET STATE WaitingForShutdown;
+		ELSE IF(I_REMOVE_BOX) ERROR;
 	}
-	
+		
 	STATE WaitingForShutdown /*Коробка под датчиком -> оба конвейера выкл*/
 	{
 		IF(!I_TURN_ON_SIDE_CONVEYOR && !I_TURN_ON_MAIN_CONVEYOR)
@@ -344,46 +329,40 @@ PROC BlueBoxControl
 		TIMEOUT AlgorithmDelay ERROR;
 	}
 	
-	STATE RemovingControl /*Коробка должна удалиться*/
+	STATE RemovingControl
 	{
-		IF(I_BOX_UNDER_SENSOR)
-		{	
-			IF(I_TURN_ON_SIDE_CONVEYOR || I_TURN_ON_MAIN_CONVEYOR || !I_REMOVE_BOX) 
-				ERROR;
-		}
-		ELSE
+		IF((I_REMOVE_BOX && !I_TURN_ON_SIDE_CONVEYOR && !I_TURN_ON_MAIN_CONVEYOR) || !I_BOX_UNDER_SENSOR) 
 			SET STATE WaitingOfBlueBox;	
-		LOOP;
+		TIMEOUT RemovingDelay ERROR;
 	}
 }
 
-/*Проверка требования: Основной конвейер выключается не дольше чем на M + 2*F тактов.*/
-PROC MainConveyorControl
+/*Проверка требования: Основной конвейер выключается не дольше чем на M + 2*F тактов*/
+PROC MainConveyorControl 
 {
-	FROM PROC Init I_BOX_RED, I_BOX_GREEN, I_BOX_UNDER_SENSOR, I_TURN_ON_MAIN_CONVEYOR;	
+	FROM PROC Init I_TURN_ON_MAIN_CONVEYOR;	
+	INT delay LOCAL;
 	
-	STATE TurnOnControl /*Конвейер вкл пока нет синей коробки*/
+	STATE Start
 	{
-		IF(!I_TURN_ON_MAIN_CONVEYOR)
-		{
-			IF(I_BOX_UNDER_SENSOR && !I_BOX_RED && !I_BOX_GREEN) /*-> BLUE*/
-				SET NEXT;
-			ELSE 
-				ERROR;	
-		}
-		LOOP;
+		delay = 2*AlgorithmDelay + RemovingDelay;
+		SET NEXT;
 	}
 	
-	STATE TurnOffControl /*Конвейер выкл пока синяя коробка под датчиком*/
+	STATE WaitingForShutdown
 	{
-		IF(I_BOX_UNDER_SENSOR)
-		{	
+		IF(!I_TURN_ON_MAIN_CONVEYOR)
+			SET NEXT;
+	}
+	
+	STATE TurnOffControl
+	{
+		TIMEOUT delay
+		{
 			IF(I_TURN_ON_MAIN_CONVEYOR)
-				ERROR;
+				SET STATE WaitingForShutdown;
+			ELSE ERROR;
 		}
-		ELSE 
-			SET STATE TurnOnControl;	
-		LOOP;
 	}
 }
 }

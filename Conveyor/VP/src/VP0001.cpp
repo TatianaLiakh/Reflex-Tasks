@@ -72,8 +72,8 @@ void P2 (void) /* ÏÐÎÖÅÑÑ: PutBoxesOnConveyor */
 			break;
 		case 2:    /*  P2S2() - ÑÎÑÒÎßÍÈÅ: ColorChoice */
 
-		if (P2V8 >= 20 && P2V8 <= 35) Set_State(2, 6);
-		else if (P2V8 > 35 && P2V8 <= 50) Set_State(2, 7);	
+		if (P2V8 >= 20 && P2V8 <= 35) Set_State(2, 5);
+		else if (P2V8 > 35 && P2V8 <= 50) Set_State(2, 6);	
 		else
 		{
 			if((P1V0 == C_4) || (P1V0 == C_6)) 
@@ -89,21 +89,15 @@ void P2 (void) /* ÏÐÎÖÅÑÑ: PutBoxesOnConveyor */
 			Set_State(2, 4);
 		}
 			break;
-		case 4:    /*  P2S4() - ÑÎÑÒÎßÍÈÅ: WaitRemoving */
+		case 4:    /*  P2S4() - ÑÎÑÒÎßÍÈÅ: RemovingOfBlueBox */
 
 		if (Timeout(2, C_3)) 
 		{
 			if(P0V5 && !P0V3 && !P0V4)
-				Set_State(2, 5);
+				Set_State(2, 0);
 		}
 			break;
-		case 5:    /*  P2S5() - ÑÎÑÒÎßÍÈÅ: RemovingControl */
-
-		P0V0[1] = C_1;
-		if(!P0V5 && P0V3)
-			Set_State(2, 0);
-			break;
-		case 6:    /*  P2S6() - ÑÎÑÒÎßÍÈÅ: GreenBoxMode */
+		case 5:    /*  P2S5() - ÑÎÑÒÎßÍÈÅ: GreenBoxMode */
 
 		if (Timeout(2, P2V7)) 
 		{
@@ -112,10 +106,10 @@ void P2 (void) /* ÏÐÎÖÅÑÑ: PutBoxesOnConveyor */
 			if(P1V0 == C_6)
 				P0V1[1] = C_0;
 			P0V2[1] = C_0;
-			Set_State(2, 8);
+			Set_State(2, 7);
 		}
 			break;
-		case 7:    /*  P2S7() - ÑÎÑÒÎßÍÈÅ: RedBoxMode */
+		case 6:    /*  P2S6() - ÑÎÑÒÎßÍÈÅ: RedBoxMode */
 
 		if (Timeout(2, P2V7)) 
 		{
@@ -124,10 +118,10 @@ void P2 (void) /* ÏÐÎÖÅÑÑ: PutBoxesOnConveyor */
 			if(P1V0 == C_6)
 				P0V2[1] = C_0;
 			P0V1[1] = C_0;
-			Set_State(2, 8);
+			Set_State(2, 7);
 		}
 			break;
-		case 8:    /*  P2S8() - ÑÎÑÒÎßÍÈÅ: PassingSensor */
+		case 7:    /*  P2S7() - ÑÎÑÒÎßÍÈÅ: PassingSensor */
 
 		if (Timeout(2, C_2))  
 			Set_State(2, 0);

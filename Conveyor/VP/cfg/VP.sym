@@ -36,11 +36,10 @@
       хлъ янярнъмхъ: Randomize,    кнц.хлъ: P2S1
       хлъ янярнъмхъ: ColorChoice,    кнц.хлъ: P2S2
       хлъ янярнъмхъ: BlueBoxMode,    кнц.хлъ: P2S3
-      хлъ янярнъмхъ: WaitRemoving,    кнц.хлъ: P2S4
-      хлъ янярнъмхъ: RemovingControl,    кнц.хлъ: P2S5
-      хлъ янярнъмхъ: GreenBoxMode,    кнц.хлъ: P2S6
-      хлъ янярнъмхъ: RedBoxMode,    кнц.хлъ: P2S7
-      хлъ янярнъмхъ: PassingSensor,    кнц.хлъ: P2S8
+      хлъ янярнъмхъ: RemovingOfBlueBox,    кнц.хлъ: P2S4
+      хлъ янярнъмхъ: GreenBoxMode,    кнц.хлъ: P2S5
+      хлъ янярнъмхъ: RedBoxMode,    кнц.хлъ: P2S6
+      хлъ янярнъмхъ: PassingSensor,    кнц.хлъ: P2S7
 /*======================= оепелеммше ============================*/
 
  хлъ оепелеммни: O_BOX_UNDER_SENSOR,	кнц.хлъ: P0V0

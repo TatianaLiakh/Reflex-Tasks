@@ -13,6 +13,7 @@ extern int P1V0;
 extern char P1V1;
 extern char P1V2;
 extern int P2V0;
+extern int P9V1;
 /*======= Input Ports =============*/
 extern char PI0;
 extern char PI1;

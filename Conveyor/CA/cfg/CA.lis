@@ -5,7 +5,7 @@
     5          	CONST OFF 0;
     6          	CONST ON 1;
     7          	
-    8          	/*Набор Команд для GUI */
+    8          	/*List of commands for GUI */
     9          	ENUM
    10          	{
    11          		CA2GUI_PRESENCE_SENSOR_ERROR,
