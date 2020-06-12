@@ -3,8 +3,8 @@
     3          TACT 50;
     4          CONST ON 1;
     5          CONST OFF 0;
-    6          CONST SensorDelay 20; /*~2 сек коробка проезжает датчик*/
-    7          CONST RemovingDelay 10; /*~1 сек коробка удаляется*/
+    6          CONST SensorDelay 20; /*2 second*/
+    7          CONST RemovingDelay 10; /*1 second*/
     8          CONST Norm 01;
     9          CONST PresenceSensorWrong 00;
    10          CONST ColorSensorWrong 10;
@@ -79,88 +79,90 @@
    79          PROC PutBoxesOnConveyor
    80          {
    81          	FROM PROC ReceiveSCMOutputMsg Flag;
-   82          	FROM PROC Init O_BOX_UNDER_SENSOR, O_BOX_RED, O_BOX_GREEN, I_TURN_ON_MAIN_CONVEYOR, I_TURN_ON_SIDE_CONVEYOR, I_REMOVE_BOX;
-   83          	INT time LOCAL;
-   84          	INT color LOCAL;
-   85          
-   86          	STATE Start
-   87          	{
-   88          		O_BOX_UNDER_SENSOR = OFF;
-   89          		O_BOX_RED = OFF;
-   90          		O_BOX_GREEN = OFF;
-   91          		SET NEXT;
-   92          	}
-   93          	
-   94          	STATE Randomize /*Генерируем время между подачами коробок и цвет*/
-   95          	{
-   96          		time = Random();
-   97          		color = Random();
-   98          		SET NEXT;
-   99          	}
-  100          	
-  101          	STATE ColorChoice 
-  102          	{
-  103          		IF (color >= 20 && color <= 35) SET STATE GreenBoxMode;
-  104          		ELSE IF (color > 35 && color <= 50) SET STATE RedBoxMode;	
-  105          		ELSE
-  106          		{
-  107          			IF((Flag == Norm) || (Flag == ColorSensorWrong)) 
-  108          				SET STATE BlueBoxMode; 
-  109          			ELSE SET STATE Randomize;
-  110          		}
-  111          	}	
-  112          	
-  113          	STATE BlueBoxMode
-  114          	{
-  115          		TIMEOUT time
-  116          		{
-  117          			O_BOX_UNDER_SENSOR = ON;
-  118          			SET NEXT;
-  119          		}
-  120          	}
-  121          	
-  122          	STATE RemovingOfBlueBox
-  123          	{
-  124          		TIMEOUT RemovingDelay
-  125          		{
-  126          			IF(I_REMOVE_BOX && !I_TURN_ON_MAIN_CONVEYOR && !I_TURN_ON_SIDE_CONVEYOR)
-  127          				SET STATE Start;
-  128          		}
-  129          	}
-  130          		
-  131          	STATE GreenBoxMode /*Вкл датчик зеленая коробка*/
-  132          	{
-  133          		TIMEOUT time
-  134          		{
-  135          			IF((Flag == Norm) || (Flag == ColorSensorWrong)) 
-  136          				O_BOX_UNDER_SENSOR = ON;
-  137          			IF(Flag == ColorSensorWrong)
-  138          				O_BOX_RED = ON;
-  139          			O_BOX_GREEN = ON;
-  140          			SET STATE PassingSensor;
-  141          		}
-  142          	}
-  143          	
-  144          	STATE RedBoxMode /*Вкл датчик красная коробка*/
-  145          	{
-  146          		TIMEOUT time
-  147          		{
-  148          			IF((Flag == Norm) || (Flag == ColorSensorWrong))
-  149          				O_BOX_UNDER_SENSOR = ON;
-  150          			IF(Flag == ColorSensorWrong)
-  151          				O_BOX_GREEN = ON;
-  152          			O_BOX_RED = ON;
-  153          			SET STATE PassingSensor;
-  154          		}
-  155          	}
-  156          	
-  157          	STATE PassingSensor
-  158          	{
-  159          		TIMEOUT SensorDelay 
-  160          			SET STATE Start;
-  161          	}
-  162          }
-  163          }
+   82          	FROM PROC Init O_BOX_UNDER_SENSOR, O_BOX_RED, 
+   83          	O_BOX_GREEN, I_TURN_ON_MAIN_CONVEYOR, 
+   84          	I_TURN_ON_SIDE_CONVEYOR, I_REMOVE_BOX;
+   85          	INT time LOCAL;
+   86          	INT color LOCAL;
+   87          
+   88          	STATE Start
+   89          	{
+   90          		O_BOX_UNDER_SENSOR = OFF;
+   91          		O_BOX_RED = OFF;
+   92          		O_BOX_GREEN = OFF;
+   93          		SET NEXT;
+   94          	}
+   95          	
+   96          	STATE Randomize /*Generate time between boxes and color*/
+   97          	{
+   98          		time = Random();
+   99          		color = Random();
+  100          		SET NEXT;
+  101          	}
+  102          	
+  103          	STATE ColorChoice 
+  104          	{
+  105          		IF (color >= 20 && color <= 35) SET STATE GreenBoxMode;
+  106          		ELSE IF (color > 35 && color <= 50) SET STATE RedBoxMode;	
+  107          		ELSE
+  108          		{
+  109          			IF(Flag == Norm) 
+  110          				SET STATE BlueBoxMode; 
+  111          			ELSE SET STATE Randomize;
+  112          		}
+  113          	}	
+  114          	
+  115          	STATE BlueBoxMode
+  116          	{
+  117          		TIMEOUT time
+  118          		{
+  119          			O_BOX_UNDER_SENSOR = ON;
+  120          			SET NEXT;
+  121          		}
+  122          	}
+  123          	
+  124          	STATE RemovingOfBlueBox
+  125          	{
+  126          		TIMEOUT RemovingDelay
+  127          		{
+  128          			IF(I_REMOVE_BOX && !I_TURN_ON_MAIN_CONVEYOR && !I_TURN_ON_SIDE_CONVEYOR)
+  129          				SET STATE Start;
+  130          		}
+  131          	}
+  132          		
+  133          	STATE GreenBoxMode /*Turn on sensor green box*/
+  134          	{
+  135          		TIMEOUT time
+  136          		{
+  137          			IF((Flag == Norm) || (Flag == ColorSensorWrong)) 
+  138          				O_BOX_UNDER_SENSOR = ON;
+  139          			IF(Flag == ColorSensorWrong)
+  140          				O_BOX_RED = ON;
+  141          			O_BOX_GREEN = ON;
+  142          			SET STATE PassingSensor;
+  143          		}
+  144          	}
+  145          	
+  146          	STATE RedBoxMode /*Turn on sensor red box*/
+  147          	{
+  148          		TIMEOUT time
+  149          		{
+  150          			IF((Flag == Norm) || (Flag == ColorSensorWrong))
+  151          				O_BOX_UNDER_SENSOR = ON;
+  152          			IF(Flag == ColorSensorWrong)
+  153          				O_BOX_GREEN = ON;
+  154          			O_BOX_RED = ON;
+  155          			SET STATE PassingSensor;
+  156          		}
+  157          	}
+  158          	
+  159          	STATE PassingSensor
+  160          	{
+  161          		TIMEOUT SensorDelay 
+  162          			SET STATE Start;
+  163          	}
+  164          }
+  165          }
 
 %RCSL-I-SUMMARY, Completed with 0 error(s).
 %RCSL-I-SUMMARY, Completed with 0 warning(s).

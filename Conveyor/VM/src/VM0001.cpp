@@ -30,7 +30,6 @@ void P1 (void) /* œ–Œ÷≈——: ReceiveCAOutputMsg */
 			break;
 		case 1:    /*  P1S1() - —Œ—“ŒﬂÕ»≈: Start */
 
-			
 			if (GetNextMsgFromCA()) 
 			{
 				P1V0 = GetMsgCodeFromCA();

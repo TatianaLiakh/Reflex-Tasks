@@ -1,4 +1,3 @@
-/*Датчик мигает каждые 2 секунды*/
 PROGR ALGORITHM
 {
 	TACT 100;
@@ -13,9 +12,9 @@ PROGR ALGORITHM
 	};
 	
 	FUNCTION INT SendMsgGUICode(INT);
-	
-	INPUT  LOG_CA_INPUT_PORT 0 0 8; /* имя, базовый адрес, доп. адр. порта, 8бит */	
-	OUTPUT LOG_CA_OUTPUT_PORT 1 0 8;
+	/* direction, name, address, offset, size of the port */
+	INPUT  LOG_CA_INPUT_PORT 0 0 8; /*input port*/
+	OUTPUT LOG_CA_OUTPUT_PORT 1 0 8; /*output port*/
 
 	PROC Init
 	{
@@ -42,7 +41,9 @@ PROGR ALGORITHM
 
 	PROC SortingBoxes
 	{
-		FROM PROC Init S_BOX_UNDER_SENSOR, S_BOX_RED, S_BOX_GREEN, C_TURN_ON_MAIN_CONVEYOR, C_TURN_ON_SIDE_CONVEYOR, C_REMOVE_BOX;
+		FROM PROC Init S_BOX_UNDER_SENSOR, S_BOX_RED, 
+		S_BOX_GREEN, C_TURN_ON_MAIN_CONVEYOR, 
+		C_TURN_ON_SIDE_CONVEYOR, C_REMOVE_BOX;
 		
 		STATE Start
 		{

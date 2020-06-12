@@ -3,8 +3,8 @@ PROGR PLANT
 TACT 50;
 CONST ON 1;
 CONST OFF 0;
-CONST SensorDelay 20; /*~2 сек коробка проезжает датчик*/
-CONST RemovingDelay 10; /*~1 сек коробка удаляется*/
+CONST SensorDelay 20; /*2 second*/
+CONST RemovingDelay 10; /*1 second*/
 CONST Norm 01;
 CONST PresenceSensorWrong 00;
 CONST ColorSensorWrong 10;
@@ -79,7 +79,9 @@ PROC ReceiveSCMOutputMsg
 PROC PutBoxesOnConveyor
 {
 	FROM PROC ReceiveSCMOutputMsg Flag;
-	FROM PROC Init O_BOX_UNDER_SENSOR, O_BOX_RED, O_BOX_GREEN, I_TURN_ON_MAIN_CONVEYOR, I_TURN_ON_SIDE_CONVEYOR, I_REMOVE_BOX;
+	FROM PROC Init O_BOX_UNDER_SENSOR, O_BOX_RED, 
+	O_BOX_GREEN, I_TURN_ON_MAIN_CONVEYOR, 
+	I_TURN_ON_SIDE_CONVEYOR, I_REMOVE_BOX;
 	INT time LOCAL;
 	INT color LOCAL;
 
@@ -91,7 +93,7 @@ PROC PutBoxesOnConveyor
 		SET NEXT;
 	}
 	
-	STATE Randomize /*Генерируем время между подачами коробок и цвет*/
+	STATE Randomize /*Generate time between boxes and color*/
 	{
 		time = Random();
 		color = Random();
@@ -104,7 +106,7 @@ PROC PutBoxesOnConveyor
 		ELSE IF (color > 35 && color <= 50) SET STATE RedBoxMode;	
 		ELSE
 		{
-			IF((Flag == Norm) || (Flag == ColorSensorWrong)) 
+			IF(Flag == Norm) 
 				SET STATE BlueBoxMode; 
 			ELSE SET STATE Randomize;
 		}
@@ -128,7 +130,7 @@ PROC PutBoxesOnConveyor
 		}
 	}
 		
-	STATE GreenBoxMode /*Вкл датчик зеленая коробка*/
+	STATE GreenBoxMode /*Turn on sensor green box*/
 	{
 		TIMEOUT time
 		{
@@ -141,7 +143,7 @@ PROC PutBoxesOnConveyor
 		}
 	}
 	
-	STATE RedBoxMode /*Вкл датчик красная коробка*/
+	STATE RedBoxMode /*Turn on sensor red box*/
 	{
 		TIMEOUT time
 		{

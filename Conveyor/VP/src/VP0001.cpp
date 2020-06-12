@@ -76,7 +76,7 @@ void P2 (void) /* опнжеяя: PutBoxesOnConveyor */
 		else if (P2V8 > 35 && P2V8 <= 50) Set_State(2, 6);	
 		else
 		{
-			if((P1V0 == C_4) || (P1V0 == C_6)) 
+			if(P1V0 == C_4) 
 				Set_State(2, 3); 
 			else Set_State(2, 1);
 		}

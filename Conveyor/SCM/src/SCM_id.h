@@ -1,7 +1,7 @@
 
-	#define TestIdling1 /* C_0 - TestIdling1 */ 600
-	#define TestIdling2 /* C_1 - TestIdling2 */ 300
-	#define TestIdling3 /* C_2 - TestIdling3 */ 300
+	#define TestIdling1 /* C_0 - TestIdling1 */ 600 
+	#define TestIdling2 /* C_1 - TestIdling2 */ 300 
+	#define TestIdling3 /* C_2 - TestIdling3 */ 300 
  
 	
 	enum EN0 {		

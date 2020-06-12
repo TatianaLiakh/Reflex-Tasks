@@ -1,9 +1,9 @@
 
 #define Tact_Value 50 /* размер такта в миллисекундах */
 
-	#define C_0 /* TestIdling1 */ 600
-	#define C_1 /* TestIdling2 */ 300
-	#define C_2 /* TestIdling3 */ 300
+	#define C_0 /* TestIdling1 */ 600 
+	#define C_1 /* TestIdling2 */ 300 
+	#define C_2 /* TestIdling3 */ 300 
  
 	
 	enum EN0 {		

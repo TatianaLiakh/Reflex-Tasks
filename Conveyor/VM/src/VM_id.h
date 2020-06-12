@@ -21,7 +21,7 @@
 	
 	};
 
-	
+	 
 	enum EN2 {
 		VM2SCM_START_VERIFICATION /* VM2SCM_START_VERIFICATION */
 	
