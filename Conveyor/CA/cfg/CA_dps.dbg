@@ -1,0 +1,10 @@
+ Init
+Start
+ SortingBoxes
+Start
+ MainConveyorOperation
+Start
+ PresenceSensorControl
+Control
+ ColorSensorsControl
+Control

@@ -1,0 +1,22 @@
+ Init
+Start
+ ReceiveSCMOutputMsg
+Start
+ Terminator
+Report
+ NoCarsControl
+Start
+ OpenRoadDelayControl
+Start
+WaitingOfCar
+WaitingPCycles
+PCyclesControl
+ ErrorControlForOpenRoad
+Start
+ CloseRoadDelayControl
+Start
+WaitingOfSwitching
+WaitingKCycles
+KCyclesControl
+ ErrorControlForCloseRoad
+Start

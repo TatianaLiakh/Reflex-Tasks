@@ -1,0 +1,186 @@
+PROGR DISPATCHER
+{
+	TACT 50;
+	CONST TestIdling1 600; /*60 sec*/
+	CONST TestIdling2 300; /*30 sec*/
+	CONST TestIdling3 300; /*30 sec*/
+ 
+	/*List of commands for VP (Virtual Plant)*/
+	ENUM
+	{		
+		SCM2VP_PUT_BOXES_ON_CONVEYOR,
+		SCM2VP_BROKEN_PRESENCE_SENSOR,
+		SCM2VP_BROKEN_COLOR_SENSORS,
+		SCM2VP_FINISH_VERIFICATION
+	};
+ 
+	/*List of commands for VM (Verification Module)*/	
+	ENUM 
+	{
+		SCM2VM_TEST_PUT_BOXES_ON_CONVEYOR,
+		SCM2VM_TEST_BROKEN_PRESENCE_SENSOR,
+		SCM2VM_TEST_BROKEN_COLOR_SENSORS,
+		SCM2VM_TEST_COMPLETED,
+		SCM2VM_FINISH_VERIFICATION
+	};
+
+	/*List of commands for SCM (Script Control Module) from VM (Verification Module)*/
+	ENUM
+	{
+		VM2SCM_START_VERIFICATION
+	};
+	
+	FUNCTION INT SendMsgToVirtualPlantCode(INT);
+	FUNCTION INT SendMsgToVerificationModuleCode(INT);
+	FUNCTION INT GetNextMsgFromVM(VOID);
+	FUNCTION INT GetMsgCodeFromVM(VOID);
+
+	PROC Init
+	{
+		STATE Start
+		{  
+			START PROC ReceiveVMOutputMsg; 			
+			STOP;
+		}
+	}	
+	
+	PROC ReceiveVMOutputMsg
+	{
+		INT VMMsgCode LOCAL;
+		STATE Start
+		{
+			IF (GetNextMsgFromVM()) 
+			{
+				VMMsgCode = GetMsgCodeFromVM();
+				SWITCH (VMMsgCode)
+				{
+				CASE VM2SCM_START_VERIFICATION:
+					START PROC TestDriver;
+					BREAK;
+				}
+			}
+		LOOP;			
+		}
+	}
+	
+	PROC TestDriver
+	{		
+		STATE RunTestPutBoxesOnConveyor
+		{
+			START PROC TestRandomBoxes;
+			SET NEXT;
+		}
+		
+		STATE IdilingTest1 
+		{
+			IF (PROC TestRandomBoxes SET STATE PASSIVE)
+				SET NEXT;	
+		}
+		
+		STATE RunTestBrokenPresenceSensor
+		{
+			START PROC TestBrokenPresenceSensor;
+			SET NEXT;
+		}
+		
+		STATE IdilingTest2
+		{
+			IF (PROC TestBrokenPresenceSensor SET STATE PASSIVE)
+				SET NEXT;		
+		}
+		
+		STATE RunTestBrokenColorSensors
+		{
+			START PROC TestBrokenColorSensors;
+			SET NEXT;
+		}
+		
+		STATE IdilingTest3
+		{
+			IF (PROC TestBrokenColorSensors SET STATE PASSIVE)
+				SET NEXT;	
+		}
+
+		STATE Finish
+		{
+			SendMsgToVerificationModuleCode(SCM2VM_FINISH_VERIFICATION);
+			SendMsgToVirtualPlantCode(SCM2VP_FINISH_VERIFICATION);
+			STOP;
+		}
+	}
+	
+	PROC TestRandomBoxes
+	{
+		STATE Start 
+		{
+			SendMsgToVirtualPlantCode(SCM2VP_PUT_BOXES_ON_CONVEYOR);
+			SendMsgToVerificationModuleCode(SCM2VM_TEST_PUT_BOXES_ON_CONVEYOR);
+			SET NEXT;
+		}
+		STATE End 
+		{
+			TIMEOUT TestIdling1 
+			{
+				SendMsgToVerificationModuleCode(SCM2VM_TEST_COMPLETED);
+				STOP;
+			}
+		}
+	}
+			
+	PROC TestBrokenPresenceSensor
+	{
+		STATE Start 
+		{
+			SendMsgToVirtualPlantCode(SCM2VP_BROKEN_PRESENCE_SENSOR);
+			SendMsgToVerificationModuleCode(SCM2VM_TEST_BROKEN_PRESENCE_SENSOR);
+			SET NEXT;
+		}
+		
+		STATE End 
+		{
+			TIMEOUT TestIdling2
+			{
+				SendMsgToVerificationModuleCode(SCM2VM_TEST_COMPLETED);
+				STOP;
+			}
+		}
+	}
+	
+	PROC TestBrokenColorSensors
+	{
+		STATE Start 
+		{
+			SendMsgToVirtualPlantCode(SCM2VP_BROKEN_COLOR_SENSORS);
+			SendMsgToVerificationModuleCode(SCM2VM_TEST_BROKEN_COLOR_SENSORS);
+			SET NEXT;
+		}
+		STATE End 
+		{
+			TIMEOUT TestIdling3 
+			{
+				SendMsgToVerificationModuleCode(SCM2VM_TEST_COMPLETED);
+				STOP;
+			}
+		}
+	}
+}  /* \PROGR */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

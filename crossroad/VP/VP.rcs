@@ -1,0 +1,107 @@
+PROGR PLANT
+{
+TACT 50;
+CONST ON 1;
+CONST OFF 0;
+CONST Wrong 00;
+CONST Norm 01;
+CONST NoCars 10;
+CONST SensorTime 20;
+
+ENUM
+{		
+	SCM2VP_RUN_CARS,
+	SCM2VP_NO_CARS,
+	SCM2VP_RUN_WRONG_CAR
+};
+
+FUNCTION INT GetMessageFromScenariousBlock(VOID);
+FUNCTION INT GetMessageCodeFromScenariousBlock(VOID);
+FUNCTION INT Random(VOID);
+	
+INPUT  LOG_VP_INPUT_PORT  0 0 8; 
+OUTPUT LOG_VP_OUTPUT_PORT 1 0 8;
+
+PROC Init
+{
+	LOG I_SWITCH_TRAFFIC_LIGHT = {LOG_VP_INPUT_PORT[1]} FOR ALL;
+	LOG O_CAR_NEAR_CROSSROAD = {LOG_VP_OUTPUT_PORT[1]} FOR ALL;
+	
+	STATE Start
+	{ 			
+		START PROC ReceiveSCMOutputMsg;
+		STOP;  
+	}
+} 
+
+PROC ReceiveSCMOutputMsg
+{
+	LOG CarFlag FOR ALL; 
+	INT SCMsgCode LOCAL;
+
+	STATE Start
+	{
+		IF (GetMessageFromScenariousBlock()) 
+		{
+			SCMsgCode = GetMessageCodeFromScenariousBlock();
+			SWITCH (SCMsgCode)
+			{	
+				CASE SCM2VP_NO_CARS:
+				IF(PROC RunCars SET STATE PASSIVE)
+				{
+					CarFlag = NoCars;	
+					START PROC RunCars;	
+				}					
+					BREAK;
+				CASE SCM2VP_RUN_CARS:
+					CarFlag = Norm;	
+					BREAK;
+				CASE SCM2VP_RUN_WRONG_CAR:
+						CarFlag = Wrong;
+					BREAK;
+			}
+		}
+		LOOP;
+	}
+}
+
+PROC RunCars
+{
+	FROM PROC ReceiveSCMOutputMsg CarFlag;
+	FROM PROC Init O_CAR_NEAR_CROSSROAD, I_SWITCH_TRAFFIC_LIGHT;
+	INT time LOCAL;
+	
+	STATE Start
+	{
+		O_CAR_NEAR_CROSSROAD = OFF;
+		IF(CarFlag != NoCars) SET NEXT;
+	}
+
+	STATE GetToSensor /*Reach car presence sensor and turn it on*/
+	{
+		O_CAR_NEAR_CROSSROAD = ON;
+		IF(CarFlag == Norm)	SET NEXT;
+	}
+
+	STATE WaitingForSwitching /*Wait until traffic light switches*/
+	{				  	 	  /*to a secondary road*/
+		IF(I_SWITCH_TRAFFIC_LIGHT)	
+			SET NEXT;
+	}
+	
+	STATE PassingSensor /*Wait until car passes crossroad*/
+	{
+		TIMEOUT SensorTime
+		{	
+			O_CAR_NEAR_CROSSROAD = OFF;
+			SET NEXT;
+		}
+	}
+	
+	STATE TimeBetweenCars /*Generate time between cars*/
+	{
+		time = Random();
+		TIMEOUT time SET STATE Start;
+	}
+}
+}

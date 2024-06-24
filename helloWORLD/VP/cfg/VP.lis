@@ -1,0 +1,31 @@
+    1          /*Просто получаем сообщения от диспетчера и ничего не делаем*/
+    2          /*Нет элемента управления*/
+    3          PROGR PLANT
+    4          {
+    5          	TACT 50;
+    6          	
+    7          	ENUM
+    8          	{		
+    9          		SCM2VP_MESSAGE_TURN_ON,
+   10          		SCM2VP_MESSAGE_TURN_OFF
+   11          	};
+   12          
+   13          	FUNCTION INT GetMessageFromScenariousBlock(VOID);
+   14          	FUNCTION INT GetMessageCodeFromScenariousBlock(VOID);
+   15          	
+   16          	INPUT  LOG_PLANT_INPUT_PORT  0 0 8; 
+   17          	OUTPUT LOG_PLANT_OUTPUT_PORT 1 0 8;
+   18          	
+   19          	PROC Init
+   20          	{
+   21          		STATE Start
+   22          		{ 			
+   23          			STOP; 
+   24          		}
+   25          	} 
+   26          }
+
+%RCSL-I-SUMMARY, Completed with 0 error(s).
+%RCSL-I-SUMMARY, Completed with 0 warning(s).
+
+ %RCSL-I-SUMMARY, Completed with 0 error(s).

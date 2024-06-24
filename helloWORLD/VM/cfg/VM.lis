@@ -1,0 +1,104 @@
+    1          PROGR VERIFIER
+    2          {
+    3          	TACT 50;
+    4          	CONST ON 1;
+    5          	CONST OFF 0;
+    6          	CONST AlgorithmDelay 40; /*2 сек*/
+    7          	CONST TestIdling 100;
+    8          
+    9          	/*Набор команд для VERIFIER(блок верификации)*/
+   10          	ENUM 
+   11          	{
+   12          		SCM2VM_TEST_NORMAL_TURN_ON,
+   13          		SCM2VM_TEST_NORMAL_TURN_OFF, 
+   14          		SCM2VM_FINISH_VERIFICATION
+   15          	};
+   16          
+   17          	/*Набор команд для DISPATCHER(блок управления сценарием) от VERIFIER(блока верификации)*/
+   18          	ENUM
+   19          	{
+   20          		VM2SCM_START_VERIFICATION,
+   21          		VM2SCM_NEXT_TEST
+   22          	};
+   23          
+   24          	/*Набор Команд для GUI */
+   25          	ENUM
+   26          	{
+   27          		VM2GUI_TEST_PASSED_NORMAL_TURN_ON, 
+   28          		VM2GUI_TEST_PASSED_NORMAL_TURN_OFF,
+   29          		VM2GUI_TEST_FAILED_NORMAL_TURN_ON,
+   30          		VM2GUI_TEST_FAILED_NORMAL_TURN_OFF,
+   31          		VM2GUI_TEST_NOT_ACTIVE_NORMAL_TURN_ON,
+   32          		VM2GUI_TEST_NOT_ACTIVE_NORMAL_TURN_OFF,
+   33          		VM2GUI_START_TEST_TURN_ON,
+   34          		VM2GUI_START_TEST_TURN_OFF,
+   35          		VM2GUI_END_VERIFICATION
+   36          	};
+   37          	
+   38          	FUNCTION INT SendMsgSCMCode(INT);
+   39          	FUNCTION INT SendMsgGUICode(INT);
+   40          	FUNCTION INT GetNextMsgFromSCM(VOID);
+   41          	FUNCTION INT GetMsgCodeFromSCM(VOID);
+   42          
+   43          	INPUT  LOG_VERIFIER_INPUT_PORT 0 0 8; /* имя, базовый адрес, доп. адр. порта, 8бит */
+   44          	INPUT  LOG_VERIFIER_OUTPUT_PORT  0 1 8; /* имя, базовый адрес, доп. адр. порта, 8бит */
+   45          	
+   46          	PROC Init
+   47          	{	
+   48          		LOG HELLO_WORLD = {LOG_VERIFIER_OUTPUT_PORT[1]} FOR ALL;
+   49          				
+   50          		STATE Start 
+   51          		{	
+   52          			SendMsgSCMCode(VM2SCM_START_VERIFICATION); 	
+   53          			START PROC ReceiveSCMOutputMsg;
+   54          			STOP;
+   55          		}
+   56          	} 
+   57          	
+   58          	PROC ReceiveSCMOutputMsg
+   59          	{  
+   60          		INT SCMsgCode LOCAL;
+   61          		STATE Start
+   62          		{
+   63          			/*  читаем код и параметр события из кольцевого буфера в структуру */
+   64          			IF (GetNextMsgFromSCM()) 
+   65          			{
+   66          				SCMsgCode = GetMsgCodeFromSCM();
+   67          				SWITCH (SCMsgCode) 				
+   68          				{
+   69          				
+   70          					CASE SCM2VM_TEST_NORMAL_TURN_ON:					
+   71          						SendMsgGUICode(VM2GUI_START_TEST_TURN_ON);
+   72          						START PROC Terminator; 	
+   73          						BREAK;
+   74          					CASE SCM2VM_FINISH_VERIFICATION:
+   75          						SendMsgGUICode(VM2GUI_END_VERIFICATION);
+   76          						STOP PROC Terminator; 
+   77          						STOP;
+   78          						BREAK;
+   79          				}
+   80          			}
+   81          			LOOP;
+   82          		}
+   83          	}
+   84          	
+   85          	PROC Terminator
+   86          	{
+   87          		STATE Idling
+   88          		{
+   89          			TIMEOUT TestIdling SET NEXT;
+   90          		}
+   91          		STATE Report
+   92          		{			
+   93          			SendMsgGUICode(VM2GUI_TEST_PASSED_NORMAL_TURN_ON);
+   94          			STOP;
+   95          		}
+   96          	
+   97          	}
+   98          
+   99          }
+
+%RCSL-I-SUMMARY, Completed with 0 error(s).
+%RCSL-I-SUMMARY, Completed with 0 warning(s).
+
+ %RCSL-I-SUMMARY, Completed with 0 error(s).

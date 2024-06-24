@@ -1,0 +1,29 @@
+ Init
+Start
+ ReceiveCAOutputMsg
+Init
+Start
+ ReceiveSCMOutputMsg
+Start
+ Terminator
+Report
+ PresenceSensorControl
+Control
+ ColorSensorsControl
+Control
+ GreenBoxControl
+WaitingOfGreenBox
+WaitingOnLaunch
+StabilityControl
+ RedBoxControl
+WaitingOfRedBox
+WaitingOnLaunch
+StabilityControl
+ BlueBoxControl
+WaitingOfBlueBox
+WaitingForShutdown
+RemovingControl
+ MainConveyorControl
+Start
+WaitingForShutdown
+TurnOffControl

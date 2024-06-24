@@ -1,0 +1,187 @@
+PROGR DISPATCHER
+{
+	TACT 50;	
+	CONST TestIdling1 350; /*35 sec*/
+	CONST TestIdling2 400; /*40 sec*/
+	CONST TestIdling3 350; /*35 sec*/
+ 
+	/*List of commands for VP (Virtual Plant)*/
+	ENUM
+	{		
+		SCM2VP_RUN_CARS,
+		SCM2VP_NO_CARS,
+		SCM2VP_RUN_WRONG_CAR
+	};
+ 
+	/*List of commands for VM (Verification Module)*/	
+	ENUM
+	{
+		SCM2VM_TEST_RUN_CARS,
+		SCM2VM_TEST_NO_CARS,
+		SCM2VM_TEST_RUN_WRONG_CAR,
+		SCM2VM_TEST_COMPLETED,
+		SCM2VM_FINISH_VERIFICATION
+	};
+
+	/*List of commands for SCM (Script Control Module) from VM (Verification Module)*/
+	ENUM
+	{
+		VM2SCM_START_VERIFICATION
+	};
+	
+	FUNCTION INT SendMsgToVirtualPlantCode(INT);
+	FUNCTION INT SendMsgToVerificationModuleCode(INT);
+	FUNCTION INT GetNextMsgFromVM(VOID);
+	FUNCTION INT GetMsgCodeFromVM(VOID);
+
+	PROC Init
+	{
+		STATE Start
+		{  
+			START PROC ReceiveVMOutputMsg; 			
+			STOP;
+		}
+	}	
+	
+	PROC ReceiveVMOutputMsg
+	{
+		INT VMMsgCode LOCAL;
+		STATE Start
+		{
+			IF (GetNextMsgFromVM()) 
+			{
+				VMMsgCode = GetMsgCodeFromVM();
+				SWITCH (VMMsgCode)
+				{
+					CASE VM2SCM_START_VERIFICATION:
+						START PROC TestDriver;
+					BREAK;
+				}
+			}
+		LOOP;			
+		}
+	}
+	
+	PROC TestDriver
+	{		
+		STATE RunTestNoCars
+		{
+			START PROC TestNoCars;
+			SET NEXT;
+		}
+		
+		STATE IdilingTest1
+		{
+			IF (PROC TestNoCars SET STATE PASSIVE)
+				SET NEXT;	
+		}
+		
+		STATE RunTestNormCars
+		{
+			START PROC TestNormCars;
+			SET NEXT;
+		}
+		
+		STATE IdilingTest2
+		{
+			IF (PROC TestNormCars SET STATE PASSIVE)
+				SET NEXT;		
+		}
+		
+		STATE RunTestWrongCar
+		{
+			START PROC TestWrongCar;
+			SET NEXT;
+		}
+		
+		STATE IdilingTest3
+		{
+			IF (PROC TestWrongCar SET STATE PASSIVE)
+				SET NEXT;		
+		}
+
+		STATE Finish
+		{
+			SendMsgToVerificationModuleCode(SCM2VM_FINISH_VERIFICATION);
+			STOP;
+		}
+	}
+	
+		
+	PROC TestNoCars
+	{
+		STATE Start
+		{
+			SendMsgToVirtualPlantCode(SCM2VP_NO_CARS);
+			SendMsgToVerificationModuleCode(SCM2VM_TEST_NO_CARS);
+			SET NEXT;
+		}
+		
+		STATE End
+		{
+			TIMEOUT TestIdling1 
+			{
+				SendMsgToVerificationModuleCode(SCM2VM_TEST_COMPLETED);
+				STOP;
+			}
+		}
+	}
+	
+	PROC TestNormCars
+	{
+		STATE Start
+		{
+			SendMsgToVirtualPlantCode(SCM2VP_RUN_CARS);
+			SendMsgToVerificationModuleCode(SCM2VM_TEST_RUN_CARS);
+			SET NEXT;
+		}
+		
+		STATE End
+		{
+			TIMEOUT TestIdling2 
+			{
+				SendMsgToVerificationModuleCode(SCM2VM_TEST_COMPLETED);
+				STOP;
+			}
+		}
+	}
+	
+	PROC TestWrongCar
+	{
+		STATE Start
+		{
+			SendMsgToVirtualPlantCode(SCM2VP_RUN_WRONG_CAR);
+			SendMsgToVerificationModuleCode(SCM2VM_TEST_RUN_WRONG_CAR);
+			SET NEXT;
+		}		
+				
+		STATE End
+		{
+			TIMEOUT TestIdling3 
+			{
+				SendMsgToVerificationModuleCode(SCM2VM_TEST_COMPLETED);
+				STOP;
+			}
+		}
+	}
+} 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

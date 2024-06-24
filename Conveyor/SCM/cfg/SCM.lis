@@ -1,0 +1,171 @@
+    1          PROGR DISPATCHER
+    2          {
+    3          	TACT 50;
+    4          	CONST TestIdling1 600; /*60 sec*/
+    5          	CONST TestIdling2 300; /*30 sec*/
+    6          	CONST TestIdling3 300; /*30 sec*/
+    7           
+    8          	/*List of commands for VP (Virtual Plant)*/
+    9          	ENUM
+   10          	{		
+   11          		SCM2VP_PUT_BOXES_ON_CONVEYOR,
+   12          		SCM2VP_BROKEN_PRESENCE_SENSOR,
+   13          		SCM2VP_BROKEN_COLOR_SENSORS,
+   14          		SCM2VP_FINISH_VERIFICATION
+   15          	};
+   16           
+   17          	/*List of commands for VM (Verification Module)*/	
+   18          	ENUM 
+   19          	{
+   20          		SCM2VM_TEST_PUT_BOXES_ON_CONVEYOR,
+   21          		SCM2VM_TEST_BROKEN_PRESENCE_SENSOR,
+   22          		SCM2VM_TEST_BROKEN_COLOR_SENSORS,
+   23          		SCM2VM_TEST_COMPLETED,
+   24          		SCM2VM_FINISH_VERIFICATION
+   25          	};
+   26          
+   27          	/*List of commands for SCM (Script Control Module) from VM (Verification Module)*/
+   28          	ENUM
+   29          	{
+   30          		VM2SCM_START_VERIFICATION
+   31          	};
+   32          	
+   33          	FUNCTION INT SendMsgToVirtualPlantCode(INT);
+   34          	FUNCTION INT SendMsgToVerificationModuleCode(INT);
+   35          	FUNCTION INT GetNextMsgFromVM(VOID);
+   36          	FUNCTION INT GetMsgCodeFromVM(VOID);
+   37          
+   38          	PROC Init
+   39          	{
+   40          		STATE Start
+   41          		{  
+   42          			START PROC ReceiveVMOutputMsg; 			
+   43          			STOP;
+   44          		}
+   45          	}	
+   46          	
+   47          	PROC ReceiveVMOutputMsg
+   48          	{
+   49          		INT VMMsgCode LOCAL;
+   50          		STATE Start
+   51          		{
+   52          			IF (GetNextMsgFromVM()) 
+   53          			{
+   54          				VMMsgCode = GetMsgCodeFromVM();
+   55          				SWITCH (VMMsgCode)
+   56          				{
+   57          				CASE VM2SCM_START_VERIFICATION:
+   58          					START PROC TestDriver;
+   59          					BREAK;
+   60          				}
+   61          			}
+   62          		LOOP;			
+   63          		}
+   64          	}
+   65          	
+   66          	PROC TestDriver
+   67          	{		
+   68          		STATE RunTestPutBoxesOnConveyor
+   69          		{
+   70          			START PROC TestRandomBoxes;
+   71          			SET NEXT;
+   72          		}
+   73          		
+   74          		STATE IdilingTest1 
+   75          		{
+   76          			IF (PROC TestRandomBoxes SET STATE PASSIVE)
+   77          				SET NEXT;	
+   78          		}
+   79          		
+   80          		STATE RunTestBrokenPresenceSensor
+   81          		{
+   82          			START PROC TestBrokenPresenceSensor;
+   83          			SET NEXT;
+   84          		}
+   85          		
+   86          		STATE IdilingTest2
+   87          		{
+   88          			IF (PROC TestBrokenPresenceSensor SET STATE PASSIVE)
+   89          				SET NEXT;		
+   90          		}
+   91          		
+   92          		STATE RunTestBrokenColorSensors
+   93          		{
+   94          			START PROC TestBrokenColorSensors;
+   95          			SET NEXT;
+   96          		}
+   97          		
+   98          		STATE IdilingTest3
+   99          		{
+  100          			IF (PROC TestBrokenColorSensors SET STATE PASSIVE)
+  101          				SET NEXT;	
+  102          		}
+  103          
+  104          		STATE Finish
+  105          		{
+  106          			SendMsgToVerificationModuleCode(SCM2VM_FINISH_VERIFICATION);
+  107          			SendMsgToVirtualPlantCode(SCM2VP_FINISH_VERIFICATION);
+  108          			STOP;
+  109          		}
+  110          	}
+  111          	
+  112          	PROC TestRandomBoxes
+  113          	{
+  114          		STATE Start 
+  115          		{
+  116          			SendMsgToVirtualPlantCode(SCM2VP_PUT_BOXES_ON_CONVEYOR);
+  117          			SendMsgToVerificationModuleCode(SCM2VM_TEST_PUT_BOXES_ON_CONVEYOR);
+  118          			SET NEXT;
+  119          		}
+  120          		STATE End 
+  121          		{
+  122          			TIMEOUT TestIdling1 
+  123          			{
+  124          				SendMsgToVerificationModuleCode(SCM2VM_TEST_COMPLETED);
+  125          				STOP;
+  126          			}
+  127          		}
+  128          	}
+  129          			
+  130          	PROC TestBrokenPresenceSensor
+  131          	{
+  132          		STATE Start 
+  133          		{
+  134          			SendMsgToVirtualPlantCode(SCM2VP_BROKEN_PRESENCE_SENSOR);
+  135          			SendMsgToVerificationModuleCode(SCM2VM_TEST_BROKEN_PRESENCE_SENSOR);
+  136          			SET NEXT;
+  137          		}
+  138          		
+  139          		STATE End 
+  140          		{
+  141          			TIMEOUT TestIdling2
+  142          			{
+  143          				SendMsgToVerificationModuleCode(SCM2VM_TEST_COMPLETED);
+  144          				STOP;
+  145          			}
+  146          		}
+  147          	}
+  148          	
+  149          	PROC TestBrokenColorSensors
+  150          	{
+  151          		STATE Start 
+  152          		{
+  153          			SendMsgToVirtualPlantCode(SCM2VP_BROKEN_COLOR_SENSORS);
+  154          			SendMsgToVerificationModuleCode(SCM2VM_TEST_BROKEN_COLOR_SENSORS);
+  155          			SET NEXT;
+  156          		}
+  157          		STATE End 
+  158          		{
+  159          			TIMEOUT TestIdling3 
+  160          			{
+  161          				SendMsgToVerificationModuleCode(SCM2VM_TEST_COMPLETED);
+  162          				STOP;
+  163          			}
+  164          		}
+  165          	}
+  166          }  /* \PROGR */
+
+%RCSL-I-SUMMARY, Completed with 0 error(s).
+%RCSL-I-SUMMARY, Completed with 0 warning(s).
+
+ %RCSL-I-SUMMARY, Completed with 0 error(s).

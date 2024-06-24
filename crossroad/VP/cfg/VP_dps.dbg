@@ -1,0 +1,10 @@
+ Init
+Start
+ ReceiveSCMOutputMsg
+Start
+ RunCars
+Start
+GetToSensor
+WaitingForSwitching
+PassingSensor
+TimeBetweenCars

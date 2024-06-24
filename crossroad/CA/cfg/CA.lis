@@ -1,0 +1,60 @@
+    1          PROGR ControlAlgorithm
+    2          {
+    3          	TACT 100;
+    4          	CONST OFF 0;
+    5          	CONST ON 1;
+    6          	CONST KCyclesDelay 150; /*15 sec*/
+    7          	CONST PCyclesDelay 200; /*20 sec*/
+    8          	/* direction, name, address, offset, size of the port */
+    9          	INPUT  LOG_CA_INPUT_PORT  0 0 8; /*car sensor input port*/
+   10          	OUTPUT LOG_CA_OUTPUT_PORT 1 0 8; /*output for switching*/
+   11          
+   12          	PROC Init
+   13          	{
+   14          	LOG S_CAR_NEAR_CROSSROAD = {LOG_CA_INPUT_PORT[1]} FOR ALL;
+   15          	LOG C_SWITCH_TRAFFIC_LIGHT = {LOG_CA_OUTPUT_PORT[1]} FOR ALL;
+   16           
+   17          		STATE Start
+   18          		{  
+   19          			C_SWITCH_TRAFFIC_LIGHT = OFF;
+   20          			SET NEXT;
+   21          		}	
+   22          		
+   23          		STATE SecondaryRoadControl
+   24          		{			
+   25          			IF(S_CAR_NEAR_CROSSROAD)
+   26          			{
+   27          				IF(PROC LightWorkCycle SET STATE PASSIVE)
+   28          				{
+   29          					START PROC LightWorkCycle;
+   30          				}
+   31          			}
+   32          			LOOP;
+   33          		}
+   34          	}/* \PROC */																	
+   35          	PROC LightWorkCycle
+   36          	{
+   37          	FROM PROC Init C_SWITCH_TRAFFIC_LIGHT;
+   38          		
+   39          		STATE PausePCycles
+   40          		{
+   41          			C_SWITCH_TRAFFIC_LIGHT = OFF;
+   42          			TIMEOUT PCyclesDelay SET NEXT;
+   43          		}
+   44          		
+   45          		STATE DisableMotionForKCycles
+   46          		{
+   47          			C_SWITCH_TRAFFIC_LIGHT = ON;
+   48          			TIMEOUT KCyclesDelay
+   49          			{	
+   50          				C_SWITCH_TRAFFIC_LIGHT = OFF;
+   51          				STOP;
+   52          			}
+   53          		}	
+   54          	}/* \PROC */
+   55          }/* \PROGRAM */
+
+%RCSL-I-SUMMARY, Completed with 0 error(s).
+%RCSL-I-SUMMARY, Completed with 0 warning(s).
+
+ %RCSL-I-SUMMARY, Completed with 0 error(s).

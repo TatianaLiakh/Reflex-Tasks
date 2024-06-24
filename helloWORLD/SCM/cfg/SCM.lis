@@ -1,0 +1,63 @@
+    1          PROGR DISPATCHER
+    2          {
+    3          	TACT 50;
+    4          	
+    5          	CONST Idiling 0;
+    6          	CONST RunNextTest 1;
+    7           
+    8          	/*Набор команд для PLANT(виртуальный объект управления)*/
+    9          	ENUM
+   10          	{		
+   11          		SCM2VP_MESSAGE_TURN_ON,
+   12          		SCM2VP_MESSAGE_TURN_OFF
+   13          	};
+   14           
+   15          	/*Набор команд для VERIFIER(блок верификации)*/
+   16          	
+   17          	ENUM 
+   18          	{
+   19          		SCM2VM_TEST_NORMAL_TURN_ON,
+   20          		SCM2VM_TEST_NORMAL_TURN_OFF, 
+   21          		SCM2VM_FINISH_VERIFICATION
+   22          	};
+   23          
+   24          	/*Набор команд для DISPATCHER(блока управления сценарием) от VERIFIER(блока верификации)*/
+   25          	ENUM
+   26          	{
+   27          		VM2SCM_START_VERIFICATION,
+   28          		VM2SCM_NEXT_TEST
+   29          	};
+   30          	
+   31          	FUNCTION INT SendMsgToVirtualPlantCode(INT);
+   32          	FUNCTION INT SendMsgToVerificationModuleCode(INT);
+   33          	FUNCTION INT GetNextMsgFromVM(VOID);
+   34          	FUNCTION INT GetMsgCodeFromVM(VOID);
+   35          
+   36          	PROC Init
+   37          	{
+   38          		STATE Start
+   39          		{  
+   40          			START PROC ReceiveVerifierOutputMsg; 
+   41          			
+   42          			STOP;
+   43          		}
+   44          	}
+   45          	
+   46          	
+   47          	PROC ReceiveVerifierOutputMsg
+   48          	{
+   49          		STATE Start
+   50          		{
+   51          			IF(GetNextMsgFromVM())
+   52          			{
+   53          				SendMsgToVerificationModuleCode(SCM2VM_TEST_NORMAL_TURN_ON);
+   54          			}
+   55          			LOOP;			
+   56          		}
+   57          	}
+   58          }  /* \Прогр */
+
+%RCSL-I-SUMMARY, Completed with 0 error(s).
+%RCSL-I-SUMMARY, Completed with 0 warning(s).
+
+ %RCSL-I-SUMMARY, Completed with 0 error(s).

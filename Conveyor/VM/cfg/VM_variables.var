@@ -1,0 +1,6 @@
+INPUT LOG I_BOX_UNDER_SENSOR /*name*/ 0 /*owner_input_port*/ 0 /*start_bit*/  
+INPUT LOG I_BOX_RED /*name*/ 0 /*owner_input_port*/ 1 /*start_bit*/  
+INPUT LOG I_BOX_GREEN /*name*/ 0 /*owner_input_port*/ 2 /*start_bit*/  
+INPUT LOG I_TURN_ON_MAIN_CONVEYOR /*name*/ 1 /*owner_input_port*/ 0 /*start_bit*/  
+INPUT LOG I_TURN_ON_SIDE_CONVEYOR /*name*/ 1 /*owner_input_port*/ 1 /*start_bit*/  
+INPUT LOG I_REMOVE_BOX /*name*/ 1 /*owner_input_port*/ 2 /*start_bit*/  
